@@ -133,6 +133,16 @@ public class RootResource {
         return new JobsResource();
     }
 
+    // If instance does not exist, then returns 404
+    // If it exists and is not working, then return empty list with count 0
+    @Path("prometheus/")
+    public PrometheusResource getPrometheus() throws StreamsMonitorException,
+            WebApplicationException, JsonProcessingException {
+
+        return new PrometheusResource();
+    }
+
+    
     // Internal debugging resource
     @Path("jobtracker")
     @GET
