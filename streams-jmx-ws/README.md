@@ -8,7 +8,7 @@ Brian M Williams, IBM<br>
 bmwilli@us.ibm.com
 
 # Contents
-1. [Buil streams-jmx-ws](#building-the-application)
+1. [Building streams-jmx-ws](#building-the-application)
 2. [Command line options](#command-line-options)
 3. [Running streams-jmx-ws](#running-the-application)
 4. [Cached REST endpoints](#cached-rest-endpoints)
