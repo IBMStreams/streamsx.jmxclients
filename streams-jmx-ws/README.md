@@ -1446,14 +1446,19 @@ Retrieves all metrics for the monitored instance
 These endpoints are not cached, rather, they are passed through directly to the Streams JMX Server API
 
 ## /jobs/{jobid}/snapshot
+
 Calls the snapshot() jmx method on the specified job
 
 ### Parameters:
+
 depth : depth of job topology to return (default: 1)
+
 static: include static job attributes in addition to dynamic attributes (default: true)
 
 `curl http://localhost:25500/jobs/{jobid}/snapshot`
+
 `curl http://localhost:25500/jobs/{jobid}/snapshot?depth=2&static=false`
+
 `curl http://localhost:25500/jobs/{jobid}/snapshot?depth=2&statuc=true`
 
 ```json 
