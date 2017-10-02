@@ -22,10 +22,12 @@ The build location must be a linux node with IBM Streams installed.  The environ
 
 ## Create executable .jar with dependencies included
 `mvn package`
+
 Location will be: target/executable-streams-jmx-ws.jar
 
 # Command line options
 `java -jar target/executable-streams-jmx-ws.jar --help`
+
 <pre>
 Usage: <main class> [options]
   Options:
@@ -63,12 +65,15 @@ Usage: <main class> [options]
 
 # Running the application
 `java -jar target/executable-streams-jmx-ws.jar -j service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i StreamsInstance -u streamsadmin`
+
 `password: <enter streamsadmin password>`
 
 # REST endpoints
 ## /jobtracker
 The Provides a complete overview of the streams-jmx-ws server.  Not recommended for programatic interface, however, a good interface for status of this server
+
 `curl http://localhost:25500/jobtracker`
+
 ```json
 {
 
