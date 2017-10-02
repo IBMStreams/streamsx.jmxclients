@@ -11,7 +11,8 @@ bmwilli@us.ibm.com
 1. [Buil streams-jmx-ws](#building-the-application)
 2. [Command line options](#command-line-options)
 3. [Running streams-jmx-ws](#running-the-application)
-4. [REST endpoints](#rest-endpoints)
+4. [Cached REST endpoints](#cached-rest-endpoints)
+5. [Passthrough REST endpoints](#passthrough-rest-endpoints)
 
 # Building the application
 
@@ -68,7 +69,1038 @@ Usage: <main class> [options]
 
 `password: <enter streamsadmin password>`
 
-# REST endpoints
+# Cached REST endpoints
+## /instance
+Retrieve status of instance being monitored
+
+`curl http://localhost:25500/instance`
+
+```json
+{
+
+    "instanceName": "StreamsInstance",
+    "instanceStatus": "running",
+    "instanceStartTime": 1506945075968
+
+}
+```
+
+## /instance/resourceMetrics
+Retrieves resources and specific metrics about them
+
+`curl http://localhost:25500/instance/resourceMetrics`
+
+```json
+{
+
+    "streamsqse.localdomain": {
+        "cpuSpeed": 8677,
+        "memoryFree": 385960,
+        "memoryTotal": 3908520,
+        "loadAverage": 0,
+        "nProcessors": 2
+    }
+
+}
+```
+
+## /joblist
+List of job names and ids along with links to details about the job
+
+`curl http://localhost:25500/joblist`
+
+```json
+{
+
+    "total": 1,
+    "jobs": [
+        {
+            "name": "SimpleJob_0",
+            "id": 0,
+            "metrics": "http://localhost:25500/jobs/0/metrics",
+            "jobInfo": "http://localhost:25500/jobs/0",
+            "snapshot": "http://localhost:25500/jobs/0/snapshot"
+        }
+    ]
+
+}
+```
+
+## /jobs/{jobid}/status
+Status of a single job
+
+`curl http://localhost:25500/jobs/{jobid}/status`
+
+```json
+{
+    "status": "running"
+}
+```
+
+## /jobs/{jobid}/health
+Health of a single job
+
+`curl http://localhost:25500/jobs/{jobid}/health`
+
+```json
+{
+    "health": "healthy"
+}
+```
+
+## /jobs/{jobid}/metrics
+Metrics of a single job
+
+`curl http://localhost:25500/jobs/{jobid}/metrics`
+
+```json
+{
+
+    "lastMetricsRefresh": 1506958998911,
+    "lastMetricsFailure": null,
+    "lastMetricsRefreshFailed": false,
+    "jobMetrics": {
+        "id": "0",
+        "pes": [
+            {
+                "indexWithinJob": 0,
+                "operators": [
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "SinkStream",
+                                "metrics": [
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 676291
+                                    },
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "SinkStream",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FunctorStream",
+                                "metrics": [
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 676291
+                                    },
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [ ],
+                        "name": "Sink",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "In",
+                                "metrics": [
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 676291
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FunctorStream",
+                                "metrics": [
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 676291
+                                    },
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "FunctorStream",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FilterStream",
+                                "metrics": [
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 676291
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "BeaconStream",
+                                "metrics": [
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 1352582
+                                    },
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "BeaconStream",
+                        "inputPorts": [ ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FilterStream",
+                                "metrics": [
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 676291
+                                    },
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "FilterStream",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "BeaconStream",
+                                "metrics": [
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 1352582
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    }
+                ],
+                "outputPorts": [ ],
+                "inputPorts": [ ],
+                "id": "0",
+                "metrics": [
+                    {
+                        "name": "nResidentMemoryConsumption",
+                        "value": 33892
+                    },
+                    {
+                        "name": "nMemoryConsumption",
+                        "value": 810016
+                    },
+                    {
+                        "name": "nCpuMilliseconds",
+                        "value": 61950
+                    }
+                ],
+                "lastTimeRetrieved": 1506958996000
+            }
+        ]
+    }
+
+}
+```
+
+## /jobs
+Array of all jobs in the instance along with job information and the metrics for each job
+
+`curl http://localhost:25500/jobs`
+
+```json
+{
+
+    "total": 1,
+    "jobs": [
+        {
+            "id": 0,
+            "status": "running",
+            "lastMetricsRefresh": 1506958518905,
+            "lastMetricsFailure": null,
+            "lastMetricsRefreshFailed": false,
+            "adlFile": "output/SimpleJob.adl",
+            "applicationName": "SimpleJob",
+            "applicationPath": "toolkits/SimpleJob",
+            "applicationScope": "Default",
+            "applicationVersion": "4211",
+            "dataPath": "/home/streamsadmin/git/streams/spl/SimpleJob/-a",
+            "domain": "StreamsDomain",
+            "health": "HEALTHY",
+            "instance": "StreamsInstance",
+            "jobGroup": "default",
+            "name": "SimpleJob_0",
+            "outputPath": "output",
+            "startedByUser": "streamsadmin",
+            "submitTime": 1506945170000,
+            "jobMetrics": {
+                "id": "0",
+                "pes": [
+                    {
+                        "indexWithinJob": 0,
+                        "operators": [
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "SinkStream",
+                                        "metrics": [
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 652797
+                                            },
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "SinkStream",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "FunctorStream",
+                                        "metrics": [
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 652797
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [ ],
+                                "name": "Sink",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "In",
+                                        "metrics": [
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 652797
+                                            },
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "FunctorStream",
+                                        "metrics": [
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 652797
+                                            },
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "FunctorStream",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "FilterStream",
+                                        "metrics": [
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 652797
+                                            },
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "BeaconStream",
+                                        "metrics": [
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 1305594
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "BeaconStream",
+                                "inputPorts": [ ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "FilterStream",
+                                        "metrics": [
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 652797
+                                            },
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "FilterStream",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "name": "BeaconStream",
+                                        "metrics": [
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 1305594
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            }
+                        ],
+                        "outputPorts": [ ],
+                        "inputPorts": [ ],
+                        "id": "0",
+                        "metrics": [
+                            {
+                                "name": "nMemoryConsumption",
+                                "value": 810016
+                            },
+                            {
+                                "name": "nResidentMemoryConsumption",
+                                "value": 33892
+                            },
+                            {
+                                "name": "nCpuMilliseconds",
+                                "value": 60000
+                            }
+                        ],
+                        "lastTimeRetrieved": 1506958516000
+                    }
+                ]
+            }
+        }
+    ]
+
+}
+```
+
+## /jobs/{jobid}
+Job information and metrics for a single job
+
+`curl http://localhost:25500/jobs/{jobid}`
+
+```json
+{
+
+    "id": 0,
+    "status": "running",
+    "lastMetricsRefresh": 1506958648907,
+    "lastMetricsFailure": null,
+    "lastMetricsRefreshFailed": false,
+    "adlFile": "output/SimpleJob.adl",
+    "applicationName": "SimpleJob",
+    "applicationPath": "toolkits/SimpleJob",
+    "applicationScope": "Default",
+    "applicationVersion": "4211",
+    "dataPath": "/home/streamsadmin/git/streams/spl/SimpleJob/-a",
+    "domain": "StreamsDomain",
+    "health": "HEALTHY",
+    "instance": "StreamsInstance",
+    "jobGroup": "default",
+    "name": "SimpleJob_0",
+    "outputPath": "output",
+    "startedByUser": "streamsadmin",
+    "submitTime": 1506945170000,
+    "jobMetrics": {
+        "id": "0",
+        "pes": [
+            {
+                "indexWithinJob": 0,
+                "operators": [
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "SinkStream",
+                                "metrics": [
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 659115
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "SinkStream",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FunctorStream",
+                                "metrics": [
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 659115
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [ ],
+                        "name": "Sink",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "In",
+                                "metrics": [
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 659115
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FunctorStream",
+                                "metrics": [
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 659115
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "FunctorStream",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FilterStream",
+                                "metrics": [
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 659115
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "BeaconStream",
+                                "metrics": [
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 1318230
+                                    },
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "BeaconStream",
+                        "inputPorts": [ ],
+                        "metrics": [ ]
+                    },
+                    {
+                        "outputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "FilterStream",
+                                "metrics": [
+                                    {
+                                        "name": "nFinalPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsSubmitted",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesSubmitted",
+                                        "value": 659115
+                                    }
+                                ]
+                            }
+                        ],
+                        "name": "FilterStream",
+                        "inputPorts": [
+                            {
+                                "indexWithinOperator": 0,
+                                "name": "BeaconStream",
+                                "metrics": [
+                                    {
+                                        "name": "nFinalPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nWindowPunctsProcessed",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesProcessed",
+                                        "value": 1318230
+                                    },
+                                    {
+                                        "name": "queueSize",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesQueued",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nTuplesDropped",
+                                        "value": 0
+                                    },
+                                    {
+                                        "name": "nFinalPunctsQueued",
+                                        "value": 0
+                                    }
+                                ]
+                            }
+                        ],
+                        "metrics": [ ]
+                    }
+                ],
+                "outputPorts": [ ],
+                "inputPorts": [ ],
+                "id": "0",
+                "metrics": [
+                    {
+                        "name": "nCpuMilliseconds",
+                        "value": 60520
+                    },
+                    {
+                        "name": "nMemoryConsumption",
+                        "value": 810016
+                    },
+                    {
+                        "name": "nResidentMemoryConsumption",
+                        "value": 33892
+                    }
+                ],
+                "lastTimeRetrieved": 1506958645000
+            }
+        ]
+    }
+
+}
+```
+
+
 ## /jobtracker
 The Provides a complete overview of the streams-jmx-ws server.  Not recommended for programatic interface, however, a good interface for status of this server
 
@@ -102,6 +1134,401 @@ The Provides a complete overview of the streams-jmx-ws server.  Not recommended 
         {
             "key": "SimpleJob_0",
             "value": "0"
+        }
+    ]
+
+}
+```
+
+## /metris
+Retrieves all metrics for the monitored instance
+
+`curl http://localhost:25500/metrics`
+
+```json
+{
+
+    "lastMetricsRefresh": 1506958218912,
+    "lastMetricsFailure": null,
+    "lastMetricsRefreshFailed": false,
+    "allMetrics": {
+        "jobs": [
+            {
+                "id": "0",
+                "pes": [
+                    {
+                        "indexWithinJob": 0,
+                        "operators": [
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 638117
+                                            },
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "SinkStream",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 638117
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [ ],
+                                "name": "Sink",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 638117
+                                            },
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 638117
+                                            },
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "FunctorStream",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 638117
+                                            },
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 1276233
+                                            },
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "BeaconStream",
+                                "inputPorts": [ ],
+                                "metrics": [ ]
+                            },
+                            {
+                                "outputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nWindowPunctsSubmitted",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesSubmitted",
+                                                "value": 638117
+                                            },
+                                            {
+                                                "name": "nFinalPunctsSubmitted",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "name": "FilterStream",
+                                "inputPorts": [
+                                    {
+                                        "indexWithinOperator": 0,
+                                        "metrics": [
+                                            {
+                                                "name": "nFinalPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesQueued",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nWindowPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesProcessed",
+                                                "value": 1276233
+                                            },
+                                            {
+                                                "name": "nFinalPunctsProcessed",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "nTuplesDropped",
+                                                "value": 0
+                                            },
+                                            {
+                                                "name": "queueSize",
+                                                "value": 0
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "metrics": [ ]
+                            }
+                        ],
+                        "outputPorts": [ ],
+                        "inputPorts": [ ],
+                        "id": "0",
+                        "metrics": [
+                            {
+                                "name": "nResidentMemoryConsumption",
+                                "value": 33892
+                            },
+                            {
+                                "name": "nCpuMilliseconds",
+                                "value": 58740
+                            },
+                            {
+                                "name": "nMemoryConsumption",
+                                "value": 810016
+                            }
+                        ],
+                        "lastTimeRetrieved": 1506958216000
+                    }
+                ]
+            }
+        ],
+        "id": "StreamsInstance"
+    }
+
+}
+```
+
+# Passthrough REST Endpoints
+These endpoints are not cached, rather, they are passed through directly to the Streams JMX Server API
+
+## /jobs/{jobid}/snapshot
+Calls the snapshot() jmx method on the specified job
+
+### Parameters:
+depth : depth of job topology to return (default: 1)
+static: include static job attributes in addition to dynamic attributes (default: true)
+
+`curl http://localhost:25500/jobs/{jobid}/snapshot`
+`curl http://localhost:25500/jobs/{jobid}/snapshot?depth=2&static=false`
+`curl http://localhost:25500/jobs/{jobid}/snapshot?depth=2&statuc=true`
+
+```json 
+{
+
+    "applicationVersion": "4211",
+    "instance": "StreamsInstance",
+    "submitParameters": [ ],
+    "startedBy": "streamsadmin",
+    "health": "healthy",
+    "resources": [
+        {
+            "id": "streamsqse.localdomain"
+        }
+    ],
+    "jobGroup": "default",
+    "dataPath": "/home/streamsadmin/git/streams/spl/SimpleJob/-a",
+    "adlFile": "output/SimpleJob.adl",
+    "submitTime": 1506945170000,
+    "applicationPath": "toolkits/SimpleJob",
+    "checkpointPath": "/home/streamsadmin/git/streams/spl/SimpleJob/-a/ckpt",
+    "outputPath": "output",
+    "domain": "StreamsDomain",
+    "name": "SimpleJob_0",
+    "id": "0",
+    "applicationName": "SimpleJob",
+    "status": "running",
+    "applicationScope": "Default",
+    "pes": [
+        {
+            "launchCount": 1,
+            "restartable": true,
+            "resource": "streamsqse.localdomain",
+            "health": "healthy",
+            "relocatable": true,
+            "tracingLevel": "error",
+            "optionalConnections": "connected",
+            "resourceTags": [ ],
+            "pendingTracingLevel": null,
+            "indexWithinJob": 0,
+            "statusReason": "none",
+            "processId": "5951",
+            "operators": [
+                {
+                    "indexWithinJob": 2,
+                    "name": "FunctorStream",
+                    "operatorKind": "spl.relational::Functor"
+                },
+                {
+                    "indexWithinJob": 0,
+                    "name": "BeaconStream",
+                    "operatorKind": "spl.utility::Beacon"
+                },
+                {
+                    "indexWithinJob": 1,
+                    "name": "FilterStream",
+                    "operatorKind": "spl.relational::Filter"
+                },
+                {
+                    "indexWithinJob": 3,
+                    "name": "SinkStream",
+                    "operatorKind": "spl.relational::Functor"
+                },
+                {
+                    "indexWithinJob": 4,
+                    "name": "Sink",
+                    "operatorKind": "spl.utility::Custom"
+                }
+            ],
+            "requiredConnections": "connected",
+            "outputPorts": [ ],
+            "inputPorts": [ ],
+            "id": "0",
+            "osCapabilities": [ ],
+            "status": "running"
         }
     ]
 
