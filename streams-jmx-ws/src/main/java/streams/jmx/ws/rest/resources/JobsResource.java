@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import streams.jmx.ws.monitor.JobInfo;
 import streams.jmx.ws.monitor.StreamsInstanceJobMonitor;
 import streams.jmx.ws.monitor.StreamsMonitorException;
+import streams.jmx.ws.monitor.job.JobInfo;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

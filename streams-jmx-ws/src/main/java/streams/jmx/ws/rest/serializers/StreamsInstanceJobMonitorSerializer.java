@@ -16,9 +16,9 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import streams.jmx.ws.monitor.InstanceInfo;
-import streams.jmx.ws.monitor.JobInfo;
 import streams.jmx.ws.monitor.StreamsInstanceJobMonitor;
 import streams.jmx.ws.monitor.StreamsMonitorException;
+import streams.jmx.ws.monitor.job.JobInfo;
 
 /**
  * Serializes a StreamsInstanceJobMonitor instance to JSON.

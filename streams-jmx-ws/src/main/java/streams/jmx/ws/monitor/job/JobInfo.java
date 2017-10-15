@@ -1,4 +1,4 @@
-package streams.jmx.ws.monitor;
+package streams.jmx.ws.monitor.job;
 
 import java.math.BigInteger;
 import java.util.Date;

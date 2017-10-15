@@ -7,9 +7,9 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import streams.jmx.ws.monitor.JobInfo;
 import streams.jmx.ws.monitor.StreamsInstanceJobMonitor;
 import streams.jmx.ws.monitor.StreamsMonitorException;
+import streams.jmx.ws.monitor.job.JobInfo;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;

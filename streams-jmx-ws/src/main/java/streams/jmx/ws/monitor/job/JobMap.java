@@ -1,4 +1,4 @@
-package streams.jmx.ws.monitor;
+package streams.jmx.ws.monitor.job;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -29,7 +29,8 @@ public class JobMap {
     // Prometheus Metrics
     static final Gauge jobCount = Gauge.build()
     		.name("jobCount").help("Number of jobs in streams instance").register();
-    
+
+	
     public synchronized void clear() {
     	jobMap.clear();
     	jobNameIndex.clear();

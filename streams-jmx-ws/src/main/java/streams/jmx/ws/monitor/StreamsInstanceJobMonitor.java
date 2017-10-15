@@ -45,7 +45,9 @@ import com.ibm.streams.management.Metric;
 import com.ibm.streams.management.Notifications;
 
 import streams.jmx.ws.monitor.AllJobMetrics;
-import streams.jmx.ws.monitor.JobMap;
+import streams.jmx.ws.monitor.job.JobDetails;
+import streams.jmx.ws.monitor.job.JobInfo;
+import streams.jmx.ws.monitor.job.JobMap;
 
 /*
  * StreamsInstanceJobMonitor
@@ -450,7 +452,7 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
      * metrics are re-initialized and brought back into consistency with
      * Streams.
      */
-    synchronized void resetMonitor() {
+    public synchronized void resetMonitor() {
         this.instanceInfo.setInstanceAvailable(false);
         this.jobsAvailable = false;
         this.metricsAvailable = false;

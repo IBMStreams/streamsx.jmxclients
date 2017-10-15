@@ -5,10 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import streams.jmx.ws.monitor.JobInfo;
 import streams.jmx.ws.monitor.StreamsInstanceJobMonitor;
 import streams.jmx.ws.monitor.StreamsMonitorException;
-
+import streams.jmx.ws.monitor.job.JobInfo;
 import streams.jmx.ws.rest.serializers.StreamsInstanceJobMonitorSerializer;
 
 import javax.ws.rs.GET;
@@ -131,15 +130,6 @@ public class RootResource {
             WebApplicationException, JsonProcessingException {
 
         return new JobsResource();
-    }
-
-    // If instance does not exist, then returns 404
-    // If it exists and is not working, then return empty list with count 0
-    @Path("prometheus/")
-    public PrometheusResource getPrometheus() throws StreamsMonitorException,
-            WebApplicationException, JsonProcessingException {
-
-        return new PrometheusResource();
     }
 
     
