@@ -1,26 +1,19 @@
 package streams.jmx.ws.monitor;
 
 import java.math.BigInteger;
-import java.net.URL;
 import java.net.MalformedURLException;
 import java.text.Format;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimerTask;
 import java.util.Timer;
-import java.util.Iterator;
 import java.util.Date;
 import java.text.SimpleDateFormat;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.UndeclaredThrowableException;
 
 import javax.management.JMX;
@@ -29,11 +22,6 @@ import javax.management.Notification;
 import javax.management.AttributeChangeNotification;
 import javax.management.NotificationFilterSupport;
 import javax.management.ObjectName;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
 import javax.management.NotificationListener;
 import javax.management.InstanceNotFoundException;
 
@@ -42,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.apache.commons.lang.time.StopWatch;
 
 import com.ibm.streams.management.ObjectNameBuilder;
@@ -58,6 +45,7 @@ import com.ibm.streams.management.Metric;
 import com.ibm.streams.management.Notifications;
 
 import streams.jmx.ws.monitor.AllJobMetrics;
+import streams.jmx.ws.monitor.JobMap;
 
 /*
  * StreamsInstanceJobMonitor
@@ -111,8 +99,9 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
      * JOB MAP and INDEXES
      **************************************/
     /* Job Map Info */
-    private ConcurrentSkipListMap<BigInteger, JobDetails> jobMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
-    private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
+    private JobMap jobMap = new JobMap();
+    //private ConcurrentSkipListMap<BigInteger, JobDetails> jobMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
+    //private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
 
     // refresher is a TimerTask that refreshes the Status and Metrics
     // automatically
@@ -283,22 +272,11 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
     }
 
     public synchronized Map<BigInteger, JobInfo> getCurrentJobMap() {
-        HashMap<BigInteger, JobInfo> m = new HashMap<BigInteger, JobInfo>();
-
-        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap.entrySet()
-                .iterator();
-
-        while (it.hasNext()) {
-            Map.Entry<BigInteger, JobDetails> entry = it.next();
-
-            m.put(entry.getKey(), entry.getValue().getJobInfo());
-        }
-
-        return m;
+    	return jobMap.getJobMap();
     }
 
     public synchronized Map<String, BigInteger> getCurrentJobNameIndex() {
-        return new HashMap<String, BigInteger>(jobNameIndex);
+        return jobMap.getCurrentJobNameIndex();
     }
 
     public synchronized InstanceInfo getInstanceInfo() throws StreamsMonitorException {
@@ -382,7 +360,7 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
     }
 
     public synchronized ArrayList<JobInfo> getAllJobInfo() throws StreamsMonitorException {
-        ArrayList<JobInfo> jia = new ArrayList<JobInfo>();
+        ArrayList<JobInfo> jia = null;
 
         if ((this.instanceInfo == null)
                 || (!this.instanceInfo.isInstanceExists())) {
@@ -394,44 +372,30 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
         }
 
         if (jobsAvailable) {
-
-            Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap.entrySet()
-                    .iterator();
-            while (it.hasNext()) {
-                Map.Entry<BigInteger, JobDetails> pair = it.next();
-
-                JobDetails curInfo = (JobDetails) pair.getValue();
-                jia.add(curInfo.getJobInfo());
-            }
+        	jia = jobMap.getJobInfo();
+        } else {
+        	// empty array
+        	jia = new ArrayList<JobInfo>();
         }
         return jia;
     }
 
     public synchronized JobInfo getJobInfo(int jobid) throws StreamsMonitorException {
-        BigInteger jid = BigInteger.valueOf(jobid);
-        JobDetails jd = null;
         JobInfo ji = null;
 
-        if (jobMap == null) {
+        ji = jobMap.getJobInfo(jobid);
+        if (ji == null) {
             throw new StreamsMonitorException(
                     StreamsMonitorErrorCode.JOB_NOT_FOUND, "Job id " + jobid
                             + " does not exist");
         }
-        jd = jobMap.get(jid);
-        if (jd == null) {
-            throw new StreamsMonitorException(
-                    StreamsMonitorErrorCode.JOB_NOT_FOUND, "Job id " + jobid
-                            + " does not exist");
-        } else {
-            ji = jd.getJobInfo();
-        }
+        
         return ji;
     }
 
     public synchronized String getJobSnapshot(int jobid, int maximumDepth,
             boolean includeStaticAttributes) throws StreamsMonitorException {
-        BigInteger jid = BigInteger.valueOf(jobid);
-        JobDetails jd = jobMap.get(jid);
+        JobDetails jd = jobMap.getJob(jobid);
 
         if (jd == null) {
             throw new StreamsMonitorException(
@@ -803,7 +767,6 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
                 // jobMXBeans
                 // Create the jobname index
                 jobMap.clear();
-                jobNameIndex.clear();
 
                 LOGGER.trace("Create hashmap of JobMXBeans...");
                 for (BigInteger jobno : jobs) {
@@ -813,8 +776,7 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
                             .getBeanSourceProvider().getBeanSource()
                             .getMBeanServerConnection(), tJobNameObj,
                             JobMXBean.class, true);
-                    jobMap.put(jobno, new JobDetails(this, jobno, jobBean));
-                    jobNameIndex.put(jobBean.getName(), jobno);
+                    jobMap.addJobToMap(jobno, new JobDetails(this, jobno, jobBean));
                 }
 
                 // IMPORTANT: Set jobsAvailable to true
@@ -862,8 +824,7 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
                     .getBeanSourceProvider().getBeanSource()
                     .getMBeanServerConnection(), tJobNameObj, JobMXBean.class,
                     true);
-            jobMap.put(jobid, new JobDetails(this, jobid, jobBean));
-            jobNameIndex.put(jobBean.getName(), jobid);
+            jobMap.addJobToMap(jobid, new JobDetails(this, jobid, jobBean));
 
         } catch (IOException e) {
             LOGGER.warn("New Job Initialization received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
@@ -883,9 +844,7 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
         sw.start();
 
         // Do we need to do anything to the MXBean we created for the job?
-        jobMap.remove(jobid);
-        // Need to remove it from the jobNameIndex
-        jobNameIndex.values().removeAll(Collections.singleton(jobid));
+        jobMap.removeJobFromMap(jobid);
 
         sw.stop();
         LOGGER.debug("** removeJobFromMap (jobid: " + jobid + ") time: "
@@ -920,16 +879,8 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
             if (allJobMetrics.isLastMetricsRefreshFailed()) {
                 // If retrieving metrics fails, we need to loop through the jobs
                 // and set the attributes to reflect that
+            	jobMap.setJobMetricsFailed(allJobMetrics.getLastMetricsFailure());
 
-                Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap
-                        .entrySet().iterator();
-                while (it.hasNext()) {
-                    Map.Entry<BigInteger, JobDetails> pair = it.next();
-                    JobDetails curInfo = (JobDetails) pair.getValue();
-                    curInfo.setLastMetricsFailure(allJobMetrics
-                            .getLastMetricsFailure());
-                    curInfo.setLastMetricsRefreshFailed(true);
-                }
             } else {
                 // We retrieved them successfully
                 String allMetrics = this.allJobMetrics.getAllMetrics();
@@ -952,8 +903,8 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
                             // problem
                             // we
                             // missed the notification
-                            if (jobMap.containsKey(jobId)) {
-                                JobDetails jd = jobMap.get(jobId);
+                            JobDetails jd = jobMap.getJob(Integer.parseInt((String)jobObject.get("id")));
+                            if (jd != null) {
                                 jd.setJobMetrics(jobObject.toString());
                                 // Update the job details that we refreshed
                                 // metrics
@@ -1007,27 +958,7 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
         result.append("instanceResourceMetricsLastUpdated:" + convertTime(instanceResourceMetricsLastUpdated));
         result.append(newline);
         if (jobsAvailable) {
-            result.append("All " + jobMap.size() + " Jobs:");
-            result.append(newline);
-            Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap.entrySet()
-                    .iterator();
-
-            while (it.hasNext()) {
-                Map.Entry<BigInteger, JobDetails> pair = it.next();
-                JobDetails curInfo = (JobDetails) pair.getValue();
-                result.append(curInfo.toString());
-                result.append(newline);
-            }
-            result.append(newline);
-            result.append("jobNameIndex:");
-            result.append(newline);
-            Iterator<Map.Entry<String, BigInteger>> jnit = jobNameIndex
-                    .entrySet().iterator();
-            while (jnit.hasNext()) {
-                Map.Entry<String, BigInteger> pair = jnit.next();
-                result.append(pair.getKey() + " : " + pair.getValue());
-                result.append(newline);
-            }
+        	result.append(jobMap.toString());
         }
         return result.toString();
     }
@@ -1042,10 +973,11 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
         }
     }
 
-    public void printJob(BigInteger jobid) {
-        System.out.println("Job Status: " + jobMap.get(jobid).getStatus());
-        System.out.println("Job Metrics: " + jobMap.get(jobid).getJobMetrics());
-    }
+//    public void printJob(BigInteger jobid) {
+//    	
+//        System.out.println("Job Status: " + jobMap.getJob(jobid).getStatus());
+//        System.out.println("Job Metrics: " + jobMap.getJob(jobid).getJobMetrics());
+//    }
 
     /*
      * Instance handleNotification
