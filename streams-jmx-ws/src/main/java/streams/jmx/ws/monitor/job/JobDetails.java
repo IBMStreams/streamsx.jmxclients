@@ -40,12 +40,14 @@ import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
 import com.ibm.streams.management.job.OperatorOutputPortMXBean;
 
+import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
 import streams.jmx.ws.monitor.MXBeanSource;
 import streams.jmx.ws.monitor.StreamsInstanceJobMonitor;
 import streams.jmx.ws.monitor.StreamsMonitorErrorCode;
 import streams.jmx.ws.monitor.StreamsMonitorException;
 
+/* Job Details including map of port names so metrics can have names for ports rather than just ids */
 public class JobDetails implements NotificationListener {
 	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceJobMonitor.class.getName());
 
@@ -78,13 +80,28 @@ public class JobDetails implements NotificationListener {
 	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
 
 	/* Prometheus Metrics */
-
-	static final Gauge nCpuMilliseconds = Gauge.build().name("nCpuMilliseconds")
+	/* _job_: summed for all PEs
+	 * _pe_ : metric for each pe !! NOT SURE WE SHOULD DO THIS, NO GOOOD LABEL
+	 * _operator_ : operator, label is the operator name
+	 * _operator_ip_ : operator input port, label is port name
+	 * _operator_op_ : operator output port, label is port name
+	 * 
+	 * We violate prometheus name convention and use streams metric name
+	 * because it is easier for streams developers to keep consistent
+	 * 
+	 * We use guage in many cases because counters do not have a .set() method
+	 * and we get the current value from streams, not a delta.
+	 */
+	static final Gauge streams_job_nCpuMilliseconds = Gauge.build().name("streams_job_nCpuMilliseconds")
 			.help("Number of CPU Milliseconds total for all PEs in job").labelNames("jobname").register();
-	static final Gauge nResidentMemoryConsumption = Gauge.build().name("nResidentMemoryConsumption")
+	static final Gauge streams_job_nResidentMemoryConsumption = Gauge.build().name("streams_job_nResidentMemoryConsumption")
 			.help("Resident Memory total for all PEs in job").labelNames("jobname").register();
-	static final Gauge nMemoryConsumption = Gauge.build().name("nMemoryConsumption")
+	static final Gauge streams_job_nMemoryConsumption = Gauge.build().name("streams_job_nMemoryConsumption")
 			.help("Memory total for all PEs in job").labelNames("jobname").register();
+	static final Gauge streams_job_avg_congestionFactor = Gauge.build().name("streams_job_avg_congestionFactor")
+			.help("Averge congestion factor for all connetions in job").labelNames("jobname").register();
+	static final Gauge streams_job_max_congestionFactor = Gauge.build().name("streams_job_max_congestionFactor")
+			.help("Maximum congestion factor for all connections in job").labelNames("jobname").register();
 
 	public JobDetails(StreamsInstanceJobMonitor monitor, BigInteger jobid, JobMXBean jobBean) {
 		this.monitor = monitor;
@@ -655,27 +672,56 @@ public class JobDetails implements NotificationListener {
 				JSONObject metricsObject = (JSONObject) parser.parse(this.jobMetrics);
 
 				JSONArray peArray = (JSONArray) metricsObject.get("pes");
-
+				
+				/* Job Metrics */
+				long ncpu = 0, nrmc = 0, nmc = 0;
+				long numconnections = 0, totalcongestion = 0, curcongestion = 0;
+				long maxcongestion = 0 , avgcongestion = 0;
+				/* PE Loop */
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 
+
 					JSONArray peMetricsArray = (JSONArray) pe.get("metrics");
-					/*** !!!! NEED TO SUM, TESTING FOR NOW ***/
+					/* PE Metrics Loop */
 					for (int j = 0; j < peMetricsArray.size(); j++) {
 						JSONObject metric = (JSONObject) peMetricsArray.get(j);
 						switch ((String) metric.get("name")) {
 						case "nCpuMilliseconds":
-							nCpuMilliseconds.labels(name).set((long)metric.get("value"));
+							ncpu += (long)metric.get("value");
 							break;
 						case "nResidentMemoryConsumption":
-							nResidentMemoryConsumption.labels(name).set((long)metric.get("value"));
+							nrmc += (long)metric.get("value");
 							break;
 						case "nMemoryConsumption":
-							nMemoryConsumption.labels(name).set((long)metric.get("value"));
+							nmc += (long)metric.get("value");
 							break;
 						default:
 						}
 					}
+					
+					/* PE outputPorts Loop */
+					JSONArray outputPorts = (JSONArray) pe.get("outputPorts");
+					for (int oportnum = 0; oportnum < outputPorts.size(); oportnum++) {
+						JSONObject oport = (JSONObject)outputPorts.get(oportnum);
+						JSONArray connections = (JSONArray) oport.get("connections");
+						for (int con = 0; con < connections.size(); con++) {
+							numconnections++;
+							JSONObject connection = (JSONObject)connections.get(con);
+							JSONArray metricsArray = (JSONArray) connection.get("metrics");
+							for (int m = 0; m < metricsArray.size(); m++) {
+								JSONObject metric = (JSONObject) metricsArray.get(m);
+								switch ((String)metric.get("name")) {
+								case "congestionFactor":
+									curcongestion = (long)metric.get("value");
+									totalcongestion += curcongestion;
+									if (curcongestion > maxcongestion) maxcongestion = curcongestion;
+								}
+							}
+						}
+					}
+
+
 					// JSONArray operatorArray = (JSONArray)
 					// pe.get("operators");
 
@@ -685,7 +731,15 @@ public class JobDetails implements NotificationListener {
 					// resolveOperatorInputPortNames(operator);
 					// resolveOperatorOutputPortNames(operator);
 					// }
-				}
+				} // End PE Loop
+				streams_job_nCpuMilliseconds.labels(name).set(ncpu);
+				streams_job_nResidentMemoryConsumption.labels(name).set(nrmc);
+				streams_job_nMemoryConsumption.labels(name).set(nmc);
+				if (numconnections > 0)
+					avgcongestion = totalcongestion / numconnections;
+				// else it was initialized to 0;
+				streams_job_avg_congestionFactor.labels(name).set(avgcongestion);
+				streams_job_max_congestionFactor.labels(name).set(maxcongestion);
 			} catch (ParseException e) {
 				throw new IllegalStateException(e);
 			}
