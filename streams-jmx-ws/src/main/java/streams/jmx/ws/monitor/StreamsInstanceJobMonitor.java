@@ -39,8 +39,6 @@ import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
 import com.ibm.streams.management.job.JobMXBean;
 
-import io.prometheus.client.Counter;
-
 import com.ibm.streams.management.Metric;
 import com.ibm.streams.management.Notifications;
 
@@ -74,10 +72,6 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
     private static StreamsInstanceJobMonitor singletonInstance = null;
 
     private static boolean isInitialized = false;
-    
-    // Prometheus test
-    static final Counter requests = Counter.build()
-    		.name("brian").help("Brian was here").register();
 
     private JmxServiceContext jmxContext;
     private int refreshRateSeconds; // How often to retrieve bulk metrics
@@ -101,7 +95,8 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
      * JOB MAP and INDEXES
      **************************************/
     /* Job Map Info */
-    private JobMap jobMap = new JobMap();
+    //private JobMap jobMap = new JobMap(this.instanceInfo.getInstanceName());
+    private JobMap jobMap = null;
     //private ConcurrentSkipListMap<BigInteger, JobDetails> jobMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
     //private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
 
@@ -157,7 +152,7 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
         this.refreshRateSeconds = refreshRateSeconds;
         this.protocol = protocol;
         this.jmxContext.getBeanSourceProvider().addBeanSourceProviderListener(this);
-
+        jobMap = new JobMap(instanceName);
         // ** Domain Info **
         MXBeanSource beanSource = null;
         try {
@@ -245,9 +240,6 @@ public class StreamsInstanceJobMonitor implements NotificationListener, MXBeanSo
                     StreamsMonitorErrorCode.STREAMS_MONITOR_UNAVAILABLE,
                     "StreamsInstanceJobMonitor is not initialized");
         }
-        
-        // Prometheus test
-        requests.inc();
         
         return singletonInstance;
 

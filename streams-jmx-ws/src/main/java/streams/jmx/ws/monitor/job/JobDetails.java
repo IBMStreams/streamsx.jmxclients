@@ -42,6 +42,7 @@ import com.ibm.streams.management.job.OperatorOutputPortMXBean;
 
 import io.prometheus.client.Counter;
 import io.prometheus.client.Gauge;
+import streams.jmx.ws.metrics.MetricsExporter;
 import streams.jmx.ws.monitor.MXBeanSource;
 import streams.jmx.ws.monitor.StreamsInstanceJobMonitor;
 import streams.jmx.ws.monitor.StreamsMonitorErrorCode;
@@ -52,6 +53,7 @@ public class JobDetails implements NotificationListener {
 	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceJobMonitor.class.getName());
 
 	private StreamsInstanceJobMonitor monitor;
+	private String streamsInstanceName;
 	private BigInteger jobid;
 	private JobMXBean jobBean;
 	private JobMXBean.Status status;
@@ -92,24 +94,32 @@ public class JobDetails implements NotificationListener {
 	 * We use guage in many cases because counters do not have a .set() method
 	 * and we get the current value from streams, not a delta.
 	 */
-	static final Gauge streams_job_nCpuMilliseconds = Gauge.build().name("streams_job_nCpuMilliseconds")
-			.help("Number of CPU Milliseconds total for all PEs in job").labelNames("jobname").register();
-	static final Gauge streams_job_nResidentMemoryConsumption = Gauge.build().name("streams_job_nResidentMemoryConsumption")
-			.help("Resident Memory total for all PEs in job").labelNames("jobname").register();
-	static final Gauge streams_job_nMemoryConsumption = Gauge.build().name("streams_job_nMemoryConsumption")
-			.help("Memory total for all PEs in job").labelNames("jobname").register();
-	static final Gauge streams_job_avg_congestionFactor = Gauge.build().name("streams_job_avg_congestionFactor")
-			.help("Averge congestion factor for all connetions in job").labelNames("jobname").register();
-	static final Gauge streams_job_max_congestionFactor = Gauge.build().name("streams_job_max_congestionFactor")
-			.help("Maximum congestion factor for all connections in job").labelNames("jobname").register();
+//	static final Gauge streams_job_nCpuMilliseconds = Gauge.build().name("streams_job_nCpuMilliseconds")
+//			.help("Number of CPU Milliseconds total for all PEs in job").labelNames("jobname").register();
+//	static final Gauge streams_job_nResidentMemoryConsumption = Gauge.build().name("streams_job_nResidentMemoryConsumption")
+//			.help("Resident Memory total for all PEs in job").labelNames("jobname").register();
+//	static final Gauge streams_job_nMemoryConsumption = Gauge.build().name("streams_job_nMemoryConsumption")
+//			.help("Memory total for all PEs in job").labelNames("jobname").register();
+//	static final Gauge streams_job_avg_congestionFactor = Gauge.build().name("streams_job_avg_congestionFactor")
+//			.help("Averge congestion factor for all connetions in job").labelNames("jobname").register();
+//	static final Gauge streams_job_max_congestionFactor = Gauge.build().name("streams_job_max_congestionFactor")
+//			.help("Maximum congestion factor for all connections in job").labelNames("jobname").register();
 
 	public JobDetails(StreamsInstanceJobMonitor monitor, BigInteger jobid, JobMXBean jobBean) {
 		this.monitor = monitor;
 
+		try {
+			this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
+		} catch (StreamsMonitorException sme) {
+			String message = "jobDetails Constructor: Error getting streams instance name from monitor, setting to UNKNOWN.";
+			LOGGER.warn(message, sme);
+			this.streamsInstanceName = "UNKNOWN";
+		}
 		setJobid(jobid);
 		setJobBean(jobBean);
 		setStatus(JobMXBean.Status.UNKNOWN);
 		setJobMetrics(null);
+		createPrometheusMetrics();
 
 		MXBeanSource beanSource = null;
 		MBeanServerConnection mbsc = null;
@@ -117,7 +127,7 @@ public class JobDetails implements NotificationListener {
 			beanSource = monitor.getContext().getBeanSourceProvider().getBeanSource();
 			mbsc = beanSource.getMBeanServerConnection();
 		} catch (IOException e) {
-			String message = "jobInfo Constructor: Exception getting MBeanServerConnection from JMX Connection Pool";
+			String message = "jobDetails Constructor: Exception getting MBeanServerConnection from JMX Connection Pool";
 			LOGGER.error(message, e);
 
 			throw new IllegalStateException(e);
@@ -163,6 +173,11 @@ public class JobDetails implements NotificationListener {
 
 			throw new IllegalStateException(e);
 		}
+	}
+	
+	/* Stop/unregister anything you need to */
+	public void close() {
+		removePrometheusMetrics();
 	}
 
 	public BigInteger getJobid() {
@@ -662,7 +677,30 @@ public class JobDetails implements NotificationListener {
 	private int getOperatorPortIndex(JSONObject port) {
 		return ((Number) port.get("indexWithinOperator")).intValue();
 	}
+	
+	private void createPrometheusMetrics() {
+		// Create standard metrics to get help text assigned
+		// All metrics do not have to be created, they will get default help text if not
+		MetricsExporter.createJobMetric("nCpuMilliseconds", "Sum of each pe metric: nCpuMilliseconds");
+		MetricsExporter.createJobMetric("nResidentMemoryConsumption", "Sum of each pe metric: nResidentMemoryConsumption");
+		MetricsExporter.createJobMetric("nMemoryConsumption", "Sum of each pe metric: nMemoryConsumption");
+		MetricsExporter.createJobMetric("avg_congestionFactor", "Average of all pe connection metric: congestionFactor");
+		MetricsExporter.createJobMetric("max_congestionFactor", "Maximum of all pe connection metric: congestionFactor");
+		MetricsExporter.createJobMetric("min_congestionFactor", "Minimum of all pe connection metric: congestionFactor");
+		MetricsExporter.createJobMetric("sum_congestionFactor", "Sum of each pe metric: congestionFactor (no value used by itself");
+		MetricsExporter.createJobMetric("pecount", "Number of pes deployed for this job");
+	}
 
+	private void removePrometheusMetrics() {
+		MetricsExporter.removeJobMetric("nCpuMilliseconds",this.streamsInstanceName,name);
+		MetricsExporter.removeJobMetric("nResidentMemoryConsumption",this.streamsInstanceName,name);
+		MetricsExporter.removeJobMetric("nMemoryConsumption",this.streamsInstanceName,name);
+		MetricsExporter.removeJobMetric("avg_congestionFactor",this.streamsInstanceName,name);
+		MetricsExporter.removeJobMetric("max_congestionFactor",this.streamsInstanceName,name);	
+		MetricsExporter.removeJobMetric("sum_congestionFactor",this.streamsInstanceName,name);	
+		MetricsExporter.removeJobMetric("min_congestionFactor",this.streamsInstanceName,name);	
+		MetricsExporter.removeJobMetric("pecount", this.streamsInstanceName,name);
+	}
 	private void updatePrometheusMetrics() {
 		/* Use this.jobMetrics to update the prometheus metrics */
 		if (this.jobMetrics != null) {
@@ -676,7 +714,7 @@ public class JobDetails implements NotificationListener {
 				/* Job Metrics */
 				long ncpu = 0, nrmc = 0, nmc = 0;
 				long numconnections = 0, totalcongestion = 0, curcongestion = 0;
-				long maxcongestion = 0 , avgcongestion = 0;
+				long maxcongestion = 0 , avgcongestion = 0, mincongestion = 999;
 				/* PE Loop */
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
@@ -716,6 +754,7 @@ public class JobDetails implements NotificationListener {
 									curcongestion = (long)metric.get("value");
 									totalcongestion += curcongestion;
 									if (curcongestion > maxcongestion) maxcongestion = curcongestion;
+									if (curcongestion < mincongestion) mincongestion = curcongestion;
 								}
 							}
 						}
@@ -732,14 +771,18 @@ public class JobDetails implements NotificationListener {
 					// resolveOperatorOutputPortNames(operator);
 					// }
 				} // End PE Loop
-				streams_job_nCpuMilliseconds.labels(name).set(ncpu);
-				streams_job_nResidentMemoryConsumption.labels(name).set(nrmc);
-				streams_job_nMemoryConsumption.labels(name).set(nmc);
+				MetricsExporter.getJobMetric("pecount", this.streamsInstanceName, name).set(peArray.size());
+				MetricsExporter.getJobMetric("nCpuMilliseconds", this.streamsInstanceName,name).set(ncpu);
+				MetricsExporter.getJobMetric("nResidentMemoryConsumption", this.streamsInstanceName,name).set(nrmc);
+				MetricsExporter.getJobMetric("nMemoryConsumption",this.streamsInstanceName,name).set(nmc);
 				if (numconnections > 0)
 					avgcongestion = totalcongestion / numconnections;
 				// else it was initialized to 0;
-				streams_job_avg_congestionFactor.labels(name).set(avgcongestion);
-				streams_job_max_congestionFactor.labels(name).set(maxcongestion);
+				MetricsExporter.getJobMetric("sum_congestionFactor",this.streamsInstanceName, name).set(totalcongestion);
+				MetricsExporter.getJobMetric("avg_congestionFactor",this.streamsInstanceName,name).set(avgcongestion);
+				MetricsExporter.getJobMetric("max_congestionFactor",this.streamsInstanceName,name).set(maxcongestion);
+				if (mincongestion == 999) mincongestion = 0;
+				MetricsExporter.getJobMetric("min_congestionFactor", this.streamsInstanceName,name).set(mincongestion);
 			} catch (ParseException e) {
 				throw new IllegalStateException(e);
 			}
