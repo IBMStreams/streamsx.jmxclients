@@ -201,7 +201,9 @@ public class JobDetails implements NotificationListener {
 	}
 
 	public void setJobMetrics(String jobMetrics) {
-		this.jobMetrics = jobMetrics;
+		//this.jobMetrics = jobMetrics;
+		// Try setting to a version with port names resolved
+		this.jobMetrics = resolvePortNames(jobMetrics);
 		updatePrometheusMetrics();
 	}
 
@@ -376,7 +378,9 @@ public class JobDetails implements NotificationListener {
 		ji.setStartedByUser(startedByUser);
 		ji.setStatus(status);
 		ji.setSubmitTime(submitTime);
-		ji.setJobMetrics(resolvePortNames(jobMetrics));
+		//ji.setJobMetrics(resolvePortNames(jobMetrics));
+		// Already resolved
+		ji.setJobMetrics(jobMetrics);
 
 		return ji;
 
@@ -760,16 +764,58 @@ public class JobDetails implements NotificationListener {
 						}
 					}
 
-
-					// JSONArray operatorArray = (JSONArray)
-					// pe.get("operators");
-
-					// for (int j = 0; j < operatorArray.size(); j++) {
-					// JSONObject operator = (JSONObject) operatorArray.get(j);
-
-					// resolveOperatorInputPortNames(operator);
-					// resolveOperatorOutputPortNames(operator);
-					// }
+					/* PE operator Loop */
+					JSONArray operatorArray = (JSONArray)pe.get("operators");
+					for (int op = 0; op < operatorArray.size(); op++) {
+						JSONObject operator = (JSONObject) operatorArray.get(op);
+						//System.out.println(operator.toString());
+						String operatorName = (String)operator.get("name");
+//						System.out.println("OPERATOR NAME: " + operatorName);
+						JSONArray opMetricsArray = (JSONArray) operator.get("metrics");
+						/* Operator Metrics Loop, these are non-standard metrics */
+						for (int om = 0; om < opMetricsArray.size(); om++) {
+							JSONObject metric = (JSONObject) opMetricsArray.get(om);
+							String operatorMetricName = (String)metric.get("name");
+//							System.out.println("OPERATOR METRIC: " + operatorMetricName);
+							switch (operatorMetricName) {
+							default:
+//								System.out.println("About to set " + operatorMetricName +
+//										" using " + this.streamsInstanceName +
+//										", " + name +
+//										", " + operatorName +
+//										" to: " + metric.get("value"));
+								MetricsExporter.getOperatorMetric(operatorMetricName,
+										this.streamsInstanceName,
+										name,
+										operatorName).set((long)metric.get("value"));
+								break;
+							}
+						}	// End Operator Metrics Loop		
+						
+						// Loop over Operator Input Ports
+						JSONArray opipArray = (JSONArray) operator.get("inputPorts");
+						for (int opip = 0; opip < opipArray.size(); opip++) {
+							JSONObject inputPort = (JSONObject)opipArray.get(opip);
+							System.out.println("INPUTPORT: " + inputPort.toString());
+							String inputPortName = (String)inputPort.get("name");
+							System.out.println("INPUTPORTNAME: " + inputPortName);
+							JSONArray ipMetrics = (JSONArray)inputPort.get("metrics");
+							for (int opipm = 0; opipm < ipMetrics.size(); opipm++) {
+								JSONObject metric = (JSONObject) ipMetrics.get(opipm);
+								String metricName = (String)metric.get("name");
+								switch (metricName) {
+								default:
+									MetricsExporter.getOperatorInputPortMetric(metricName,
+											this.streamsInstanceName,
+											name,
+											operatorName,
+											inputPortName).set((long)metric.get("value"));
+									break;
+								}
+							} // End Input Port Metrics Loop
+						} // End Operator Input Port Loop
+						
+					} // End Operator Loop
 				} // End PE Loop
 				MetricsExporter.getJobMetric("pecount", this.streamsInstanceName, name).set(peArray.size());
 				MetricsExporter.getJobMetric("nCpuMilliseconds", this.streamsInstanceName,name).set(ncpu);
