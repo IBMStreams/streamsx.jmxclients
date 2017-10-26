@@ -130,7 +130,7 @@ outputportname
 
 # Grafana Examples
 See the dashboards directory
-![Grafana Example[(/images/StreamsGrafanaImage1.png)
+![Grafana Example](images/StreamsGrafanaImage1.png)
 
 # Cached REST endpoints
 ## /instance
