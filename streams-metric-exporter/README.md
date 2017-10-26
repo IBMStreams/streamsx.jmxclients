@@ -86,11 +86,13 @@ Usage: <main class> [options]
 ## Endpoint
 ```/prometheus```
 ## prometheus.yml
+```
   - job_name: "ibmstreams"
     scrape_interval: "15s"
     metrics_path: "/prometheus"
     static_configs:
     - targets: ['localhost:25500']
+```
 ## metric names
 The set of metrics exposed in continuously increasing as this is active development
 The metric names chosen for this endpoint are a hybrid of prometheus naming conventions and the pre-defined metrics of IBMStreams.
@@ -110,8 +112,25 @@ operatorname
 inputportname
 outputportname
 ```
+## Prometheus endpoing examples
+```
+ # HELP streams_instance_jobCount Number of jobs currently deployed into the streams instance
+ # TYPE streams_instance_jobCount gauge
+ streams_instance_jobCount{instancename="StreamsInstance",} 3.0
+
+ # HELP streams_job_pecount Number of pes deployed for this job
+ # TYPE streams_job_pecount gauge
+ streams_job_pecount{instancename="StreamsInstance",jobname="MultiPEJob",} 2.0
+
+ # HELP streams_operator_ip_nTuplesProcessed Streams operator input port metric: nTuplesProcessed
+ # TYPE streams_operator_ip_nTuplesProcessed gauge
+ streams_operator_ip_nTuplesProcessed{instancename="StreamsInstance",jobname="CompositeJob",operatorname="SubCompositeToMain.SubCompFunctor",inputportname="SubCompIn",} 1227489.0
+
+```
+
 # Grafana Examples
 See the dashboards directory
+![Grafana Example[(/images/StreamsGrafanaImage1.png)
 
 # Cached REST endpoints
 ## /instance
