@@ -1,4 +1,4 @@
-package streams.prometheus.exporter;
+package streams.metric.exporter;
 
 import junit.framework.Test;
 import junit.framework.TestCase;
