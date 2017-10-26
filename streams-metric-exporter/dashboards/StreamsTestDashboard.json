@@ -11,12 +11,6 @@
   ],
   "__requires": [
     {
-      "type": "panel",
-      "id": "dashlist",
-      "name": "Dashboard list",
-      "version": ""
-    },
-    {
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
@@ -33,18 +27,6 @@
       "id": "prometheus",
       "name": "Prometheus",
       "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "singlestat",
-      "name": "Singlestat",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "text",
-      "name": "Text",
-      "version": ""
     }
   ],
   "annotations": {
@@ -60,104 +42,81 @@
   "rows": [
     {
       "collapse": false,
-      "height": 136,
+      "height": 250,
       "panels": [
         {
-          "content": "# IBM Streams Prometheus Metrics Exporter",
-          "id": 8,
-          "mode": "markdown",
-          "span": 4,
-          "title": "Panel Title",
-          "type": "text"
-        },
-        {
-          "cacheTimeout": null,
-          "colorBackground": false,
-          "colorValue": true,
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
+          "aliasColors": {},
+          "bars": false,
           "datasource": "${DS_LOCALPROMETHEUS}",
-          "format": "none",
-          "gauge": {
-            "maxValue": 100,
-            "minValue": 0,
-            "show": false,
-            "thresholdLabels": false,
-            "thresholdMarkers": true
+          "fill": 1,
+          "id": 1,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "rightSide": false,
+            "show": true,
+            "total": false,
+            "values": false
           },
-          "id": 6,
-          "interval": null,
+          "lines": true,
+          "linewidth": 1,
           "links": [],
-          "mappingType": 1,
-          "mappingTypes": [
-            {
-              "name": "value to text",
-              "value": 1
-            },
-            {
-              "name": "range to text",
-              "value": 2
-            }
-          ],
-          "maxDataPoints": 100,
-          "nullPointMode": "connected",
-          "nullText": null,
-          "postfix": " ",
-          "postfixFontSize": "50%",
-          "prefix": "",
-          "prefixFontSize": "80%",
-          "rangeMaps": [
-            {
-              "from": "null",
-              "text": "N/A",
-              "to": "null"
-            }
-          ],
-          "span": 4,
-          "sparkline": {
-            "fillColor": "rgba(31, 118, 189, 0.18)",
-            "full": false,
-            "lineColor": "rgb(31, 120, 193)",
-            "show": true
-          },
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "span": 12,
+          "stack": false,
+          "steppedLine": false,
           "targets": [
             {
               "expr": "streams_instance_jobCount",
               "intervalFactor": 2,
               "legendFormat": "",
-              "metric": "streams_instance_jobcount",
+              "metric": "streams_instance_jobCount",
               "refId": "A",
-              "step": 20
+              "step": 2
             }
           ],
-          "thresholds": "",
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
           "title": "Job Count",
-          "type": "singlestat",
-          "valueFontSize": "70%",
-          "valueMaps": [
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
             {
-              "op": "=",
-              "text": "N/A",
-              "value": "null"
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
             }
-          ],
-          "valueName": "current"
-        },
-        {
-          "headings": true,
-          "id": 7,
-          "limit": 10,
-          "query": "",
-          "recent": false,
-          "search": false,
-          "span": 4,
-          "starred": true,
-          "tags": [],
-          "title": "Panel Title",
-          "type": "dashlist"
+          ]
         }
       ],
       "repeat": null,
@@ -387,7 +346,7 @@
           "points": false,
           "renderer": "flot",
           "seriesOverrides": [],
-          "span": 6,
+          "span": 12,
           "stack": false,
           "steppedLine": false,
           "targets": [
@@ -412,78 +371,6 @@
           "timeFrom": null,
           "timeShift": null,
           "title": "Job Max Congestion",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "datasource": "${DS_LOCALPROMETHEUS}",
-          "fill": 1,
-          "id": 5,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "hideZero": true,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "span": 6,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "rate(streams_operator_ip_nTuplesDropped[10m])",
-              "intervalFactor": 2,
-              "legendFormat": "{{jobname}}.{{operator}}.{{inputportname}}",
-              "refId": "A",
-              "step": 2
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Dropped Tuples",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -561,5 +448,5 @@
   },
   "timezone": "browser",
   "title": "Streams Test Dashboard",
-  "version": 11
+  "version": 7
 }
