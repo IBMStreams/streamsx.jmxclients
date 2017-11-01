@@ -46,6 +46,8 @@ import streams.metric.exporter.error.StreamsMonitorErrorCode;
 import streams.metric.exporter.error.StreamsMonitorException;
 import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.metrics.MetricsExporter;
+import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
+import streams.metric.exporter.metrics.PrometheusMetricsExporter;
 import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 /* Job Details including map of port names so metrics can have names for ports rather than just ids */
@@ -82,6 +84,9 @@ public class JobDetails implements NotificationListener {
 	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
 
 	/* Prometheus Metrics */
+	/* Temproary solution */
+	private MetricsExporter metricsExporter = new PrometheusMetricsExporter();
+	
 	/* _job_: summed for all PEs
 	 * _pe_ : metric for each pe !! NOT SURE WE SHOULD DO THIS, NO GOOOD LABEL
 	 * _operator_ : operator, label is the operator name
@@ -685,25 +690,26 @@ public class JobDetails implements NotificationListener {
 	private void createPrometheusMetrics() {
 		// Create standard metrics to get help text assigned
 		// All metrics do not have to be created, they will get default help text if not
-		MetricsExporter.createJobMetric("nCpuMilliseconds", "Sum of each pe metric: nCpuMilliseconds");
-		MetricsExporter.createJobMetric("nResidentMemoryConsumption", "Sum of each pe metric: nResidentMemoryConsumption");
-		MetricsExporter.createJobMetric("nMemoryConsumption", "Sum of each pe metric: nMemoryConsumption");
-		MetricsExporter.createJobMetric("avg_congestionFactor", "Average of all pe connection metric: congestionFactor");
-		MetricsExporter.createJobMetric("max_congestionFactor", "Maximum of all pe connection metric: congestionFactor");
-		MetricsExporter.createJobMetric("min_congestionFactor", "Minimum of all pe connection metric: congestionFactor");
-		MetricsExporter.createJobMetric("sum_congestionFactor", "Sum of each pe metric: congestionFactor (no value used by itself");
-		MetricsExporter.createJobMetric("pecount", "Number of pes deployed for this job");
+		metricsExporter.createStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB, "Sum of each pe metric: nCpuMilliseconds");
+		metricsExporter.createStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nResidentMemoryConsumption");
+		metricsExporter.createStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nMemoryConsumption");
+		metricsExporter.createStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB, "Average of all pe connection metric: congestionFactor");
+		metricsExporter.createStreamsMetric("max_congestionFactor", StreamsObjectType.JOB, "Maximum of all pe connection metric: congestionFactor");
+		metricsExporter.createStreamsMetric("min_congestionFactor", StreamsObjectType.JOB, "Minimum of all pe connection metric: congestionFactor");
+		metricsExporter.createStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB, "Sum of each pe metric: congestionFactor (no value used by itself");
+		metricsExporter.createStreamsMetric("pecount", StreamsObjectType.JOB, "Number of pes deployed for this job");
 	}
 
 	private void removePrometheusMetrics() {
-		MetricsExporter.removeJobMetric("nCpuMilliseconds",this.streamsInstanceName,name);
-		MetricsExporter.removeJobMetric("nResidentMemoryConsumption",this.streamsInstanceName,name);
-		MetricsExporter.removeJobMetric("nMemoryConsumption",this.streamsInstanceName,name);
-		MetricsExporter.removeJobMetric("avg_congestionFactor",this.streamsInstanceName,name);
-		MetricsExporter.removeJobMetric("max_congestionFactor",this.streamsInstanceName,name);	
-		MetricsExporter.removeJobMetric("sum_congestionFactor",this.streamsInstanceName,name);	
-		MetricsExporter.removeJobMetric("min_congestionFactor",this.streamsInstanceName,name);	
-		MetricsExporter.removeJobMetric("pecount", this.streamsInstanceName,name);
+		metricsExporter.removeAllChildStreamsMetrics(this.streamsInstanceName,name);
+//		metricsExporter.removeStreamsMetric("nCpuMilliseconds",StreamsObjectType.JOB, this.streamsInstanceName,name);
+//		metricsExporter.removeStreamsMetric("nResidentMemoryConsumption",StreamsObjectType.JOB,this.streamsInstanceName,name);
+//		metricsExporter.removeStreamsMetric("nMemoryConsumption",StreamsObjectType.JOB,this.streamsInstanceName,name);
+//		metricsExporter.removeStreamsMetric("avg_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);
+//		metricsExporter.removeStreamsMetric("max_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);	
+//		metricsExporter.removeStreamsMetric("sum_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);	
+//		metricsExporter.removeStreamsMetric("min_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);	
+//		metricsExporter.removeStreamsMetric("pecount",StreamsObjectType.JOB, this.streamsInstanceName,name);
 	}
 	private void updatePrometheusMetrics() {
 		/* Use this.jobMetrics to update the prometheus metrics */
@@ -784,7 +790,8 @@ public class JobDetails implements NotificationListener {
 //										", " + name +
 //										", " + operatorName +
 //										" to: " + metric.get("value"));
-								MetricsExporter.getOperatorMetric(operatorMetricName,
+								metricsExporter.getStreamsMetric(operatorMetricName,
+										StreamsObjectType.OPERATOR,
 										this.streamsInstanceName,
 										name,
 										operatorName).set((long)metric.get("value"));
@@ -805,7 +812,8 @@ public class JobDetails implements NotificationListener {
 								String metricName = (String)metric.get("name");
 								switch (metricName) {
 								default:
-									MetricsExporter.getOperatorInputPortMetric(metricName,
+									metricsExporter.getStreamsMetric(metricName,
+											StreamsObjectType.OPERATOR_INPUTPORT,
 											this.streamsInstanceName,
 											name,
 											operatorName,
@@ -828,7 +836,8 @@ public class JobDetails implements NotificationListener {
 								String metricName = (String)metric.get("name");
 								switch (metricName) {
 								default:
-									MetricsExporter.getOperatorOutputPortMetric(metricName,
+									metricsExporter.getStreamsMetric(metricName,
+											StreamsObjectType.OPERATOR_OUTPUTPORT,
 											this.streamsInstanceName,
 											name,
 											operatorName,
@@ -840,18 +849,18 @@ public class JobDetails implements NotificationListener {
 						
 					} // End Operator Loop
 				} // End PE Loop
-				MetricsExporter.getJobMetric("pecount", this.streamsInstanceName, name).set(peArray.size());
-				MetricsExporter.getJobMetric("nCpuMilliseconds", this.streamsInstanceName,name).set(ncpu);
-				MetricsExporter.getJobMetric("nResidentMemoryConsumption", this.streamsInstanceName,name).set(nrmc);
-				MetricsExporter.getJobMetric("nMemoryConsumption",this.streamsInstanceName,name).set(nmc);
+				metricsExporter.getStreamsMetric("pecount", StreamsObjectType.JOB,this.streamsInstanceName, name).set(peArray.size());
+				metricsExporter.getStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB, this.streamsInstanceName,name).set(ncpu);
+				metricsExporter.getStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, this.streamsInstanceName,name).set(nrmc);
+				metricsExporter.getStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB,this.streamsInstanceName,name).set(nmc);
 				if (numconnections > 0)
 					avgcongestion = totalcongestion / numconnections;
 				// else it was initialized to 0;
-				MetricsExporter.getJobMetric("sum_congestionFactor",this.streamsInstanceName, name).set(totalcongestion);
-				MetricsExporter.getJobMetric("avg_congestionFactor",this.streamsInstanceName,name).set(avgcongestion);
-				MetricsExporter.getJobMetric("max_congestionFactor",this.streamsInstanceName,name).set(maxcongestion);
+				metricsExporter.getStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName, name).set(totalcongestion);
+				metricsExporter.getStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName,name).set(avgcongestion);
+				metricsExporter.getStreamsMetric("max_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName,name).set(maxcongestion);
 				if (mincongestion == 999) mincongestion = 0;
-				MetricsExporter.getJobMetric("min_congestionFactor", this.streamsInstanceName,name).set(mincongestion);
+				metricsExporter.getStreamsMetric("min_congestionFactor", StreamsObjectType.JOB, this.streamsInstanceName,name).set(mincongestion);
 			} catch (ParseException e) {
 				throw new IllegalStateException(e);
 			}

@@ -9,8 +9,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import io.prometheus.client.Gauge;
 import streams.metric.exporter.metrics.MetricsExporter;
+import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
+import streams.metric.exporter.metrics.PrometheusMetricsExporter;
 
 /*
  * JobMap
@@ -28,19 +29,22 @@ public class JobMap {
     private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
 
     // Prometheus Metrics
+    // Temporary
+	private MetricsExporter metricsExporter = new PrometheusMetricsExporter();
+
 //    static final Gauge streams_instance_jobcount = Gauge.build()
 //    		.name("streams_instance_jobcount").help("Number of jobs in streams instance").register();
 
     public JobMap(String streamsInstanceName) {
     	this.streamsInstanceName = streamsInstanceName;
-    	MetricsExporter.createStreamsInstanceMetric("jobCount", "Number of jobs currently deployed into the streams instance");
+    	metricsExporter.createStreamsMetric("jobCount", StreamsObjectType.INSTANCE, "Number of jobs currently deployed into the streams instance");
     }
 	
     public synchronized void clear() {
     	jobMap.clear();
     	jobNameIndex.clear();
     	//streams_instance_jobcount.clear();
-		MetricsExporter.removeStreamsInstanceMetric("jobCount",this.streamsInstanceName);
+		metricsExporter.removeStreamsMetric("jobCount", StreamsObjectType.INSTANCE,this.streamsInstanceName);
 
     }
     
@@ -111,7 +115,7 @@ public class JobMap {
 		jobMap.put(jobid, details);
 		jobNameIndex.put(details.getName(), jobid);
 		//streams_instance_jobcount.set(size());
-		MetricsExporter.getStreamsInstanceMetric("jobCount", this.streamsInstanceName).set(size());
+		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.streamsInstanceName).set(size());
 
 
 	}
@@ -124,7 +128,7 @@ public class JobMap {
         // Need to remove it from the jobNameIndex
         jobNameIndex.values().removeAll(Collections.singleton(jobid));
         //streams_instance_jobcount.set(size());
-		MetricsExporter.getStreamsInstanceMetric("jobCount", this.streamsInstanceName).set(size());
+		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.streamsInstanceName).set(size());
 
     }
     

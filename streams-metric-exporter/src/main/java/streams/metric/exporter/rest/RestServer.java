@@ -59,7 +59,7 @@ public class RestServer {
         WebappContext context = new WebappContext("WebappContext","");
         ServletRegistration registration = context.addServlet("ServletContainer", ServletContainer.class);
         registration.setInitParameter("jersey.config.server.provider.packages",
-        		"streams.prometheus.exporter.rest.resources;streams.prometheus.exporter.rest.errorhandling;streams.prometheus.exporter.rest.serializers");
+        		"streams.metric.exporter.rest.resources;streams.metric.exporter.rest.errorhandling;streams.metric.exporter.rest.serializers");
         registration.addMapping("/*");
         
         theServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri));
