@@ -1,4 +1,4 @@
-package streams.metric.exporter.metrics;
+package streams.metric.exporter.prometheus;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,7 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import io.prometheus.client.Gauge;
-import streams.metric.exporter.metrics.MetricsExporter.Metric;
+import streams.metric.exporter.metrics.MetricsExporter;
+
 
 public class PrometheusMetricsExporter extends MetricsExporter {
 	static final Map<String, Gauge> gaugeMap = new HashMap<String, Gauge>();	
@@ -37,9 +38,9 @@ public class PrometheusMetricsExporter extends MetricsExporter {
 		Iterator<Metric> it = metricsToRemove.iterator();
 		while (it.hasNext()) {
 			Metric metric = it.next();
-			if (gaugeMap.containsKey(metric.name)) {
-				Gauge g = gaugeMap.get(metric.name);
-				g.remove((String[])metric.labelValues.toArray());
+			if (gaugeMap.containsKey(metric.getName())) {
+				Gauge g = gaugeMap.get(metric.getName());
+				g.remove((String[])metric.getLabelValues().toArray());
 			}
 		}		
 	}

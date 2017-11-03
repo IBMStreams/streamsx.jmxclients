@@ -1,12 +1,9 @@
 package streams.metric.exporter.streamstracker.job;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
 import java.lang.reflect.UndeclaredThrowableException;
 import java.math.BigInteger;
-import java.net.URL;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,11 +16,6 @@ import javax.management.Notification;
 import javax.management.NotificationFilterSupport;
 import javax.management.NotificationListener;
 import javax.management.ObjectName;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,14 +32,12 @@ import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
 import com.ibm.streams.management.job.OperatorOutputPortMXBean;
 
-import io.prometheus.client.Counter;
-import io.prometheus.client.Gauge;
 import streams.metric.exporter.error.StreamsMonitorErrorCode;
 import streams.metric.exporter.error.StreamsMonitorException;
 import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
-import streams.metric.exporter.metrics.PrometheusMetricsExporter;
+import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
 import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 /* Job Details including map of port names so metrics can have names for ports rather than just ids */
@@ -83,33 +73,11 @@ public class JobDetails implements NotificationListener {
 	private final Map<String, Map<Integer, String>> operatorInputPortNames = new HashMap<String, Map<Integer, String>>();
 	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
 
-	/* Prometheus Metrics */
-	/* Temproary solution */
+	/* Metrics Exporter*/
+	/* Temporary solution: always use Prometheus exporter */
+	/* Future: Make this pluggable, add Elasticsearch exporter */
 	private MetricsExporter metricsExporter = new PrometheusMetricsExporter();
 	
-	/* _job_: summed for all PEs
-	 * _pe_ : metric for each pe !! NOT SURE WE SHOULD DO THIS, NO GOOOD LABEL
-	 * _operator_ : operator, label is the operator name
-	 * _operator_ip_ : operator input port, label is port name
-	 * _operator_op_ : operator output port, label is port name
-	 * 
-	 * We violate prometheus name convention and use streams metric name
-	 * because it is easier for streams developers to keep consistent
-	 * 
-	 * We use guage in many cases because counters do not have a .set() method
-	 * and we get the current value from streams, not a delta.
-	 */
-//	static final Gauge streams_job_nCpuMilliseconds = Gauge.build().name("streams_job_nCpuMilliseconds")
-//			.help("Number of CPU Milliseconds total for all PEs in job").labelNames("jobname").register();
-//	static final Gauge streams_job_nResidentMemoryConsumption = Gauge.build().name("streams_job_nResidentMemoryConsumption")
-//			.help("Resident Memory total for all PEs in job").labelNames("jobname").register();
-//	static final Gauge streams_job_nMemoryConsumption = Gauge.build().name("streams_job_nMemoryConsumption")
-//			.help("Memory total for all PEs in job").labelNames("jobname").register();
-//	static final Gauge streams_job_avg_congestionFactor = Gauge.build().name("streams_job_avg_congestionFactor")
-//			.help("Averge congestion factor for all connetions in job").labelNames("jobname").register();
-//	static final Gauge streams_job_max_congestionFactor = Gauge.build().name("streams_job_max_congestionFactor")
-//			.help("Maximum congestion factor for all connections in job").labelNames("jobname").register();
-
 	public JobDetails(StreamsInstanceTracker monitor, BigInteger jobid, JobMXBean jobBean) {
 		this.monitor = monitor;
 
@@ -124,7 +92,7 @@ public class JobDetails implements NotificationListener {
 		setJobBean(jobBean);
 		setStatus(JobMXBean.Status.UNKNOWN);
 		setJobMetrics(null);
-		createPrometheusMetrics();
+		createExportedMetrics();
 
 		MXBeanSource beanSource = null;
 		MBeanServerConnection mbsc = null;
@@ -137,7 +105,8 @@ public class JobDetails implements NotificationListener {
 
 			throw new IllegalStateException(e);
 		}
-
+		
+		this.setName(jobBean.getName());
 		this.setStatus(jobBean.getStatus());
 		this.setAdlFile(jobBean.getAdlFile());
 		this.setApplicationName(jobBean.getApplicationName());
@@ -149,7 +118,6 @@ public class JobDetails implements NotificationListener {
 		this.setHealth(jobBean.getHealth());
 		this.setInstance(jobBean.getInstance());
 		this.setJobGroup(jobBean.getJobGroup());
-		this.setName(jobBean.getName());
 		this.setOutputPath(jobBean.getOutputPath());
 		this.setStartedByUser(jobBean.getStartedByUser());
 		this.setSubmitTime(jobBean.getSubmitTime());
@@ -182,7 +150,7 @@ public class JobDetails implements NotificationListener {
 	
 	/* Stop/unregister anything you need to */
 	public void close() {
-		removePrometheusMetrics();
+		removeExportedMetrics();
 	}
 
 	public BigInteger getJobid() {
@@ -206,10 +174,9 @@ public class JobDetails implements NotificationListener {
 	}
 
 	public void setJobMetrics(String jobMetrics) {
-		//this.jobMetrics = jobMetrics;
-		// Try setting to a version with port names resolved
+		// Resolve portnames and store locally
 		this.jobMetrics = resolvePortNames(jobMetrics);
-		updatePrometheusMetrics();
+		updateExportedMetrics();
 	}
 
 	public JobMXBean.Status getStatus() {
@@ -306,6 +273,8 @@ public class JobDetails implements NotificationListener {
 
 	public void setHealth(JobMXBean.Health health) {
 		this.health = health;
+		metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.streamsInstanceName, this.name).set((this.getHealth() == JobMXBean.Health.HEALTHY?1:0));
+
 	}
 
 	public String getInstance() {
@@ -430,7 +399,7 @@ public class JobDetails implements NotificationListener {
 						"*    It was an " + t.getClass() + " which was unexpected, throw original undeclarable...");
 				throw e;
 			}
-		}
+		}		
 	}
 
 	@Override
@@ -559,7 +528,7 @@ public class JobDetails implements NotificationListener {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	//@SuppressWarnings("unchecked")
 	private void mapOperatorInputPortNames(MXBeanSource beanSource, String operatorName, Set<Integer> inputPorts) {
 		for (Integer portIndex : inputPorts) {
 			OperatorInputPortMXBean bean = beanSource.getOperatorInputPortMXBean(getDomain(), getInstance(), getJobid(),
@@ -576,7 +545,7 @@ public class JobDetails implements NotificationListener {
 		}
 	}
 
-	@SuppressWarnings("unchecked")
+	//@SuppressWarnings("unchecked")
 	private void mapOperatorOutputPortNames(MXBeanSource beanSource, String operatorName, Set<Integer> outputPorts) {
 		for (Integer portIndex : outputPorts) {
 			OperatorOutputPortMXBean bean = beanSource.getOperatorOutputPortMXBean(getDomain(), getInstance(),
@@ -687,9 +656,13 @@ public class JobDetails implements NotificationListener {
 		return ((Number) port.get("indexWithinOperator")).intValue();
 	}
 	
-	private void createPrometheusMetrics() {
-		// Create standard metrics to get help text assigned
-		// All metrics do not have to be created, they will get default help text if not
+	private void createExportedMetrics() {
+		// Create our own metrics that will be aggregates of Streams metrics
+	    // Operator, Operator InputPort, and Operator OUtputPort metrics
+		// are automatically created based on metrics discovered in json
+		// job health
+		metricsExporter.createStreamsMetric("healthy", StreamsObjectType.JOB, "Job health, set to 1 of job is healthy else 0");
+		// job metrics
 		metricsExporter.createStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB, "Sum of each pe metric: nCpuMilliseconds");
 		metricsExporter.createStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nResidentMemoryConsumption");
 		metricsExporter.createStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nMemoryConsumption");
@@ -700,19 +673,21 @@ public class JobDetails implements NotificationListener {
 		metricsExporter.createStreamsMetric("pecount", StreamsObjectType.JOB, "Number of pes deployed for this job");
 	}
 
-	private void removePrometheusMetrics() {
+	private void removeExportedMetrics() {
+		// When this job is removed, remove all metrics for this job
+		// (really its the specific instance of the metric for the streams objects of this job)
 		metricsExporter.removeAllChildStreamsMetrics(this.streamsInstanceName,name);
-//		metricsExporter.removeStreamsMetric("nCpuMilliseconds",StreamsObjectType.JOB, this.streamsInstanceName,name);
-//		metricsExporter.removeStreamsMetric("nResidentMemoryConsumption",StreamsObjectType.JOB,this.streamsInstanceName,name);
-//		metricsExporter.removeStreamsMetric("nMemoryConsumption",StreamsObjectType.JOB,this.streamsInstanceName,name);
-//		metricsExporter.removeStreamsMetric("avg_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);
-//		metricsExporter.removeStreamsMetric("max_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);	
-//		metricsExporter.removeStreamsMetric("sum_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);	
-//		metricsExporter.removeStreamsMetric("min_congestionFactor",StreamsObjectType.JOB,this.streamsInstanceName,name);	
-//		metricsExporter.removeStreamsMetric("pecount",StreamsObjectType.JOB, this.streamsInstanceName,name);
 	}
-	private void updatePrometheusMetrics() {
-		/* Use this.jobMetrics to update the prometheus metrics */
+	private void updateExportedMetrics() {
+		/* Use this.jobMetrics to update the exported metrics */
+		/* Some will be auto created, others we will control and aggregate */
+		/* Specifically, we aggregate PE metrics to the job level */
+		/* As the purpose of this is application metrics, PE level are not */
+		/* understandable by operators, and future versions of streams */
+		/* may create/remove pes automatically, and that would drive */
+		/* a metric graphing tool crazy */
+		
+		/* Use SimpleJSON, it tests out pretty fast and easy to use */
 		if (this.jobMetrics != null) {
 
 			JSONParser parser = new JSONParser();

@@ -1,38 +1,17 @@
 package streams.metric.exporter.streamstracker.metrics;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
 import java.lang.reflect.UndeclaredThrowableException;
-import java.math.BigInteger;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.Format;
 import java.text.SimpleDateFormat;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Date;
-import java.security.GeneralSecurityException;
-
 import org.apache.commons.lang.time.StopWatch;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.annotation.JsonRawValue;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
-import com.ibm.streams.management.job.OperatorInputPortMXBean;
-import com.ibm.streams.management.job.OperatorOutputPortMXBean;
-
 import streams.metric.exporter.error.StreamsMonitorException;
 import streams.metric.exporter.httpclient.WebClientException;
 import streams.metric.exporter.jmx.JmxServiceContext;
@@ -123,7 +102,7 @@ public class AllJobMetrics {
 
         StopWatch stopwatch = null;
         LinkedHashMap<String, Long> timers = null;
-        if (LOGGER.isDebugEnabled()) {
+        if (LOGGER.isTraceEnabled()) {
             stopwatch = new StopWatch();
             timers = new LinkedHashMap<String, Long>();
             stopwatch.reset();
@@ -159,9 +138,9 @@ public class AllJobMetrics {
                     throw e;
                 }
             }
-            if (LOGGER.isDebugEnabled()) {
+            if (LOGGER.isTraceEnabled()) {
                 stopwatch.stop();
-                timers.put("snapshotJobMetrics", stopwatch.getTime());
+                timers.put("jmx call to snapshotJobMetrics", stopwatch.getTime());
             }
 
         } catch (IOException e) {
@@ -174,7 +153,7 @@ public class AllJobMetrics {
 
         }
 
-        if (LOGGER.isDebugEnabled()) {
+        if (LOGGER.isTraceEnabled()) {
             stopwatch.reset();
             stopwatch.start();
         }
@@ -187,9 +166,9 @@ public class AllJobMetrics {
             this.setLastMetricsRefresh(new Date());
             this.setLastMetricsRefreshFailed(false);
 
-            if (LOGGER.isDebugEnabled()) {
+            if (LOGGER.isTraceEnabled()) {
                 stopwatch.stop();
-                timers.put("connect and retrieve metrics", stopwatch.getTime());
+                timers.put("connect jmx(http server) and retrieve metrics", stopwatch.getTime());
             }
 
         } catch (WebClientException e) {
@@ -200,13 +179,13 @@ public class AllJobMetrics {
             throw new StreamsMonitorException(e);
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Profiling for AllMetrics Refresh");
-            LOGGER.debug("Time (seconds) since last refresh: "
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Profiling for AllMetrics Refresh");
+            LOGGER.trace("Time (seconds) since last refresh: "
                     + ((this.lastMetricsRefresh.getTime() - previousRefresh
                             .getTime()) / 1000));
             for (Map.Entry<String, Long> entry : timers.entrySet()) {
-                LOGGER.debug("Timing for " + entry.getKey() + ": "
+                LOGGER.trace("Timing for " + entry.getKey() + ": "
                         + entry.getValue());
             }
         }

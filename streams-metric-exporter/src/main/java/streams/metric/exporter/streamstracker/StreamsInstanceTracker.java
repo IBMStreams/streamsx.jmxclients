@@ -44,6 +44,9 @@ import streams.metric.exporter.error.StreamsMonitorException;
 import streams.metric.exporter.jmx.JmxServiceContext;
 import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.jmx.MXBeanSourceProviderListener;
+import streams.metric.exporter.metrics.MetricsExporter;
+import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
+import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
 import streams.metric.exporter.streamstracker.instance.InstanceInfo;
 import streams.metric.exporter.streamstracker.job.JobDetails;
 import streams.metric.exporter.streamstracker.job.JobInfo;
@@ -54,7 +57,7 @@ import com.ibm.streams.management.Metric;
 import com.ibm.streams.management.Notifications;
 
 /*
- * StreamsInstanceJobMonitor
+ * StreamsInstanceTracker
  * 	Listens for Instance notifications to help update its status
  *  Has a periodic refresh() to also update status and retrieve periodic items (e.g. allJobMetrics)
  *  
@@ -96,6 +99,12 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
     private final Map<String, Map<String, Long>> instanceResourceMetrics = new HashMap<String, Map<String, Long>>();
     private Long instanceResourceMetricsLastUpdated = null;
+    
+    /*****************************************
+     * Metrics Exporter for non REST JSON 
+     **************************************/
+    // Future change to plugin
+	private MetricsExporter metricsExporter = new PrometheusMetricsExporter();
 
     /*****************************************
      * JOB MAP and INDEXES
@@ -209,7 +218,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
         // Create timer to automatically refresh the status and metrics
         Timer timer = new Timer("Refresher");
-        timer.scheduleAtFixedRate(refresher, refreshRateSeconds * 1000,
+        timer.scheduleAtFixedRate(refresher, this.refreshRateSeconds * 1000,
                 refreshRateSeconds * 1000);
 
     }
@@ -251,6 +260,10 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
     }
 
+    public MetricsExporter getMetricsExporter() {
+    	return metricsExporter;
+    }
+    
     public JmxServiceContext getContext() {
         return jmxContext;
     }
@@ -307,10 +320,16 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         }
     }
 
+    
+    /* Get Resource Metrics */
+    /* FUTURE: need to be notified of resources coming and going */
+    /* For now, we will quickly just use a delta between this time and last time */
     private synchronized void updateInstanceResourceMetrics() throws StreamsMonitorException {
         verifyInstanceExists();
 
         MXBeanSource beanSource = null;
+        
+        Map<String, Map<String, Long>> prevInstanceResourceMetrics = new HashMap<String, Map<String, Long>>(instanceResourceMetrics);
                 
         try {
             beanSource = jmxContext.getBeanSourceProvider().getBeanSource();
@@ -319,18 +338,16 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                 this.instanceInfo.getInstanceName());
 
             Map<String, Set<Metric>> jmxResourceMetrics = instance.retrieveResourceMetrics(false);
-
             instanceResourceMetrics.clear();
             for (Map.Entry<String, Set<Metric>> jmxEntry : jmxResourceMetrics.entrySet()) {
                 Map<String, Long> metrics = new HashMap<String, Long>();
-
                 for (Metric m : jmxEntry.getValue()) {
                     metrics.put(m.getName(), m.getValue());
                 }
 
                 instanceResourceMetrics.put(jmxEntry.getKey(), metrics);
             }
-
+            
             instanceResourceMetricsLastUpdated = System.currentTimeMillis();
         }
         catch (MalformedURLException me) {
@@ -338,6 +355,23 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         }
         catch (IOException ioe) {
             throw new StreamsMonitorException("JMX IO Exception when retrieving instance bean", ioe);
+        }
+        
+        /* Process resource metrics for export */
+        // Loop through old list and remove any not in the new list
+        for (String key : prevInstanceResourceMetrics.keySet()) {
+        	if (!instanceResourceMetrics.containsKey(key))
+        		metricsExporter.removeAllChildStreamsMetrics(this.instanceInfo.getInstanceName(),key);
+        }
+        // Set exiting and new ones
+        for (String resourceName : instanceResourceMetrics.keySet()) {
+        	Map<String,Long> rmap = instanceResourceMetrics.get(resourceName);
+        	for (String metricName : rmap.keySet()) {
+				metricsExporter.getStreamsMetric(metricName,
+						StreamsObjectType.RESOURCE,
+						this.instanceInfo.getInstanceName(),
+						resourceName).set((long)rmap.get(metricName));
+        	}
         }
     }
 
@@ -411,8 +445,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      * we need a way to recover and reset everything.
      */
     public synchronized void refresh() throws StreamsMonitorException {
-        // No longer need to update all job status because we should get
-        // notified
         LOGGER.trace("*** entering refresh()");
 				LOGGER.trace("    current state: isInstanceAvailable: {}, jobsAvailable: {}, metricsAvailable {}",this.instanceInfo.isInstanceAvailable(), jobsAvailable, metricsAvailable);
         
@@ -437,10 +469,11 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         		LOGGER.trace("*** Calling updateAllJobMetrics(true)");
             updateAllJobMetrics(true);
         }
-
+        
     }
 
-    String getProtocol() {
+
+	String getProtocol() {
         return protocol;
     }
 
@@ -850,21 +883,23 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         LOGGER.debug("** removeJobFromMap (jobid: " + jobid + ") time: "
                 + sw.getTime());
 
-    }
-
+    }   
+    
     /*
      * updateAllJobMetrics Need to use this to determine when JMX has been reset
      * so we invalidate the job beans
      */
     private synchronized void updateAllJobMetrics(boolean refreshFromServer)
             throws StreamsMonitorException {
-        LOGGER.trace("***** Entered updateAllJobMetrics, refreshFromServer {}",
-                refreshFromServer);
-        StopWatch sw = new StopWatch();
-
-        sw.reset();
-        sw.start();
+        LOGGER.trace("***** Entered updateAllJobMetrics, refreshFromServer {}, jobsAvailable {}",
+                refreshFromServer, jobsAvailable);
+        
         if (jobsAvailable) {
+            LOGGER.debug("** updateAllJobMetrics Start timer...");
+            StopWatch sw = new StopWatch();
+            sw.reset();
+            sw.start();
+            
             // Refresh Metrics if requested
             if (refreshFromServer) {
                 try {
@@ -874,6 +909,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                             + e.getLocalizedMessage());
                     resetMonitor();
                 }
+                sw.split();
+                LOGGER.debug("** updateAllJobMetrics refresh from server split time: " + sw.getSplitTime());
+                sw.unsplit();
             }
 
             if (allJobMetrics.isLastMetricsRefreshFailed()) {
@@ -899,10 +937,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                             JSONObject jobObject = (JSONObject) jobArray.get(j);
                             BigInteger jobId = new BigInteger(
                                     (String) jobObject.get("id"));
-                            // Have we seen this job before? If not thats a
-                            // problem
-                            // we
-                            // missed the notification
                             JobDetails jd = jobMap.getJob(Integer.parseInt((String)jobObject.get("id")));
                             if (jd != null) {
                                 jd.setJobMetrics(jobObject.toString());
@@ -927,10 +961,10 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                     }
                 }
             }
-
+            sw.stop();
+            LOGGER.debug("** updateAllJobMetrics time total (includes parsing) (milliseconds): " + sw.getTime());
         }
-        sw.stop();
-        LOGGER.trace("** updateAllJobMetrics time: " + sw.getTime());
+
 
         LOGGER.trace("Exited");
 

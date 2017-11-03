@@ -32,6 +32,7 @@ public abstract class MetricsExporter {
 	
 	public enum StreamsObjectType {
 		INSTANCE("streams_instance_", new String[] { "instancename" }),
+		RESOURCE("streams_resource_", new String[] { "instancename", "resource"}),
 		JOB("streams_job_",new String[] { "instancename", "jobname" }),
 		OPERATOR("streams_operator_",new String[] { "instancename", "jobname", "operatorname" }), 
 		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "instancename", "jobname", "operatorname", "inputportname" }), 
@@ -49,16 +50,18 @@ public abstract class MetricsExporter {
 			return metric_prefix;
 		}
 
-		String[] metricLabelNames() {
+		public String[] metricLabelNames() {
 			return labels;
 		}
 
-		String metricDescriptionPrefix() {
+		public String metricDescriptionPrefix() {
 			String description;
 			switch (this) {
 			case INSTANCE:
 				description = "Streams instance metric";
 				break;
+			case RESOURCE:
+				description = "Streams resource metric";
 			case JOB:
 				description = "Streams job metric";
 				break;
@@ -87,6 +90,14 @@ public abstract class MetricsExporter {
 		protected Metric(String name, List<String> labelValues) {
 			this.name = name;
 			this.labelValues = labelValues;
+		}
+		
+		public String getName() {
+			return name;
+		}
+
+		public List<String> getLabelValues() {
+			return labelValues;
 		}
 
 		abstract public void set(double val);

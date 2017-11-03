@@ -125,6 +125,21 @@ public class Launcher {
             System.exit(1);
         }
     }
+    
+    // If we cannot connect to the JMX Server at least once shutdown
+    // Once started, we allow for reconnection attempts, but if this fails
+    // it usually means the credentials or url are incorrect and should get
+    // fixed.
+    public boolean checkValidJMXConnection() {
+    	boolean success = true;
+        try {
+            MXBeanSource streamsBeanSource = connectionPool.getBeanSource();
+        } catch (IOException e) {
+            LOGGER.error("Inital JMX Connection Failed: ", e);
+            success = false;
+        }   
+        return success;
+    }
 
     private void startStreamsMonitor() {
         StopWatch sw = null;
@@ -140,18 +155,6 @@ public class Launcher {
         if (LOGGER.isDebugEnabled()) {
             sw.reset();
             sw.start();
-        }
-
-        // First attempt to connect to JMX
-        // If there is a problem, then we need to exit
-        // Retries are built in and handled by JmxConnectionPool, so no need
-        // to handle here
-        MXBeanSource streamsBeanSource = null;
-        try {
-            streamsBeanSource = connectionPool.getBeanSource();
-        } catch (IOException e) {
-            LOGGER.error("Inital JMX Connection Failed. Exiting Program", e);
-            System.exit(1);
         }
 
         LOGGER.info("...Connected");
@@ -217,10 +220,16 @@ public class Launcher {
             System.exit(0);
         }
 
-        LOGGER.debug("*** Settings ***\n" + config);
-
+        LOGGER.trace("*** Settings ***\n" + config);
         Launcher launcher = new Launcher(config);
-        launcher.startStreamsMonitor();
-        launcher.startRestServer();
+        if (launcher.checkValidJMXConnection()) {
+        	launcher.startRestServer();
+        	launcher.startStreamsMonitor();
+        } else {
+        	LOGGER.error("Initial JMX Connection failed.  Exiting Program.");
+        	System.out.println("Initial JMX Connection failed.  See log for details.");
+        	System.out.println("  Check status of Streams Domain and JMX Service");
+        	System.out.println("  Check JMX url and connection credentials");
+        }
     }
 }

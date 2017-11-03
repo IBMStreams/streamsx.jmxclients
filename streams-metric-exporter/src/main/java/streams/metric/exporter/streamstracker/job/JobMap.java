@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
-import streams.metric.exporter.metrics.PrometheusMetricsExporter;
+import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
 
 /*
  * JobMap
