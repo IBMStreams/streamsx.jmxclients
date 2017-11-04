@@ -1,3 +1,19 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package streams.metric.exporter.streamstracker.job;
 
 import java.io.IOException;
@@ -32,8 +48,8 @@ import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
 import com.ibm.streams.management.job.OperatorOutputPortMXBean;
 
-import streams.metric.exporter.error.StreamsMonitorErrorCode;
-import streams.metric.exporter.error.StreamsMonitorException;
+import streams.metric.exporter.error.StreamsTrackerErrorCode;
+import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
@@ -83,7 +99,7 @@ public class JobDetails implements NotificationListener {
 
 		try {
 			this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
-		} catch (StreamsMonitorException sme) {
+		} catch (StreamsTrackerException sme) {
 			String message = "jobDetails Constructor: Error getting streams instance name from monitor, setting to UNKNOWN.";
 			LOGGER.warn(message, sme);
 			this.streamsInstanceName = "UNKNOWN";
@@ -416,7 +432,7 @@ public class JobDetails implements NotificationListener {
 	 * getJobSnapshot: method to grab snapshot of job from JMX Server
 	 */
 
-	public String getSnapshot(int maximumDepth, boolean includeStaticAttributes) throws StreamsMonitorException {
+	public String getSnapshot(int maximumDepth, boolean includeStaticAttributes) throws StreamsTrackerException {
 
 		StringBuilder newSnapshot = new StringBuilder();
 
@@ -455,11 +471,11 @@ public class JobDetails implements NotificationListener {
 			LOGGER.warn("** job.snapshot JMX Interaction IOException **");
 			LOGGER.info("details", e);
 
-			throw new StreamsMonitorException(StreamsMonitorErrorCode.JMX_IOERROR,
+			throw new StreamsTrackerException(StreamsTrackerErrorCode.JMX_IOERROR,
 					"Unable to retrieve snapshots at this time.", e);
 
 		} catch (Exception e) {
-			throw new StreamsMonitorException(StreamsMonitorErrorCode.UNSPECIFIED_ERROR,
+			throw new StreamsTrackerException(StreamsTrackerErrorCode.UNSPECIFIED_ERROR,
 					"Unable to retrieve snapshots at this time.", e);
 		}
 
@@ -475,7 +491,7 @@ public class JobDetails implements NotificationListener {
 			timers.put("connect and retrieve snapshot", stopwatch.getTime());
 
 		} catch (Exception e) {
-			throw new StreamsMonitorException(StreamsMonitorErrorCode.UNSPECIFIED_ERROR,
+			throw new StreamsTrackerException(StreamsTrackerErrorCode.UNSPECIFIED_ERROR,
 					"Unable to retrieve snapshots at this time.", e);
 		}
 

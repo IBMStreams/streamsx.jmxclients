@@ -1,3 +1,19 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package streams.metric.exporter;
 
 import java.security.KeyStoreException;
@@ -19,7 +35,7 @@ import org.slf4j.LoggerFactory;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 
-import streams.metric.exporter.error.StreamsMonitorException;
+import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.httpclient.WebClient;
 import streams.metric.exporter.httpclient.WebClientImpl;
 import streams.metric.exporter.jmx.JmxConnectionPool;
@@ -46,8 +62,8 @@ public class Launcher {
     private JmxServiceContext jmxContext = null;
 
     private ServiceConfig config = null;
-    private StreamsInstanceTracker jobTracker = null;
-    private RestServer restServer = null;
+    static private StreamsInstanceTracker jobTracker = null;
+    static private RestServer restServer = null;
 
     public Launcher(ServiceConfig config) {
         this.config = config;
@@ -116,14 +132,16 @@ public class Launcher {
         };
     }
 
-    private void startRestServer() {
+    private boolean startRestServer() {
+    	LOGGER.info("Creating and starting HTTP Server...");
         try {
             restServer = new RestServer(config.getHost(), config.getPort(), config.getWebPath());
         } catch (Exception e) {
             LOGGER.error("REST Server failed to start !! NEED BETTER ERROR HANDLING !!", e);
-
-            System.exit(1);
+            return false;
         }
+        LOGGER.info("... HTTP Server Started");
+        return true;
     }
     
     // If we cannot connect to the JMX Server at least once shutdown
@@ -132,8 +150,10 @@ public class Launcher {
     // fixed.
     public boolean checkValidJMXConnection() {
     	boolean success = true;
+        LOGGER.info("Connecting to JMX Server {}...", new Object[] { config.getJmxUrl() });
         try {
             MXBeanSource streamsBeanSource = connectionPool.getBeanSource();
+            LOGGER.info("...Connected");
         } catch (IOException e) {
             LOGGER.error("Inital JMX Connection Failed: ", e);
             success = false;
@@ -141,38 +161,11 @@ public class Launcher {
         return success;
     }
 
-    private void startStreamsMonitor() {
+    private boolean startStreamsMonitor() {
+    	LOGGER.info("Creating and starting Streams Tracker...");
         StopWatch sw = null;
-        LinkedHashMap<String, Long> timers = null;
         if (LOGGER.isDebugEnabled()) {
             sw = new StopWatch();
-            // Create hashMap for timing Stuff
-            timers = new LinkedHashMap<String, Long>();
-        }
-
-        LOGGER.info("Connecting to JMX Server {}...", new Object[] { config.getJmxUrl() });
-
-        if (LOGGER.isDebugEnabled()) {
-            sw.reset();
-            sw.start();
-        }
-
-        LOGGER.info("...Connected");
-
-        if (LOGGER.isDebugEnabled()) {
-            sw.stop();
-            timers.put("Connect", sw.getTime());
-
-            LOGGER.debug("Debug Profiling of StreamsJMXServer");
-            for (Map.Entry<String, Long> entry : timers.entrySet()) {
-                LOGGER.debug("Timing for " + entry.getKey() + ": "
-                        + entry.getValue());
-            }
-        }
-
-        if (LOGGER.isDebugEnabled()) {
-            timers.clear();
-
             sw.reset();
             sw.start();
         }
@@ -181,24 +174,18 @@ public class Launcher {
             jobTracker = StreamsInstanceTracker.initInstance(
                     jmxContext, config.getDomainName(), config.getInstanceName(),
                     config.getRefreshRateSeconds(), config.getProtocol());
-        } catch (StreamsMonitorException e) {
-            LOGGER.error("Could not construct the StreamsInstanceJobMonitor", e);
-
-            System.exit(1);
+        } catch (StreamsTrackerException e) {
+            LOGGER.error("Could not construct the StreamsInstanceJobMonitor, Exit!", e);
+            return false;
         }
 
         if (LOGGER.isDebugEnabled()) {
             sw.stop();
-            timers.put("startStreamsMonitor", sw.getTime());
-
-            LOGGER.debug("Debug Profiling of StreamsJMXServer");
-
-            for (Map.Entry<String, Long> entry : timers.entrySet()) {
-                LOGGER.debug("Timing for " + entry.getKey() + ": "
-                        + entry.getValue());
-            }
+            LOGGER.debug("Timing for initial startup of StreamsInstanceTracker (milliseconds): " + sw.getTime()) ;
         }
-
+        
+        LOGGER.info("...Streams Tracker started.");
+        return true;
     }
 
 
@@ -223,8 +210,18 @@ public class Launcher {
         LOGGER.trace("*** Settings ***\n" + config);
         Launcher launcher = new Launcher(config);
         if (launcher.checkValidJMXConnection()) {
-        	launcher.startRestServer();
-        	launcher.startStreamsMonitor();
+        	if (launcher.startRestServer()) {
+        		if (launcher.startStreamsMonitor()) {
+        			LOGGER.info("Streams Metric Exporter running.");
+        		} else {
+        			LOGGER.error("Startup of Streams Tracker failed, Exiting Program.");
+        			restServer.stopServer();
+        			System.exit(1);
+        		}
+        	} else {
+        		LOGGER.error("Startup of HTTP Server failed, Exiting Program.");
+        		System.exit(1);
+        	}
         } else {
         	LOGGER.error("Initial JMX Connection failed.  Exiting Program.");
         	System.out.println("Initial JMX Connection failed.  See log for details.");

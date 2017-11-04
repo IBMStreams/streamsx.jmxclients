@@ -1,3 +1,19 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package streams.metric.exporter.jmx;
 
 import java.io.File;
@@ -270,8 +286,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                 // If can retry, then wait a bit
                 if (needToRetry && canRetry) {
                     LOGGER.info(
-                            "Retrying initial JMX connection in {0} seconds...",
-                            startRetryDelay);
+                            "Retrying initial JMX connection in " + startRetryDelay + " seconds...");
                     try {
                         Thread.sleep(startRetryDelay * 1000);
                     } catch (InterruptedException e) {
@@ -329,7 +344,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
 
             LOGGER.trace("***** initNetworkConnection, Created JMX ConnectonID: "
                     + mConnectionId);
-
+            LOGGER.info("*** JMX Connection Success");
         }
 
         /**
@@ -344,16 +359,14 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                         initNetworkConnection();
                     } catch (Exception e) {
                         LOGGER.warn(
-                                "** Failed to reconnect to JMX Server. > {0}",
-                                e.getMessage());
+                                "** Failed to reconnect to JMX Server. > " + e.getMessage());
                         scheduleReconnect();
                     }
                 }
             };
 
             LOGGER.info(
-                    "** Delaying JMX reconnection. Trying again in {0} seconds",
-                    reconnectionDelay);
+                    "*** Delaying JMX reconnection. Trying again in " + reconnectionDelay + " seconds");
 
             // Create timer to automatically refresh the status and metrics
             Timer timer = new Timer("JMXReconnection");

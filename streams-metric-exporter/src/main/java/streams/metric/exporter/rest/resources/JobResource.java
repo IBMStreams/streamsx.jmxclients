@@ -1,3 +1,19 @@
+// Licensed to the Apache Software Foundation (ASF) under one
+// or more contributor license agreements.  See the NOTICE file
+// distributed with this work for additional information
+// regarding copyright ownership.  The ASF licenses this file
+// to you under the Apache License, Version 2.0 (the
+// "License"); you may not use this file except in compliance
+// with the License.  You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package streams.metric.exporter.rest.resources;
 
 import java.util.Date;
@@ -21,7 +37,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import streams.metric.exporter.error.StreamsMonitorException;
+import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
@@ -46,7 +62,7 @@ public class JobResource {
     @Path("status")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getJobStatus() throws StreamsMonitorException,
+    public Response getJobStatus() throws StreamsTrackerException,
             WebApplicationException, JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
 
@@ -59,7 +75,7 @@ public class JobResource {
     @Path("health")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getJobHealth() throws StreamsMonitorException,
+    public Response getJobHealth() throws StreamsTrackerException,
             WebApplicationException, JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
 
@@ -76,7 +92,7 @@ public class JobResource {
     public Response getJobSnapshot(
             @DefaultValue("1") @QueryParam("depth") int maximumDepth,
             @DefaultValue("true") @QueryParam("static") boolean includeStaticAttributes)
-            throws StreamsMonitorException, WebApplicationException {
+            throws StreamsTrackerException, WebApplicationException {
 
         StreamsInstanceTracker jobTracker = StreamsInstanceTracker
                 .getInstance();
@@ -97,7 +113,7 @@ public class JobResource {
     @Path("metrics")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getJobMetrics() throws StreamsMonitorException,
+    public Response getJobMetrics() throws StreamsTrackerException,
             WebApplicationException, JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
 
