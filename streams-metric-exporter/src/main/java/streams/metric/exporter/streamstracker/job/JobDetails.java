@@ -526,7 +526,7 @@ public class JobDetails implements NotificationListener {
 			} catch (IOException e) {
 				// Assuming this means that JMX connection was lost, mark
 				// everything as unavailable
-				monitor.resetMonitor();
+				monitor.resetTracker();
 			}
 
 			break;

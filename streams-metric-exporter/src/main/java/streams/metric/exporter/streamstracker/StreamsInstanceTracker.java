@@ -462,27 +462,28 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      */
     public synchronized void refresh() throws StreamsTrackerException {
         LOGGER.trace("*** entering refresh()");
-				LOGGER.trace("    current state: isInstanceAvailable: {}, jobsAvailable: {}, metricsAvailable {}",this.instanceInfo.isInstanceAvailable(), jobsAvailable, metricsAvailable);
+		LOGGER.trace("    current state: isInstanceAvailable: {}, jobsAvailable: {}, metricsAvailable {}",this.instanceInfo.isInstanceAvailable(), jobsAvailable, metricsAvailable);
         
         if (!this.instanceInfo.isInstanceAvailable()) {
-        		LOGGER.trace("*** Calling initStreamsInstance()");
+        	LOGGER.trace("*** Calling initStreamsInstance()");
             initStreamsInstance();
         }
 
         if (instanceInfo.isInstanceAvailable()) {
-        		LOGGER.trace("*** Calling updateInstanceResourceMetrics()");
+        	LOGGER.trace("*** Calling updateInstanceResourceMetrics()");
+        	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(jobMap.size());
             updateInstanceResourceMetrics();
         }
 
         // Need to know if instance was unavailable on previous run so we
         // re-initialize jobs
         if (!jobsAvailable) {
-        		LOGGER.trace("*** Calling initAllJobs()");
+        	LOGGER.trace("*** Calling initAllJobs()");
             initAllJobs();
         }
 
         if (metricsAvailable) {
-        		LOGGER.trace("*** Calling updateAllJobMetrics(true)");
+        	LOGGER.trace("*** Calling updateAllJobMetrics(true)");
             updateAllJobMetrics(true);
         }
         
@@ -499,7 +500,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      * metrics are re-initialized and brought back into consistency with
      * Streams.
      */
-    public synchronized void resetMonitor() {
+    public synchronized void resetTracker() {
         this.instanceInfo.setInstanceAvailable(false);
         this.jobsAvailable = false;
         this.metricsAvailable = false;
@@ -508,14 +509,18 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         	this.allJobMetrics.setLastMetricsFailure(new Date());
         	this.allJobMetrics.setLastMetricsRefreshFailed(true);
         }
+        removeExportedInstanceMetrics();
+        createExportedInstanceMetrics();
     }
 
     /*
      * clearMonitor In the case that the Streams instance is stopped/fails we
      * will not be able to recover the metrics or jobs so clear them out
      */
-    private synchronized void clearMonitor() {
+    private synchronized void clearTracker() {
         instanceResourceMetrics.clear();
+        removeExportedInstanceMetrics();
+        createExportedInstanceMetrics();
         this.allJobMetrics.clear();
         this.jobMap.clear();
     }
@@ -547,7 +552,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                 LOGGER.warn(
                         "Instance '{}' not found.  Continuing assuming it will be created in the future",
                         this.instanceInfo.getInstanceName());
-                resetMonitor();
+                resetTracker();
                 return;
             }
 
@@ -563,7 +568,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                         "Instance '{}' found, but is not started.  Current Status: {}",
                         new Object[] { this.instanceInfo.getInstanceName(),
                                 this.instanceInfo.getInstanceStatus() });
-                resetMonitor();
+                resetTracker();
                 return;
             } else {
                 // Force jobs and metrics to initialize by setting instance as
@@ -611,7 +616,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                         "Instance '{}' not found when initializing.  Continuing assuming it will be created in the future",
                         this.instanceInfo.getInstanceName());
                 this.instanceInfo.setInstanceExists(false);
-                resetMonitor();
+                resetTracker();
             } else {
                 LOGGER.trace("Unexpected exception ("
                         + t.getClass()
@@ -626,19 +631,20 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                     "Instance '{}' not found when initializing.  Continuing assuming it will be created in the future",
                     this.instanceInfo.getInstanceName());
             this.instanceInfo.setInstanceExists(false);
-            resetMonitor();
+            resetTracker();
             // throw new StreamsMonitorException("Instance MXBean not found when
             // initializing instance");
         } catch (MalformedURLException me) {
-            resetMonitor();
+            resetTracker();
             throw new StreamsTrackerException(
                     "Invalid JMX URL when initializing instance", me);
         } catch (IOException ioe) {
             // JMX Error, cannot initialize streams instance so ensure state
             // variables reflect and return
             LOGGER.warn("JMX IO Exception when initializing instance, Continuing to wait for reconnect");
-            resetMonitor();
+            resetTracker();
         }
+        createExportedInstanceMetrics();
     }
 
     // Initialize our tracking of jobs and metrics
@@ -687,7 +693,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             } catch (IOException e) {
                 LOGGER.warn("JMX IO Exception when initializing all job metrics, resetting monitor. Exception message: "
                         + e.getLocalizedMessage());
-                resetMonitor();
+                resetTracker();
             }
 
             if (LOGGER.isDebugEnabled()) {
@@ -837,7 +843,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                 // reconnect
                 LOGGER.warn("Job Map Initialization received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
                         + e.getLocalizedMessage());
-                resetMonitor();
+                resetTracker();
             }
 
             if (LOGGER.isDebugEnabled()) {
@@ -878,12 +884,14 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         } catch (IOException e) {
             LOGGER.warn("New Job Initialization received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
                     + e.getLocalizedMessage());
-            resetMonitor();
+            resetTracker();
         }
 
         sw.stop();
         LOGGER.debug("** addJobToMap (jobid: " + jobid + ") time: "
                 + sw.getTime());
+        
+		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(jobMap.size());
 
     }
 
@@ -898,6 +906,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         sw.stop();
         LOGGER.debug("** removeJobFromMap (jobid: " + jobid + ") time: "
                 + sw.getTime());
+        
+		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(jobMap.size());
 
     }   
     
@@ -923,7 +933,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                 } catch (IOException e) {
                     LOGGER.error("Updating all metrics received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
                             + e.getLocalizedMessage());
-                    resetMonitor();
+                    resetTracker();
                 }
                 sw.split();
                 LOGGER.debug("** updateAllJobMetrics refresh from server split time: " + sw.getSplitTime());
@@ -1049,27 +1059,28 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                         .getNewValue();
                 InstanceMXBean.Status oldValue = (InstanceMXBean.Status) acn
                         .getOldValue();
-                LOGGER.debug("Instance Status Changed from: " + oldValue
+                LOGGER.info("Streams Instance Status Changed from: " + oldValue
                         + " to: " + newValue);
                 this.instanceInfo.setInstanceStatus((InstanceMXBean.Status) acn
                         .getNewValue());
                 if (newValue.equals(InstanceMXBean.Status.STOPPED)
                         || newValue.equals(InstanceMXBean.Status.FAILED)
                         || newValue.equals(InstanceMXBean.Status.UNKNOWN)) {
-                    LOGGER.info("Instance Status ("
+                    LOGGER.info("Instance Status reflects not availabe status ("
                             + newValue
                             + "), monitor will reset and reinitialize when instance is available");
                     this.instanceInfo.setInstanceStartTime(null);
-                    resetMonitor();
-                    clearMonitor();
+                    resetTracker();
+                    clearTracker();
+                	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
                 }
             }
             break;
         case Notifications.INSTANCE_DELETED:
             LOGGER.debug("Instance deleted from domain, resetting monitor and waiting for instance to be recreated");
             this.instanceInfo.setInstanceExists(false);
-            resetMonitor();
-            clearMonitor();
+            resetTracker();
+            clearTracker();
             break;
         case Notifications.JOB_ADDED:
             LOGGER.debug("****** Job add notification, Jobid : "
@@ -1086,10 +1097,38 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         }
 
     }
+    
+    private void createExportedInstanceMetrics() {
+    	metricsExporter.createStreamsMetric("status", StreamsObjectType.INSTANCE, "Instance status, 1: running, .5: partially up, 0: stopped, failed, unknown");
+    	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
+    	metricsExporter.createStreamsMetric("jobCount", StreamsObjectType.INSTANCE, "Number of jobs currently deployed into the streams instance");
+    	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(0);
+    }
+    
+    private void removeExportedInstanceMetrics() {
+		metricsExporter.removeAllChildStreamsMetrics(this.instanceInfo.getInstanceName());
+    }
+    
+    private double getInstanceStatusAsMetric() {
+    	double value = 0;
+    	switch (this.instanceInfo.getInstanceStatus()) {
+    	case RUNNING :
+    		value = 1;
+    		break;
+    	case STARTING:
+    	case PARTIALLY_RUNNING:
+    	case PARTIALLY_FAILED:
+    	case STOPPING:
+    		value = 0.5;
+    	default:
+    		value = 0;
+    	}
+    	return value;
+    }
 
     @Override
     public void beanSourceInterrupted(MXBeanSource bs) {
         LOGGER.debug("***** BeanSource interrupted, resetting monitor...");
-        resetMonitor();
+        resetTracker();
     }
 }

@@ -66,6 +66,110 @@
   "rows": [
     {
       "collapse": false,
+      "height": -49,
+      "panels": [
+        {
+          "cacheTimeout": null,
+          "colorBackground": true,
+          "colorValue": false,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "datasource": "${DS_LOCALPROMETHEUS}",
+          "format": "none",
+          "gauge": {
+            "maxValue": 100,
+            "minValue": 0,
+            "show": false,
+            "thresholdLabels": false,
+            "thresholdMarkers": true
+          },
+          "hideTimeOverride": true,
+          "id": 11,
+          "interval": null,
+          "links": [],
+          "mappingType": 1,
+          "mappingTypes": [
+            {
+              "name": "value to text",
+              "value": 1
+            },
+            {
+              "name": "range to text",
+              "value": 2
+            }
+          ],
+          "maxDataPoints": 100,
+          "nullPointMode": "connected",
+          "nullText": null,
+          "postfix": "",
+          "postfixFontSize": "50%",
+          "prefix": "Streams Instane Status: ",
+          "prefixFontSize": "50%",
+          "rangeMaps": [
+            {
+              "from": "null",
+              "text": "N/A",
+              "to": "null"
+            }
+          ],
+          "span": 12,
+          "sparkline": {
+            "fillColor": "rgba(31, 118, 189, 0.18)",
+            "full": false,
+            "lineColor": "rgb(31, 120, 193)",
+            "show": false
+          },
+          "targets": [
+            {
+              "expr": "streams_instance_status",
+              "intervalFactor": 1,
+              "legendFormat": "",
+              "refId": "A",
+              "step": 1
+            }
+          ],
+          "thresholds": ".5,1",
+          "timeFrom": "1s",
+          "title": "",
+          "type": "singlestat",
+          "valueFontSize": "50%",
+          "valueMaps": [
+            {
+              "op": "=",
+              "text": "0",
+              "value": "null"
+            },
+            {
+              "op": "=",
+              "text": "Stopped, Failed, or Unknown",
+              "value": "0"
+            },
+            {
+              "op": "=",
+              "text": "Partially Failed, Partially Running, Starting, or Stopping",
+              "value": "0.5"
+            },
+            {
+              "op": "=",
+              "text": "Running",
+              "value": "1"
+            }
+          ],
+          "valueName": "current"
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Dashboard Row",
+      "titleSize": "h1"
+    },
+    {
+      "collapse": false,
       "height": 169,
       "panels": [
         {
@@ -94,6 +198,7 @@
             "thresholdLabels": false,
             "thresholdMarkers": true
           },
+          "hideTimeOverride": true,
           "id": 6,
           "interval": null,
           "links": [],
@@ -136,17 +241,18 @@
               "legendFormat": "",
               "metric": "streams_instance_jobcount",
               "refId": "A",
-              "step": 40
+              "step": 2
             }
           ],
           "thresholds": "",
+          "timeFrom": "10s",
           "title": "Job Count",
           "type": "singlestat",
           "valueFontSize": "70%",
           "valueMaps": [
             {
               "op": "=",
-              "text": "N/A",
+              "text": "0",
               "value": "null"
             }
           ],
@@ -186,7 +292,7 @@
               "pattern": "Current",
               "thresholds": [
                 ".5",
-                ".9"
+                "1"
               ],
               "type": "number",
               "unit": "short"
@@ -209,11 +315,11 @@
           "targets": [
             {
               "expr": "streams_job_healthy",
-              "intervalFactor": 2,
+              "intervalFactor": 1,
               "legendFormat": "{{jobname}}",
               "metric": "stream_job_healthy",
               "refId": "A",
-              "step": 2
+              "step": 1
             }
           ],
           "timeFrom": "1s",
@@ -268,7 +374,7 @@
           "lines": true,
           "linewidth": 1,
           "links": [],
-          "nullPointMode": "null as zero",
+          "nullPointMode": "null",
           "percentage": false,
           "pointradius": 5,
           "points": false,
@@ -279,13 +385,13 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(streams_job_nCpuMilliseconds[10m])",
+              "expr": "rate(streams_job_nCpuMilliseconds[5m])",
               "hide": false,
               "intervalFactor": 2,
               "legendFormat": "{{jobname}}",
               "metric": "streams_job_nCpuMilliseconds",
               "refId": "A",
-              "step": 4
+              "step": 2
             }
           ],
           "thresholds": [],
@@ -310,7 +416,7 @@
               "label": null,
               "logBase": 1,
               "max": null,
-              "min": null,
+              "min": "0",
               "show": true
             },
             {
@@ -359,7 +465,7 @@
               "legendFormat": "{{jobname}}",
               "metric": "",
               "refId": "A",
-              "step": 4
+              "step": 2
             }
           ],
           "thresholds": [],
@@ -476,7 +582,7 @@
               "legendFormat": "{{jobname}}",
               "metric": "streams_job_max_congestionFactor",
               "refId": "A",
-              "step": 4
+              "step": 2
             }
           ],
           "thresholds": [
@@ -557,7 +663,7 @@
               "intervalFactor": 2,
               "legendFormat": "{{jobname}}.{{operator}}.{{inputportname}}",
               "refId": "A",
-              "step": 4
+              "step": 2
             }
           ],
           "thresholds": [],
@@ -709,7 +815,7 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {
@@ -739,5 +845,5 @@
   },
   "timezone": "browser",
   "title": "Streams Test Dashboard",
-  "version": 16
+  "version": 19
 }

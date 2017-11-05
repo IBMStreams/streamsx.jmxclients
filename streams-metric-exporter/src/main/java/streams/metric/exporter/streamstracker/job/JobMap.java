@@ -25,9 +25,10 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import streams.metric.exporter.metrics.MetricsExporter;
-import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
-import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 /*
  * JobMap
@@ -36,43 +37,47 @@ import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
  * 
  */
 public class JobMap {
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
+
 	private String streamsInstanceName = null;
     /*****************************************
      * JOB MAP and INDEXES
      **************************************/
     /* Job Map Info */
-    private ConcurrentSkipListMap<BigInteger, JobDetails> jobMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
+    private ConcurrentSkipListMap<BigInteger, JobDetails> jobDetailsMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
     private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
-
-    // Prometheus Metrics
-    // Temporary
-	private MetricsExporter metricsExporter = new PrometheusMetricsExporter();
 
 //    static final Gauge streams_instance_jobcount = Gauge.build()
 //    		.name("streams_instance_jobcount").help("Number of jobs in streams instance").register();
 
     public JobMap(String streamsInstanceName) {
+    	LOGGER.trace("JobMap Initialization");
     	this.streamsInstanceName = streamsInstanceName;
-    	metricsExporter.createStreamsMetric("jobCount", StreamsObjectType.INSTANCE, "Number of jobs currently deployed into the streams instance");
     }
 	
+    // Clear out the job map
     public synchronized void clear() {
-    	jobMap.clear();
+    	LOGGER.trace("JobMap.clear()");
+        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap
+                .entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<BigInteger, JobDetails> pair = it.next();
+            JobDetails curInfo = (JobDetails) pair.getValue();
+            curInfo.close(); 
+        }
+    	jobDetailsMap.clear();
     	jobNameIndex.clear();
-    	//streams_instance_jobcount.clear();
-		metricsExporter.removeStreamsMetric("jobCount", StreamsObjectType.INSTANCE,this.streamsInstanceName);
-
     }
     
     public synchronized int size() {
-    	return jobMap.size();
+    	return jobDetailsMap.size();
     }
     
     /* Return a map using jobInfo objects rather than all details */
     public synchronized Map<BigInteger, JobInfo> getJobMap() {
         HashMap<BigInteger, JobInfo> m = new HashMap<BigInteger, JobInfo>();
 
-        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap.entrySet()
+        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet()
                 .iterator();
 
         while (it.hasNext()) {
@@ -93,14 +98,14 @@ public class JobMap {
     public synchronized JobDetails getJob(int jobid) {
         BigInteger jid = BigInteger.valueOf(jobid);
 
-        return jobMap.get(jid);
+        return jobDetailsMap.get(jid);
     }
 
     /* Return job info of each job in the map */
 	public synchronized ArrayList<JobInfo> getJobInfo() {
 		ArrayList<JobInfo> jia = new ArrayList<JobInfo>();
 
-		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap.entrySet().iterator();
+		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet().iterator();
 		while (it.hasNext()) {
 			Map.Entry<BigInteger, JobDetails> pair = it.next();
 
@@ -117,7 +122,7 @@ public class JobMap {
         JobDetails jd = null;
         JobInfo ji = null;
 
-        jd = jobMap.get(jid);
+        jd = jobDetailsMap.get(jid);
         if (jd != null) {
         	ji = jd.getJobInfo();
         }
@@ -128,28 +133,21 @@ public class JobMap {
     // ** Add Job to job map
 	public synchronized void addJobToMap(BigInteger jobid, JobDetails details) {
 
-		jobMap.put(jobid, details);
+		jobDetailsMap.put(jobid, details);
 		jobNameIndex.put(details.getName(), jobid);
-		//streams_instance_jobcount.set(size());
-		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.streamsInstanceName).set(size());
-
-
 	}
 
     public synchronized void removeJobFromMap(BigInteger jobid) {
         // Tell jobDetails handle going away, whatever it needs to do
-    	if (jobMap.containsKey(jobid))
-    			jobMap.get(jobid).close();
-        jobMap.remove(jobid);
+    	if (jobDetailsMap.containsKey(jobid))
+    			jobDetailsMap.get(jobid).close();
+        jobDetailsMap.remove(jobid);
         // Need to remove it from the jobNameIndex
         jobNameIndex.values().removeAll(Collections.singleton(jobid));
-        //streams_instance_jobcount.set(size());
-		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.streamsInstanceName).set(size());
-
     }
     
     public synchronized void setJobMetricsFailed(Date failureDate) {
-        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap
+        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap
                 .entrySet().iterator();
         while (it.hasNext()) {
             Map.Entry<BigInteger, JobDetails> pair = it.next();
@@ -164,9 +162,9 @@ public class JobMap {
         StringBuilder result = new StringBuilder();
         String newline = System.getProperty("line.separator");
         
-        result.append("All " + jobMap.size() + " Jobs:");
+        result.append("All " + jobDetailsMap.size() + " Jobs:");
         result.append(newline);
-        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobMap.entrySet()
+        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet()
                 .iterator();
 
         while (it.hasNext()) {
