@@ -2,4 +2,4 @@
 
 | Application | Description |
 | ----------- | ----------- |
-| [streams-jmx-ws](streams-jmx-ws/) | REST Server that periodically pulls metrics for all jobs of a Streams Instance for integration with status and monitoring systems and prevents saturating the IBM Streams jmx server. |
+| [streams-metric-exporter](streams-metric-exporter/) | IBM Streams Metric Exporter for Prometheus (more to come). Connects to the IBM Streams JMX Server and  periodically pulls metrics for all jobs of a Streams Instance from the JMX HTTP Server for large data operations. |
