@@ -48,6 +48,6 @@ public class Constants {
 		DEFAULT_X509CERT = null,
 		DEFAULT_REFRESHRATE = "10",
 		DEFAULT_TRUSTSTORE = null,
-		DEFAULT_PROTOCOL = "TSLv1"
+		DEFAULT_PROTOCOL = "TLSv1"
 	;
 }

@@ -37,13 +37,13 @@ public class ServiceConfig {
     @Parameter(names = { "--webPath" }, description = "REST Base URI Web Path (e.g. /thispath)", required = false)
     private String webPath = getEnvDefault(Constants.ENV_WEBPATH,Constants.DEFAULT_WEBPATH);
 
-    @Parameter(names = { "-j", "--jmxurl" }, description = "JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)", required = true)
+    @Parameter(names = { "-j", "--jmxurl" }, description = "JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)", required = false)
     private String jmxUrl = getEnvDefault(Constants.ENV_JMXCONNECT,Constants.DEFAULT_JMXCONNECT);
 
-    @Parameter(names = { "-d", "--domain" }, description = "Streams domain name.", required = true)
+    @Parameter(names = { "-d", "--domain" }, description = "Streams domain name.", required = false)
     private String domainName = getEnvDefault(Constants.ENV_DOMAIN_ID,Constants.DEFAULT_DOMAIN_ID);
 
-    @Parameter(names = { "-i", "--instance" }, description = "Streams instance name", required = true)
+    @Parameter(names = { "-i", "--instance" }, description = "Streams instance name", required = false)
     private String instanceName = getEnvDefault(Constants.ENV_INSTANCE_ID,Constants.DEFAULT_INSTANCE_ID);
 
     @Parameter(names = { "-u", "--user" }, description = "Streams login user name", required = false)
