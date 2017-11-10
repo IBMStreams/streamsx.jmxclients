@@ -1,0 +1,1 @@
+export STREAMS_EXPORTER_JMXCONNECT=`streamtool getjmxconnect`
