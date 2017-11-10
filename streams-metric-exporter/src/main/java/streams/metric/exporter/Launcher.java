@@ -195,6 +195,7 @@ public class Launcher {
         JCommander jc = null;
         try {
             jc = new JCommander(config);
+            jc.setProgramName(Constants.PROGRAM_NAME);
             jc.parse(args);
         } catch (ParameterException e) {
             System.out.println(e.getLocalizedMessage());

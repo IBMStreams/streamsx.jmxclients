@@ -16,8 +16,6 @@
 
 package streams.metric.exporter;
 
-import java.security.KeyStore;
-
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.internal.Console;
@@ -27,46 +25,47 @@ import streams.metric.exporter.cli.validators.FileExistsValidator;
 
 public class ServiceConfig {
 
-    private static final String STREAMS_X509CERT = "STREAMS_X509CERT";
-
     @Parameter(names = "--help", help = true)
     private boolean help;
 
     @Parameter(names = { "-h", "--host" }, description = "REST Servers host interface to listen (e.g. localhost)", required = false)
-    private String host = "localhost";
-
+    private String host = getEnvDefault(Constants.ENV_HOST,"localhost");
+    	    
     @Parameter(names = { "-p", "--port" }, description = "REST Server port to listen on (e.g. 25500", required = false)
-    private String port = "25500";
+    private String port = getEnvDefault(Constants.ENV_PORT,"25500");
     
     @Parameter(names = { "--webPath" }, description = "REST Base URI Web Path (e.g. /thispath)", required = false)
-    private String webPath = "/";
+    private String webPath = getEnvDefault(Constants.ENV_WEBPATH,Constants.DEFAULT_WEBPATH);
 
-    @Parameter(names = { "-j", "--jmxurl" }, description = "JMX Connection URL (e.g. service:jmx:jmxmp://server:9975)", required = true)
-    private String jmxUrl;
+    @Parameter(names = { "-j", "--jmxurl" }, description = "JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)", required = true)
+    private String jmxUrl = getEnvDefault(Constants.ENV_JMXCONNECT,Constants.DEFAULT_JMXCONNECT);
 
-    @Parameter(names = { "-d", "--domain" }, description = "Streams domain name", required = true)
-    private String domainName;
+    @Parameter(names = { "-d", "--domain" }, description = "Streams domain name.", required = true)
+    private String domainName = getEnvDefault(Constants.ENV_DOMAIN_ID,Constants.DEFAULT_DOMAIN_ID);
 
     @Parameter(names = { "-i", "--instance" }, description = "Streams instance name", required = true)
-    private String instanceName;
+    private String instanceName = getEnvDefault(Constants.ENV_INSTANCE_ID,Constants.DEFAULT_INSTANCE_ID);
 
     @Parameter(names = { "-u", "--user" }, description = "Streams login user name", required = false)
-    private String user;
-
+    private String user = getEnvDefault(Constants.ENV_USERNAME,Constants.DEFAULT_USERNAME);
+    
+    @Parameter(names = "--password", description = "Streams login password, recommend using $STREAMS_EXPORTER_PW", required = false)
+    private String password = getEnvDefault(Constants.ENV_PASSWORD,Constants.DEFAULT_PASSWORD);
+    
     @Parameter(names = { "-x", "--x509cert" }, description = "X509 Certification file to use instead of username/password, defaults to $STREAMS_X509CERT", required = false)
-    private String x509Cert = System.getenv(STREAMS_X509CERT);
+    private String x509Cert = getEnvDefault(Constants.ENV_X509CERT,Constants.DEFAULT_X509CERT);
 
     @Parameter(names = "--noconsole", description = "Indicates that the console should not be used for prompts")
     private boolean hasNoConsole = false;
 
     @Parameter(names = { "-r", "--refresh" }, description = "Refresh rate of metrics in seconds", required = false)
-    private int refreshRateSeconds = 10;
+    private int refreshRateSeconds = Integer.parseInt(getEnvDefault(Constants.ENV_REFRESHRATE,Constants.DEFAULT_REFRESHRATE));
 
     @Parameter(names = "--truststore", description = "Path to a Java keystore containing the trusted jmx server's certificate", required = false, validateWith = FileExistsValidator.class)
-    private String truststore;
+    private String truststore = getEnvDefault(Constants.ENV_TRUSTSTORE,Constants.DEFAULT_TRUSTSTORE);
 
-    private String protocol = "TLSv1";
-    private String password;
+    private String protocol = getEnvDefault(Constants.ENV_PROTOCOL,Constants.DEFAULT_PROTOCOL);;
+    
 
     public String getPassword(boolean hasConsole) {
         // Choose the appropriate JCommander console implementation to use
@@ -234,8 +233,14 @@ public class ServiceConfig {
         result.append("refreshRateSeconds: " + this.getRefreshRateSeconds());
         result.append(newline);
         result.append("truststore: " + getTruststore());
+        result.append(newline);
+        result.append("protocol: " + getProtocol());
 
         return result.toString();
     }
-
+     
+    private String getEnvDefault(String env, String defaultValue) {
+    	String value = System.getenv(env);
+    	return value == null ? defaultValue : value;
+    }
 }
