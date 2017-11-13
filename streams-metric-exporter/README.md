@@ -8,7 +8,7 @@ This version provides 2 interfaces:
 
 IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pulls) that is capable of providing status of the Streams instance, deployed streaming application (jobs), and cluster resources.  In addition, metrics are available via the Streams JMX Server.
 
-The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana. 
+The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.
 It is meant to be used as a Streams Application Metrics exporter.  It is not meant to monitor the internal system services of IBM Streams.
 This application improves performance over per-job metric scraping by periodically pulling all job metrics (via the JMX Server HTTP callbacks) and caching them.  Users can use the REST endpoints (including Prometheus endpoint) to get metrics and status of specific jobs.
 
@@ -23,19 +23,31 @@ bmwilli@us.ibm.com
 2. [Command line options](#command-line-options)
 3. [Running streams-metric-exporter](#running-the-application)
 4. [Prometheus Integration](#prometheus-integration)
-5. [Grafana Dashboard Example](#grafana-example)
-5. [Cached REST endpoints](#cached-rest-endpoints)
-6. [Passthrough REST endpoints](#passthrough-rest-endpoints)
+5. [Grafana Dashboard Example](#grafana-examples)
+6. [Running with Docker](#running-with-docker)
+7. [Cached REST endpoints](#cached-rest-endpoints)
+8. [Passthrough REST endpoints](#passthrough-rest-endpoints)
 
 # Building the application
 
 ## Dependencies
-The build location must be a linux node with IBM Streams installed.  The environment variable (STREAMS_INSTALL) must be set.  The pom.xml file references the IBM Streams JMX API classes in the product directory.
+The build location must be a linux node with IBM Streams installed.
+
+The environment variable (STREAMS_INSTALL) must be set.
+
+The pom.xml file references the IBM Streams JMX API classes in the product directory.
+
+Another option is to copy the necessary files to the local machine and modify the pom.xml files
+\
 ## Compiling the application
-`mvn compile`
+```
+mvn compile
+```
 
 ## Create executable .jar with dependencies included
-`mvn package`
+```
+mvn package
+```
 
 Location will be: target/executable-streams-metric-exporter.jar
 
@@ -78,59 +90,90 @@ Usage: <main class> [options]
 </pre>
 
 # Running the application
-`java -jar target/executable-streams-metric-exporter.jar -j service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i StreamsInstance -u streamsadmin`
-
-`password: <enter streamsadmin password>`
-
-# Prometheus Integration
-## Endpoint
-```/prometheus```
-## prometheus.yml
 ```
+java -jar target/executable-streams-metric-exporter.jar -j \
+service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i \
+StreamsInstance -u streamsadmin
+
+password: <enter streamsadmin password>
+```
+# Prometheus Integration
+
+## Endpoint
+
+```bash
+/prometheus
+```
+## prometheus.yml
+```yml
   - job_name: "ibmstreams"
     scrape_interval: "15s"
     metrics_path: "/prometheus"
     static_configs:
     - targets: ['localhost:25500']
 ```
-## metric names
+## Metric Names
 The set of metrics exposed in continuously increasing as this is active development
 The metric names chosen for this endpoint are a hybrid of prometheus naming conventions and the pre-defined metrics of IBMStreams.
 The pattern for metric names is<br>
+
 ```streams_<objecttype>[_<subobjecttype>]_[_<aggregationtype>]_<streams metric>```
+
 Examples
 ```
 streams_operator_ip_nTuplesProcessed
 streams_job_max_congestionFactor
 ```
-## label names
-label names:
-```
-instancename (instance is reserved by prometheus)
-jobname (job is reserved by prometheus)
-operatorname
-inputportname
-outputportname
-```
-## Prometheus endpoing examples
-```
- # HELP streams_instance_jobCount Number of jobs currently deployed into the streams instance
- # TYPE streams_instance_jobCount gauge
- streams_instance_jobCount{instancename="StreamsInstance",} 3.0
 
- # HELP streams_job_pecount Number of pes deployed for this job
- # TYPE streams_job_pecount gauge
- streams_job_pecount{instancename="StreamsInstance",jobname="MultiPEJob",} 2.0
+## Metric Labels
+The prometheus metric names are not specific to streams objects (e.g. a specific job), rather, they are for an object type (e.g. operator input port).  The labels are used to identify the individual instances (e.g. job: job_1, operator: myBeacon, input port: StockTickersIn).
 
- # HELP streams_operator_ip_nTuplesProcessed Streams operator input port metric: nTuplesProcessed
- # TYPE streams_operator_ip_nTuplesProcessed gauge
- streams_operator_ip_nTuplesProcessed{instancename="StreamsInstance",jobname="CompositeJob",operatorname="SubCompositeToMain.SubCompFunctor",inputportname="SubCompIn",} 1227489.0
+| Label Name | Description     |
+| :------------- | :------------- |
+|**instancename**|name of streams instance (instance is reserved by prometheus)|
+|**jobname**| name of streams job (job is reserved by prometheus)|
+|**operatorname**| name of operator|
+|**inputportname**| name of input port|
+|**outputportname**| name of output port|
+|**resource**| name of streams resource|
 
+## Prometheus endpoint example
+
+```
+# HELP streams_instance_jobCount Number of jobs currently deployed into the streams instance
+# TYPE streams_instance_jobCount gauge
+streams_instance_jobCount{instancename="StreamsInstance",} 3.0
+
+# HELP streams_job_pecount Number of pes deployed for this job
+# TYPE streams_job_pecount gauge
+streams_job_pecount{instancename="StreamsInstance",jobname="MultiPEJob",} 2.0
+
+# HELP streams_operator_ip_nTuplesProcessed Streams operator input port metric: nTuplesProcessed
+# TYPE streams_operator_ip_nTuplesProcessed gauge
+streams_operator_ip_nTuplesProcessed{instancename="StreamsInstance",jobname="CompositeJob",operatorname="SubCompositeToMain.SubCompFunctor",inputportname="SubCompIn",} 1227489.0
 ```
 
 # Grafana Examples
-See the dashboards directory
+See [dashboards directory](dashboards/README.md) for more information.
+
 ![Grafana Example](images/StreamsGrafanaImage1.png)
+
+# Running with Docker
+
+The easiest way to try out the Streams Metric Exporter is to run it using Docker.  Included in this release is a Dockerfile for building the image and a docker-compose.yml file for starting it up with Prometheus and Grafana instances.
+
+The versions of Prometheus and Grafana specified in the docker-compose.yml file are those that were used to test with.
+
+## Prerequisites
+
+* Compiled version of Streams Metric Exporter (executable-streams-metric-exporter.jar)
+* JMX Access to a running IBM Streams 4.2.1 Domain (JMX Port 9975 is the default
+* Docker Engine
+* Docker Compose (docker-compose.yml file version 2 used)
+* Access to Dockerhub or local repository with Images:
+  * ibmjava:sfj (or any 1.8 version)
+  * prom/prometheus
+  * grafana/grafana
 
 # Cached REST endpoints
 ## /instance
@@ -1524,7 +1567,7 @@ static: include static job attributes in addition to dynamic attributes (default
 
 `curl http://localhost:25500/jobs/{jobid}/snapshot?depth=2&statuc=true`
 
-```json 
+```json
 {
 
     "applicationVersion": "4211",

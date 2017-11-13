@@ -1,4 +1,7 @@
 version: '2'
+volumes:
+  prometheus_data:
+  grafana_data:
 services:
   streamsexporter:
     env_file:
@@ -8,20 +11,21 @@ services:
       dockerfile: docker/Dockerfile
     ports:
      - 25500:25500
-#    volumes:
-#     - /home/brian/git2/streamsx.jmxclients/streams-metric-exporter:/opt/app
     environment:
       - STREAMS_DOMAIN_ID
       - STREAMS_INSTANCE_ID
       - STREAMS_EXPORTER_HOST=0.0.0.0
       - STREAMS_EXPORTER_JMXCONNECT
   prometheus:
-    image: "prom/prometheus"
+    image: "prom/prometheus:v1.8.2"
     ports:
      - 9090:9090
     volumes:
-     - ./prometheus-data/prometheus.yml:/etc/prometheus/prometheus.yml
+     - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+     - prometheus_data:/prometheus
   grafana:
     image: "grafana/grafana"
     ports:
      - 3000:3000
+    volumes:
+     - grafana_data:/var/lib/grafana
