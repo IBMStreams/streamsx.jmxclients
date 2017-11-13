@@ -181,42 +181,42 @@ The versions of Prometheus and Grafana specified in the docker-compose.yml file 
 ```bash
 cd docker
 ```
-1. Create .env file from sample.env
+2. Create .env file from sample.env
 ```
 cp sample.env .env
 ```
-1. Edit .env to set authentication for streams jmx Server
+3. Edit .env to set authentication for streams jmx Server
 ```
 STREAMS_EXPORTER_USERNAME=<username with domain/instance read access>
 STREAMS_EXPORTER_PASSWORD=<user password for pam authentication>
 ```
-1. Export additional environment variables via .env file or from the command line
+4. Export additional environment variables via .env file or from the command line
 ```
 export STREAMS_EXPORTER_JMXCONNECT=service:jmx:jmxmp://<jmxhost>:<jmxport>
 export STREAMS_DOMAIN_ID=<domain id>
 export STREAMS_INSTANCE_ID=<instance id>
 ```
-1. Build / Run Docker Images
+5. Build / Run Docker Images
 ```
 docker-compose up
 ```
-1. Create Prometheus data source in grafana
+6. Create Prometheus data source in grafana
 ```bash
 ../scripts/create_datasource.sh
 ```
-1. Import sample dashboard into Grafana
+7. Import sample dashboard into Grafana
 ```
 ../scripts/import_dashboard.sh ../dashboards/StreamsSampleDashboard_apiCreate.json
 ```
-1. Open Grafana in browswer
+8. Open Grafana in browswer
 ```
 http://localhost:3000
 ```
-1. Login with default username/password
+9. Login with default username/password
 ```
 admin/admin
 ```
-1. Navigate to Home Dashboard
+10. Navigate to Home Dashboard
 ```
 IBM Streams Sample Dashboard
 ```
