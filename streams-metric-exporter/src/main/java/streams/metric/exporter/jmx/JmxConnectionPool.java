@@ -252,14 +252,14 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                 try {
                     initNetworkConnection();
                 } catch (UnknownHostException e) {
-                    LOGGER.error("Unknown Host in JMX URL: {0}", this.jmxUri);
+                    LOGGER.error("Unknown Host in JMX URL: {}", this.jmxUri);
                     throw e;
                 } catch (MalformedURLException e) {
-                    LOGGER.error("Malformed JMX URL: {0}", this.jmxUri);
+                    LOGGER.error("Malformed JMX URL: {}", this.jmxUri);
                     throw e;
                 } catch (IOException e) {
                     LOGGER.warn(
-                            "Failed initial connection to JMX Server {0}. Verify port number and ensure it is running.",
+                            "Failed initial connection to JMX Server {}. Verify port number and ensure it is running.",
                             this.jmxUri);
                     System.out.println("*** e: " + e);
                     e.printStackTrace();
