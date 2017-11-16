@@ -92,7 +92,7 @@ public class JobDetails implements NotificationListener {
 	/* Metrics Exporter*/
 	/* Temporary solution: always use Prometheus exporter */
 	/* Future: Make this pluggable, add Elasticsearch exporter */
-	private MetricsExporter metricsExporter = new PrometheusMetricsExporter();
+	private MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
 	
 	public JobDetails(StreamsInstanceTracker monitor, BigInteger jobid, JobMXBean jobBean) {
 		this.monitor = monitor;
@@ -511,26 +511,31 @@ public class JobDetails implements NotificationListener {
 	 * specific processing of the notification.
 	 */
 	public void handleNotification(Notification notification, Object handback) {
-		String notificationType = notification.getType();
-		LOGGER.trace("** Job Notification: " + notification);
-
-		switch (notificationType) {
-
-		case AttributeChangeNotification.ATTRIBUTE_CHANGE:
-			AttributeChangeNotification acn = (AttributeChangeNotification) notification;
-			LOGGER.debug("** Job Notification: attribute changed: " + acn);
-			// Need to be specific, but for now, if any attribute changes,
-			// updateStatus() will update them all
-			try {
-				this.updateStatus();
-			} catch (IOException e) {
-				// Assuming this means that JMX connection was lost, mark
-				// everything as unavailable
-				monitor.resetTracker();
+		try {
+			String notificationType = notification.getType();
+			LOGGER.trace("** Job Notification: " + notification);
+	
+			switch (notificationType) {
+	
+			case AttributeChangeNotification.ATTRIBUTE_CHANGE:
+				AttributeChangeNotification acn = (AttributeChangeNotification) notification;
+				LOGGER.debug("** Job Notification: attribute changed: " + acn);
+				// Need to be specific, but for now, if any attribute changes,
+				// updateStatus() will update them all
+				try {
+					this.updateStatus();
+				} catch (IOException e) {
+					// Assuming this means that JMX connection was lost, mark
+					// everything as unavailable
+					monitor.resetTracker();
+				}
+	
+				break;
 			}
-
-			break;
-		}
+    	} catch (Exception e) {
+    		LOGGER.error("Job ({}) Notification Handler caught exception: {}",this.name,e.toString());
+    		e.printStackTrace();
+    	}
 	}
 
 	private void mapPortNames(MXBeanSource beanSource) {
@@ -692,6 +697,7 @@ public class JobDetails implements NotificationListener {
 	private void removeExportedMetrics() {
 		// When this job is removed, remove all metrics for this job
 		// (really its the specific instance of the metric for the streams objects of this job)
+		LOGGER.debug("removeExportedMetrics()");
 		metricsExporter.removeAllChildStreamsMetrics(this.streamsInstanceName,name);
 	}
 	private void updateExportedMetrics() {

@@ -139,8 +139,9 @@ public class JobMap {
 
     public synchronized void removeJobFromMap(BigInteger jobid) {
         // Tell jobDetails handle going away, whatever it needs to do
-    	if (jobDetailsMap.containsKey(jobid))
-    			jobDetailsMap.get(jobid).close();
+    	if (jobDetailsMap.containsKey(jobid)) {
+            jobDetailsMap.get(jobid).close();
+        }
         jobDetailsMap.remove(jobid);
         // Need to remove it from the jobNameIndex
         jobNameIndex.values().removeAll(Collections.singleton(jobid));

@@ -16,12 +16,19 @@
 
 package streams.metric.exporter.metrics;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 public abstract class MetricsExporter {
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
 	
 	// Metric Labels Index, allows us to remove child metrics by label
 	private MetricLabelIndex metricIndex = new MetricLabelIndex();
@@ -42,7 +49,11 @@ public abstract class MetricsExporter {
 		this.metricIndex.add(m);
 	}
 	
-	protected List<Metric> removeAllChildMetricsFromIndex(String... labelValues) {
+	public MetricLabelIndex getMetricIndex() {
+		return metricIndex;
+	}
+	
+	protected Set<Metric> removeAllChildMetricsFromIndex(String... labelValues) {
 		return this.metricIndex.removeWithChildren(labelValues);
 	}
 	
@@ -122,20 +133,47 @@ public abstract class MetricsExporter {
 		/* "I1","J1","Op1" is a labelChildOf("I1","J1") */
 		public boolean labelChildOf(String... compareLabelValues) {
 			List<String> compareList = Arrays.asList(compareLabelValues);
-			if (compareList.size() > 0) {
+			if (compareList.size() > labelValues.size()) {
+				return false;
+			}
+			if (compareList.size() > 0)  {
+				LOGGER.trace("compareList size: {}: {}",compareList.size(),Arrays.toString(compareList.toArray()));
+				LOGGER.trace("this.labelValues size: {}: {}",labelValues.size(),Arrays.toString(labelValues.toArray()));
 				List<String> subList = this.labelValues.subList(0, compareList.size());
 				return (subList.equals(compareList));
 			}
 			return true;
 		}
 
+		// Hashcode builder for use in HashSet
+		@Override
+		public int hashCode() {
+			return new HashCodeBuilder().append(this.name).append(this.labelValues).toHashCode();
+		}
+
+		// Equals method for use in HashSet
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof Metric == false) {
+				return false;
+			}
+			if (this == obj) {
+				return true;
+			}
+			final Metric otherObject = (Metric)obj;
+
+			return new EqualsBuilder().append(this.name,otherObject.name)
+				.append(this.labelValues, otherObject.labelValues)
+				.isEquals();
+		}
+
 	}
 	
-	private class MetricLabelIndex {
-		private List<Metric> metrics;
+	public class MetricLabelIndex {
+		private Set<Metric> metrics;
 		
 		public MetricLabelIndex() {
-			this.metrics = new LinkedList<Metric>();
+			this.metrics = new HashSet<Metric>();
 		}
 		
 		public void add(Metric... newMetrics) {
@@ -146,14 +184,16 @@ public abstract class MetricsExporter {
 			}
 		}
 		
-		public List<Metric> removeWithChildren(String... labelValues) {			
-			List<Metric> removedMetrics = new LinkedList<Metric>();
-			
+		public int size() {
+			return metrics.size();
+		}
+		
+		public Set<Metric> removeWithChildren(String... labelValues) {	
+			Set<Metric> removedMetrics = new HashSet<Metric>();
 			synchronized (this.metrics){
 				Iterator<Metric> it = this.metrics.iterator();
 				while (it.hasNext()) {
 					Metric metric = it.next();
-					
 					if (metric.labelChildOf(labelValues)) {
 						removedMetrics.add(metric);
 						it.remove();

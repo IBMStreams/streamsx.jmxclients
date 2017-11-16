@@ -67,7 +67,6 @@ public class Launcher {
 
     public Launcher(ServiceConfig config) {
         this.config = config;
-
         connectionPool = new JmxConnectionPool(config.getJmxUrl(),
                 config.getX509Cert(), config.getUser(),
                 config.getPassword(), config.getProtocol(), retryInitialConnection);

@@ -120,7 +120,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      * Metrics Exporter for non REST JSON 
      **************************************/
     // Future change to plugin
-	private MetricsExporter metricsExporter = new PrometheusMetricsExporter();
+	private MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
 
     /*****************************************
      * JOB MAP and INDEXES
@@ -1046,56 +1046,60 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      * Only interested in specific notifications so should implement filter soon
      */
     public void handleNotification(Notification notification, Object handback) {
-        String notificationType = notification.getType();
-        LOGGER.trace("Streams Instance Notification: " + notification
-                + "; User Data: " + notification.getUserData());
+    	try {
+    		String notificationType = notification.getType();
+    		LOGGER.trace("Streams Instance Notification: " + notification
+    				+ "; User Data: " + notification.getUserData());
 
-        switch (notificationType) {
-        case AttributeChangeNotification.ATTRIBUTE_CHANGE:
-            AttributeChangeNotification acn = (AttributeChangeNotification) notification;
-            String attributeName = acn.getAttributeName();
-            if (attributeName.equals("Status")) {
-                InstanceMXBean.Status newValue = (InstanceMXBean.Status) acn
-                        .getNewValue();
-                InstanceMXBean.Status oldValue = (InstanceMXBean.Status) acn
-                        .getOldValue();
-                LOGGER.info("Streams Instance Status Changed from: " + oldValue
-                        + " to: " + newValue);
-                this.instanceInfo.setInstanceStatus((InstanceMXBean.Status) acn
-                        .getNewValue());
-                if (newValue.equals(InstanceMXBean.Status.STOPPED)
-                        || newValue.equals(InstanceMXBean.Status.FAILED)
-                        || newValue.equals(InstanceMXBean.Status.UNKNOWN)) {
-                    LOGGER.info("Instance Status reflects not availabe status ("
-                            + newValue
-                            + "), monitor will reset and reinitialize when instance is available");
-                    this.instanceInfo.setInstanceStartTime(null);
-                    resetTracker();
-                    clearTracker();
-                	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
-                }
-            }
-            break;
-        case Notifications.INSTANCE_DELETED:
-            LOGGER.debug("Instance deleted from domain, resetting monitor and waiting for instance to be recreated");
-            this.instanceInfo.setInstanceExists(false);
-            resetTracker();
-            clearTracker();
-            break;
-        case Notifications.JOB_ADDED:
-            LOGGER.debug("****** Job add notification, Jobid : "
-                    + notification.getUserData());
-            addJobToMap((BigInteger) notification.getUserData());
-            break;
-        case Notifications.JOB_REMOVED:
-            LOGGER.debug("******** Job removed notification, userData: "
-                    + notification.getUserData());
-            // We are only listening on Straems Instance, so user data is a
-            // jobid
-            removeJobFromMap((BigInteger) notification.getUserData());
-            break;
-        }
-
+    		switch (notificationType) {
+    		case AttributeChangeNotification.ATTRIBUTE_CHANGE:
+    			AttributeChangeNotification acn = (AttributeChangeNotification) notification;
+    			String attributeName = acn.getAttributeName();
+    			if (attributeName.equals("Status")) {
+    				InstanceMXBean.Status newValue = (InstanceMXBean.Status) acn
+    						.getNewValue();
+    				InstanceMXBean.Status oldValue = (InstanceMXBean.Status) acn
+    						.getOldValue();
+    				LOGGER.info("Streams Instance Status Changed from: " + oldValue
+    						+ " to: " + newValue);
+    				this.instanceInfo.setInstanceStatus((InstanceMXBean.Status) acn
+    						.getNewValue());
+    				if (newValue.equals(InstanceMXBean.Status.STOPPED)
+    						|| newValue.equals(InstanceMXBean.Status.FAILED)
+    						|| newValue.equals(InstanceMXBean.Status.UNKNOWN)) {
+    					LOGGER.info("Instance Status reflects not availabe status ("
+    							+ newValue
+    							+ "), monitor will reset and reinitialize when instance is available");
+    					this.instanceInfo.setInstanceStartTime(null);
+    					resetTracker();
+    					clearTracker();
+    					metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
+    				}
+    			}
+    			break;
+	        case Notifications.INSTANCE_DELETED:
+	            LOGGER.debug("Instance deleted from domain, resetting monitor and waiting for instance to be recreated");
+	            this.instanceInfo.setInstanceExists(false);
+	            resetTracker();
+	            clearTracker();
+	            break;
+	        case Notifications.JOB_ADDED:
+	            LOGGER.debug("****** Job add notification, Jobid : "
+	                    + notification.getUserData());
+	            addJobToMap((BigInteger) notification.getUserData());
+	            break;
+	        case Notifications.JOB_REMOVED:
+	            LOGGER.debug("******** Job removed notification, userData: "
+	                    + notification.getUserData());
+	            // We are only listening on Straems Instance, so user data is a
+	            // jobid
+	            removeJobFromMap((BigInteger) notification.getUserData());
+	            break;
+	        }
+    	} catch (Exception e) {
+    		LOGGER.error("Instance Notification Handler caught exception: {}",e.toString());
+    		e.printStackTrace();
+    	}
     }
     
     private void createExportedInstanceMetrics() {
