@@ -25,46 +25,47 @@ import streams.metric.exporter.cli.validators.FileExistsValidator;
 
 public class ServiceConfig {
 
-    @Parameter(names = "--help", help = true)
+    @Parameter(names = "--help", description = Constants.DESC_HELP, help = true)
     private boolean help;
 
-    @Parameter(names = { "-h", "--host" }, description = "REST Servers host interface to listen (e.g. localhost)", required = false)
+    @Parameter(names = { "-h", "--host" }, description = Constants.DESC_HOST, required = false)
     private String host = getEnvDefault(Constants.ENV_HOST,"localhost");
     	    
-    @Parameter(names = { "-p", "--port" }, description = "REST Server port to listen on (e.g. 25500", required = false)
+    @Parameter(names = { "-p", "--port" }, description = Constants.DESC_PORT, required = false)
     private String port = getEnvDefault(Constants.ENV_PORT,"25500");
     
-    @Parameter(names = { "--webPath" }, description = "REST Base URI Web Path (e.g. /thispath)", required = false)
+    @Parameter(names = { "--webPath","" }, description = Constants.DESC_WEBPATH, required = false)
     private String webPath = getEnvDefault(Constants.ENV_WEBPATH,Constants.DEFAULT_WEBPATH);
 
-    @Parameter(names = { "-j", "--jmxurl" }, description = "JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)", required = false)
+    @Parameter(names = { "-j", "--jmxurl" }, description = Constants.DESC_JMXCONNECT, required = false)
     private String jmxUrl = getEnvDefault(Constants.ENV_JMXCONNECT,Constants.DEFAULT_JMXCONNECT);
 
-    @Parameter(names = { "-d", "--domain" }, description = "Streams domain name.", required = false)
+    @Parameter(names = { "-d", "--domain" }, description = Constants.DESC_DOMAIN_ID, required = false)
     private String domainName = getEnvDefault(Constants.ENV_DOMAIN_ID,Constants.DEFAULT_DOMAIN_ID);
 
-    @Parameter(names = { "-i", "--instance" }, description = "Streams instance name", required = false)
+    @Parameter(names = { "-i", "--instance" }, description = Constants.DESC_INSTANCE_ID, required = false)
     private String instanceName = getEnvDefault(Constants.ENV_INSTANCE_ID,Constants.DEFAULT_INSTANCE_ID);
 
-    @Parameter(names = { "-u", "--user" }, description = "Streams login user name", required = false)
+    @Parameter(names = { "-u", "--user" }, description = Constants.DESC_USERNAME, required = false)
     private String user = getEnvDefault(Constants.ENV_USERNAME,Constants.DEFAULT_USERNAME);
     
-    @Parameter(names = "--password", description = "Streams login password, recommend using $STREAMS_EXPORTER_PW", required = false)
+    @Parameter(names = {"--password"}, description = Constants.DESC_PASSWORD, required = false)
     private String password = getEnvDefault(Constants.ENV_PASSWORD,Constants.DEFAULT_PASSWORD);
     
-    @Parameter(names = { "-x", "--x509cert" }, description = "X509 Certification file to use instead of username/password, defaults to $STREAMS_X509CERT", required = false)
+    @Parameter(names = { "-x", "--x509cert" }, description = Constants.DESC_X509CERT, required = false)
     private String x509Cert = getEnvDefault(Constants.ENV_X509CERT,Constants.DEFAULT_X509CERT);
 
-    @Parameter(names = "--noconsole", description = "Indicates that the console should not be used for prompts")
+    @Parameter(names = "--noconsole", description = Constants.DESC_NOCONSOLE)
     private boolean hasNoConsole = false;
 
-    @Parameter(names = { "-r", "--refresh" }, description = "Refresh rate of metrics in seconds", required = false)
+    @Parameter(names = { "-r", "--refresh" }, description = Constants.DESC_REFRESHRATE, required = false)
     private int refreshRateSeconds = Integer.parseInt(getEnvDefault(Constants.ENV_REFRESHRATE,Constants.DEFAULT_REFRESHRATE));
 
-    @Parameter(names = "--truststore", description = "Path to a Java keystore containing the trusted jmx server's certificate", required = false, validateWith = FileExistsValidator.class)
+    @Parameter(names = "--truststore", description = Constants.DESC_TRUSTSTORE, required = false, validateWith = FileExistsValidator.class)
     private String truststore = getEnvDefault(Constants.ENV_TRUSTSTORE,Constants.DEFAULT_TRUSTSTORE);
 
-    private String protocol = getEnvDefault(Constants.ENV_PROTOCOL,Constants.DEFAULT_PROTOCOL);;
+    @Parameter(names = "--sslOption", description = Constants.DESC_PROTOCOL, required = false)
+    private String sslOption = getEnvDefault(Constants.ENV_PROTOCOL,Constants.DEFAULT_PROTOCOL);;
     
 
     public String getPassword(boolean hasConsole) {
@@ -180,11 +181,11 @@ public class ServiceConfig {
     }
 
     public void setProtocol(String p) {
-        protocol = p;
+        sslOption = p;
     }
 
     public String getProtocol() {
-        return protocol;
+        return sslOption;
     }
 
     public void setTruststore(String path) {

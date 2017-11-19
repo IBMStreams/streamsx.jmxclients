@@ -195,6 +195,7 @@ public class Launcher {
         try {
             jc = new JCommander(config);
             jc.setProgramName(Constants.PROGRAM_NAME);
+            jc.setColumnSize(132);
             jc.parse(args);
         } catch (ParameterException e) {
             System.out.println(e.getLocalizedMessage());

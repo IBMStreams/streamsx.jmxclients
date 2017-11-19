@@ -105,6 +105,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             LOGGER.debug(String
                     .format("Credentials provided: user = %s, password = %s, x509 cert = %s",
                             user, password, X509Cert));
+            LOGGER.debug("jmxUri: {}, Protocol: {}",jmxUri,protocol);
         }
 
         if (X509Cert == null) {
@@ -159,7 +160,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             // Create the connection if it does not exist
             if (connector == null) {
                 connector = new PooledJmxConnection(key, jmxUri, x509Cert,
-                        username, password, provider);
+                        username, password, provider, protocol);
                 connector.doStart();
                 connectors.put(key, connector);
             } else {
@@ -234,13 +235,14 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
         private String provider = null;
 
         public PooledJmxConnection(ConnectorKey connectorKey, String jmxUri,
-                String x509Cert, String user, String password, String provider) {
+                String x509Cert, String user, String password, String provider, String protocol) {
             this.mConnectorKey = connectorKey;
             this.jmxUri = jmxUri; // use streamtool getjmxconnect to find
             this.x509Cert = x509Cert;
             this.user = user;
             this.password = password;
             this.provider = provider;
+            this.protocol = protocol;
         }
 
         public void doStart() throws IOException, SecurityException {
@@ -333,6 +335,9 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             }
 
             env.put("jmx.remote.protocol.provider.pkgs", provider);
+            
+            // sslOption in Streams, set for JMX Connections
+            env.put("jmx.remote.tls.enabled.protocols", protocol);
 
             mConnector = JMXConnectorFactory.connect(new JMXServiceURL(jmxUri),
                     env);
