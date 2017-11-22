@@ -192,7 +192,7 @@ The versions of Prometheus and Grafana specified in the docker-compose.yml file 
 * Docker Compose (version 1.9.0-5 with .yml file format 2 used in development)
 * Access to Dockerhub or local repository with Images:
   * ibmjava:sfj (or any 1.8 version)
-  * prom/prometheus (1.8.2 used in development)
+  * prom/prometheus (2.0.0 used in development)
   * grafana/grafana (4.6.1 used in development)
 
 ## Setup environment
