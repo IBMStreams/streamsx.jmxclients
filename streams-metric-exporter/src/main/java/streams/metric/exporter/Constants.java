@@ -33,14 +33,15 @@ public class Constants {
 		ENV_X509CERT = "STREAMS_X509CERT",
 		ENV_REFRESHRATE = "STREAMS_EXPORTER_REFRESHRATE",
 		ENV_TRUSTSTORE = "STREAMS_EXPORTER_TRUSTSTORE",
-		ENV_PROTOCOL = "STREAMS_EXPORTER_SSL_PROTOCOL"
+		ENV_PROTOCOL = "STREAMS_EXPORTER_SSLOPTION"
 	;
 	
+
 	public static final String
 		DEFAULT_JMXCONNECT = null,
 		DEFAULT_DOMAIN_ID = null,
 		DEFAULT_INSTANCE_ID = null,
-		DEFAULT_HOST = "localhost",
+		DEFAULT_HOST = "0.0.0.0",
 		DEFAULT_PORT = "25500",
 		DEFAULT_WEBPATH = "./",
 		DEFAULT_USERNAME = null,
@@ -48,6 +49,24 @@ public class Constants {
 		DEFAULT_X509CERT = null,
 		DEFAULT_REFRESHRATE = "10",
 		DEFAULT_TRUSTSTORE = null,
-		DEFAULT_PROTOCOL = "TLSv1"
+		DEFAULT_PROTOCOL = "SSL_TLSv2"
+	;
+	public static final String indent = "       ";
+	
+	public static final String
+		DESC_HELP = "Display command line arguments",
+		DESC_JMXCONNECT = "JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)\n      Environment Variable: " + ENV_JMXCONNECT,
+		DESC_DOMAIN_ID = "Streams domain name\n      Environment Variable: " + ENV_DOMAIN_ID,
+		DESC_INSTANCE_ID = "Streams instance name\n      Environment Variable: " + ENV_INSTANCE_ID,
+		DESC_HOST = "Listen Host or IP address for this service (e.g. localhost)\n      Environment Variable: " + ENV_HOST,
+		DESC_PORT = "Listen Port for this service\n      Environment Variable: " + ENV_PORT,
+		DESC_WEBPATH = "Base URI prefix (e.g. /someprefix)\n      Environment Variable: " + ENV_WEBPATH,
+		DESC_USERNAME = "Streams login username. Use this or X509CERT\n      Environment Variable: " + ENV_USERNAME,
+		DESC_PASSWORD = "Streams login password. Recommend using environment variable\n      Environment Variable: " + ENV_PASSWORD,
+		DESC_X509CERT = "X509 Certificate file to use instead of username/password\n      Environment Variable: " + ENV_X509CERT,
+		DESC_REFRESHRATE = "Refresh rate of metrics in seconds\n      Environment Variable: " + ENV_REFRESHRATE,
+		DESC_TRUSTSTORE = "Java keystore of certificates/signers to trust from JMX Server\n      Environment Variable: " + ENV_TRUSTSTORE,
+		DESC_PROTOCOL = "SSL Protocol for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)\n      Environment Variable: " + ENV_PROTOCOL,
+		DESC_NOCONSOLE = "Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password."
 	;
 }

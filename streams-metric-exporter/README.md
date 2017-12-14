@@ -38,7 +38,7 @@ The environment variable (STREAMS_INSTALL) must be set.
 The pom.xml file references the IBM Streams JMX API classes in the product directory.
 
 Another option is to copy the necessary files to the local machine and modify the pom.xml files
-\
+
 ## Compiling the application
 ```
 mvn compile
@@ -55,38 +55,58 @@ Location will be: target/executable-streams-metric-exporter.jar
 `java -jar target/executable-streams-metric-exporter.jar --help`
 
 <pre>
-Usage: <main class> [options]
+Usage: streams-metric-exporter [options]
   Options:
-  * -d, --domain
-       Streams domain name
+    -d, --domain
+      Streams domain name
+      Environment Variable: STREAMS_DOMAIN_ID
+      Default: StreamsDomain
     --help
-       Default: false
+      Display command line arguments
     -h, --host
-       REST Servers host interface to listen (e.g. localhost)
-       Default: localhost
-  * -i, --instance
-       Streams instance name
-  * -j, --jmxurl
-       JMX Connection URL (e.g. service:jmx:jmxmp://server:9975)
+      Listen Host or IP address for this service (e.g. localhost)
+      Environment Variable: STREAMS_EXPORTER_HOST
+      Default: localhost
+    -i, --instance
+      Streams instance name
+      Environment Variable: STREAMS_INSTANCE_ID
+      Default: StreamsInstance
+    -j, --jmxurl
+      JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)
+      Environment Variable: STREAMS_EXPORTER_JMXCONNECT
     --noconsole
-       Indicates that the console should not be used for prompts
-       Default: false
+      Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.
+      Default: false
+    --password
+      Streams login password. Recommend using environment variable
+      Environment Variable: STREAMS_EXPORTER_PASSWORD
     -p, --port
-       REST Server port to listen on (e.g. 25500
-       Default: 25500
+      Listen Port for this service
+      Environment Variable: STREAMS_EXPORTER_PORT
+      Default: 25500
     -r, --refresh
-       Refresh rate of metrics in seconds
-       Default: 10
+      Refresh rate of metrics in seconds
+      Environment Variable: STREAMS_EXPORTER_REFRESHRATE
+      Default: 10
+    --sslOption
+      SSL Protocol for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
+      Environment Variable: 
+      STREAMS_EXPORTER_SSLOPTION 
+      Default: SSL_TLSv2
     --truststore
-       Path to a Java keystore containing the trusted jmx server's certificate
+      Java keystore of certificates/signers to trust from JMX Server
+      Environment Variable: STREAMS_EXPORTER_TRUSTSTORE
     -u, --user
-       Streams login user name
-    --webPath
-       REST Base URI Web Path (e.g. /thispath)
-       Default: /
+      Streams login username. Use this or X509CERT
+      Environment Variable: STREAMS_EXPORTER_USERNAME
+    --webPath, 
+      Base URI prefix (e.g. /someprefix)
+      Environment Variable: STREAMS_EXPORTER_WEBPATH
+      Default: ./
     -x, --x509cert
-       X509 Certification file to use instead of username/password, defaults to
-       $STREAMS_X509CERT
+      X509 Certificate file to use instead of username/password
+      Environment Variable: STREAMS_X509CERT
+
 </pre>
 
 # Running the application
@@ -172,7 +192,7 @@ The versions of Prometheus and Grafana specified in the docker-compose.yml file 
 * Docker Compose (version 1.9.0-5 with .yml file format 2 used in development)
 * Access to Dockerhub or local repository with Images:
   * ibmjava:sfj (or any 1.8 version)
-  * prom/prometheus (1.8.2 used in development)
+  * prom/prometheus (2.0.0 used in development)
   * grafana/grafana (4.6.1 used in development)
 
 ## Setup environment
