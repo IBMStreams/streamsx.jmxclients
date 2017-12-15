@@ -79,7 +79,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
     private String jmxUri = null;
     private String user = null;
     private String password = null;
-    private String protocol = null;
+    private String sslOption = null;
     private String X509Cert = null;
     private boolean retryConnections = false;
     private List<MXBeanSourceProviderListener> providerListeners = new ArrayList<MXBeanSourceProviderListener>();
@@ -88,12 +88,12 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
     // Create a constructor that will allow the pool to be constructed for use
     // with a single connection string set
     public JmxConnectionPool(String jmxUri, String x509Cert, String user,
-            String password, String protocol, boolean retryConnections) {
+            String password, String ssloption, boolean retryConnections) {
         this.jmxUri = jmxUri; // use streamtool getjmxconnect to find
         this.user = StringUtils.trimToNull(user);
         this.password = StringUtils.trimToNull(password);
         this.X509Cert = StringUtils.trimToNull(x509Cert);
-        this.protocol = protocol;
+        this.sslOption = ssloption;
         this.retryConnections = retryConnections;
 
         // If the user did not pass in x509 or username password, try to get
@@ -105,7 +105,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             LOGGER.debug(String
                     .format("Credentials provided: user = %s, password = %s, x509 cert = %s",
                             user, password, X509Cert));
-            LOGGER.debug("jmxUri: {}, Protocol: {}",jmxUri,protocol);
+            LOGGER.debug("jmxUri: {}, sslOption: {}",jmxUri,ssloption);
         }
 
         if (X509Cert == null) {
@@ -160,7 +160,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             // Create the connection if it does not exist
             if (connector == null) {
                 connector = new PooledJmxConnection(key, jmxUri, x509Cert,
-                        username, password, provider, protocol);
+                        username, password, provider, sslOption);
                 connector.doStart();
                 connectors.put(key, connector);
             } else {

@@ -14,29 +14,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package streams.metric.exporter.cli.validators;
+package streams.metric.exporter.cli;
 
-import java.io.File;
-
-import com.beust.jcommander.IParameterValidator;
+import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;
+import streams.metric.exporter.rest.Protocol;
 
 /**
  * IParameterValidator that verifies that a parameter value is a filesystem path
  * that points to an existing file.
  */
-public class FileExistsValidator implements IParameterValidator {
+public class ServerProtocolConverter implements IStringConverter<Protocol> {
 
     @Override
-    public void validate(String name, String value) throws ParameterException {
-        if (value == null) {
-            throw new ParameterException(String.format("Parameter %s must not be null.", name));
-        }
-        
-        File f = new File(value);
-        
-        if (!f.exists() || f.isDirectory()) {
-            throw new ParameterException(String.format("%s does not exist or is not a valid file. Parameter %s must contain the path of an existing file.", value, name));
+    public Protocol convert(String value) throws ParameterException {
+    	return convertProtocol(value);
+    }
+    
+    public static Protocol convertProtocol(String value) throws ParameterException {
+    	
+    	if (value.equalsIgnoreCase(Protocol.HTTP.toString())) {
+    		return Protocol.HTTP;
+    	} else if (value.equalsIgnoreCase(Protocol.HTTPS.toString())) {
+    		return Protocol.HTTPS;
+    	} else {
+            throw new ParameterException(String.format("%s is not a valid protocol.  Valid values include [http|https]", value));
         }
     }
+    
 }

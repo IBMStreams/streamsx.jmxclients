@@ -43,6 +43,7 @@ import streams.metric.exporter.jmx.JmxServiceContext;
 import streams.metric.exporter.jmx.JmxTrustManager;
 import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.jmx.MXBeanSourceProvider;
+import streams.metric.exporter.rest.Protocol;
 import streams.metric.exporter.rest.RestServer;
 import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
@@ -69,7 +70,7 @@ public class Launcher {
         this.config = config;
         connectionPool = new JmxConnectionPool(config.getJmxUrl(),
                 config.getX509Cert(), config.getUser(),
-                config.getPassword(), config.getProtocol(), retryInitialConnection);
+                config.getPassword(), config.getSslOption(), retryInitialConnection);
 
         TrustManager[] trustManagers = null;
 
@@ -118,7 +119,7 @@ public class Launcher {
             } 
         }
 
-        webClient = new WebClientImpl(config.getProtocol(), trustManagers);
+        webClient = new WebClientImpl(config.getSslOption(), trustManagers);
 
         this.jmxContext = new JmxServiceContext() {
             public MXBeanSourceProvider getBeanSourceProvider() {
@@ -134,9 +135,9 @@ public class Launcher {
     private boolean startRestServer() {
     	LOGGER.info("Creating and starting HTTP Server...");
         try {
-            restServer = new RestServer(config.getHost(), config.getPort(), config.getWebPath());
+            restServer = new RestServer(config.getHost(), config.getPort(), config.getWebPath(), config.getServerProtocol(), config.getServerKeystore(), config.getServerKeystorePwd());
         } catch (Exception e) {
-            LOGGER.error("REST Server failed to start !! NEED BETTER ERROR HANDLING !!", e);
+            LOGGER.error("HTTP Server failed to start !!", e);
             return false;
         }
         LOGGER.info("... HTTP Server Started");
@@ -172,7 +173,7 @@ public class Launcher {
         try {
             jobTracker = StreamsInstanceTracker.initInstance(
                     jmxContext, config.getDomainName(), config.getInstanceName(),
-                    config.getRefreshRateSeconds(), config.getProtocol());
+                    config.getRefreshRateSeconds(), config.getSslOption());
         } catch (StreamsTrackerException e) {
             LOGGER.error("Could not construct the StreamsInstanceJobMonitor, Exit!", e);
             return false;
@@ -206,6 +207,16 @@ public class Launcher {
         if (config.isHelp()) {
             jc.usage();
             System.exit(0);
+        }
+        
+        // Add validate config because we now accept environment variables, and jcommander does not handle that
+        // FUTURE: replace with a more comprehensive approach
+        try {
+        	config.validateConfig();
+        } catch (ParameterException e) {
+        	System.out.println(e.getLocalizedMessage());
+        	jc.usage();
+        	System.exit(1);
         }
 
         LOGGER.trace("*** Settings ***\n" + config);
