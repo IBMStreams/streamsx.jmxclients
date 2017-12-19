@@ -16,7 +16,10 @@
 
 package streams.metric.exporter.rest;
 
+import java.io.IOException;
 import java.net.URI;
+
+import javax.net.ssl.SSLContext;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +27,11 @@ import org.slf4j.LoggerFactory;
 import io.prometheus.client.exporter.MetricsServlet;
 
 import org.glassfish.grizzly.http.server.HttpServer;
+import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.servlet.ServletRegistration;
 import org.glassfish.grizzly.servlet.WebappContext;
+import org.glassfish.grizzly.ssl.SSLContextConfigurator;
+import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
@@ -37,31 +43,29 @@ public class RestServer {
 
     private String baseUri = null;
     private HttpServer server = null;
+    
+    private Protocol serverProtocol = Protocol.HTTP;
+    private String serverKeystore = null;
+    private String serverKeystorePwd = null;
+    
+    
+    public RestServer(String host, String webPort, String webPath, Protocol serverProtocol, String serverKeystore, String serverKeystorePwd) throws IOException {
+    	String webPathString = (webPath == null?"":webPath);
+        //this.baseUri = serverProtocol.toString() + "://" + host + ":" + webPort + ((webPath.length() > 0) && !webPath.startsWith("/")?"/":"") + webPath + (webPath.endsWith("/")?"":"/");
+        this.baseUri = serverProtocol.toString() + "://" + host + ":" + webPort + ((webPathString.length() > 0) && !webPathString.startsWith("/")?"/":"") + webPathString + (webPathString.endsWith("/")?"":"/");
 
-    public RestServer(String host, String webPort, String webPath) {
-        this.baseUri = "http://" + host + ":" + webPort + ((webPath.length() > 0) && !webPath.startsWith("/")?"/":"") + webPath + (webPath.endsWith("/")?"":"/");
-
+        this.serverProtocol = serverProtocol;
+        this.serverKeystore = serverKeystore;
+        this.serverKeystorePwd = serverKeystorePwd;
+        
         server = startServer();
 
-        LOGGER.debug("Jersey app started listening on {}.",
+        LOGGER.info("HTTP Server Listening on: {}",
                 new Object[] { this.baseUri });
     }
 
-//    public HttpServer startServer() {
-//
-//        String[] packages = { "streams.prometheus.exporter.rest.resources",
-//                "streams.prometheus.exporter.rest.errorhandling",
-//                "streams.prometheus.exporter.rest.serializers" };
-//
-//        final ResourceConfig rc = new ResourceConfig().packages(packages);
-//        // Enable JSON media conversions
-//        rc.register(JacksonFeature.class);
-//
-//        return GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri),
-//                rc);
-//    }
 
-    public HttpServer startServer() {
+    public HttpServer startServer() throws IOException {
     	HttpServer theServer;
     	
 //        String[] packages = { "streams.prometheus.exporter.rest.resources",
@@ -78,18 +82,58 @@ public class RestServer {
         		"streams.metric.exporter.rest.resources;streams.metric.exporter.rest.errorhandling;streams.metric.exporter.rest.serializers");
         registration.addMapping("/*");
         
-        theServer = GrizzlyHttpServerFactory.createHttpServer(URI.create(baseUri));
-        
+       //if (this.serverProtocol.equalsIgnoreCase("https")) {
+        if (this.serverProtocol == Protocol.HTTPS) {
+
+        	LOGGER.debug("Using https protocol");
+        	theServer = createHttpsServer();
+        } else {
+        	LOGGER.debug("Using http protcol");
+        	theServer = createHttpServer();
+        }
         // Prometheus servlet
         // FUTURE: if we go with plugin this needs to be variant if it is created or not
         ServletRegistration prometheus = context.addServlet("PrometheusContainer",new MetricsServlet());
         prometheus.addMapping("/prometheus");
         
         context.deploy(theServer);
-
         
+        theServer.start();
+ 
         return theServer;
     }
+    
+    private HttpServer createHttpServer() {
+    	// Create server but do not start it
+    	return GrizzlyHttpServerFactory.createHttpServer(URI.create(this.baseUri),false);
+    }
+    
+    private HttpServer createHttpsServer() {
+        SSLContextConfigurator sslContextConfig = new SSLContextConfigurator();
+
+        // set up security context
+        sslContextConfig.setKeyStoreFile(this.serverKeystore); // contains server cert and key
+        sslContextConfig.setKeyStorePass(this.serverKeystorePwd);
+
+        // Create context and have exceptions raised if anything wrong with keystore or password
+        SSLContext sslContext = sslContextConfig.createSSLContext(true);
+                
+        // Create server but do not start it
+        HttpServer server = GrizzlyHttpServerFactory.createHttpServer(URI.create(this.baseUri),false);
+
+        
+        //LOGGER.debug("About to loop through listeners");
+        //for (NetworkListener listener : server.getListeners()) {
+        //	LOGGER.debug("About to setSecure on listener name: " + listener.getName());
+        //}
+        
+        // grizzly is the default listener name
+        server.getListener("grizzly").setSecure(true);
+        // One way authentication
+        server.getListener("grizzly").setSSLEngineConfig(new SSLEngineConfigurator(sslContext).setClientMode(false).setNeedClientAuth(false));
+        return server;
+    }
+    
     public void stopServer() {
         server.shutdownNow();
     }

@@ -1,8 +1,8 @@
 # streams-metric-exporter
-(formerly the poorly named streams-metric-exporter)
+
 This application provides an interface to the IBM Streams - Stream Processing System for the purposes of retrieving status and metrics of streams instances, jobs, and resources.
 
-This version provides 2 interfaces:
+This version provides 2 HTTP/HTTPS interfaces:
 * Prometheus: HTTP/Text endpoint in Prometheus metrics format.
 * REST: Multiple endpoints returning json.
 
@@ -11,6 +11,8 @@ IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pul
 The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.
 It is meant to be used as a Streams Application Metrics exporter.  It is not meant to monitor the internal system services of IBM Streams.
 This application improves performance over per-job metric scraping by periodically pulling all job metrics (via the JMX Server HTTP callbacks) and caching them.  Users can use the REST endpoints (including Prometheus endpoint) to get metrics and status of specific jobs.
+
+The REST service supports HTTP and HTTPS with One-way SSL Authentication.
 
 ## Questions
 For questions and issues, please contact:
@@ -60,7 +62,6 @@ Usage: streams-metric-exporter [options]
     -d, --domain
       Streams domain name
       Environment Variable: STREAMS_DOMAIN_ID
-      Default: StreamsDomain
     --help
       Display command line arguments
     -h, --host
@@ -70,7 +71,14 @@ Usage: streams-metric-exporter [options]
     -i, --instance
       Streams instance name
       Environment Variable: STREAMS_INSTANCE_ID
-      Default: StreamsInstance
+    --jmxssloption
+      SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
+      Environment Variable:
+      STREAMS_EXPORTER_JMX_SSLOPTION
+      Default: TLSv1
+    --jmxtruststore
+      Java keystore of certificates/signers to trust from JMX Server
+      Environment Variable: STREAMS_EXPORTER_JMX_TRUSTSTORE
     -j, --jmxurl
       JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)
       Environment Variable: STREAMS_EXPORTER_JMXCONNECT
@@ -88,21 +96,20 @@ Usage: streams-metric-exporter [options]
       Refresh rate of metrics in seconds
       Environment Variable: STREAMS_EXPORTER_REFRESHRATE
       Default: 10
-    --sslOption
-      SSL Protocol for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
-      Environment Variable: 
-      STREAMS_EXPORTER_SSLOPTION 
-      Default: SSL_TLSv2
-    --truststore
-      Java keystore of certificates/signers to trust from JMX Server
-      Environment Variable: STREAMS_EXPORTER_TRUSTSTORE
+    --serverkeystore
+      Java keystore containing server certificate and key to identify server side of this application
+    --serverkeystorepwd
+      Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
+    --serverprotocol
+      http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
+      Default: http
     -u, --user
       Streams login username. Use this or X509CERT
       Environment Variable: STREAMS_EXPORTER_USERNAME
-    --webPath, 
+    --webPath,
       Base URI prefix (e.g. /someprefix)
       Environment Variable: STREAMS_EXPORTER_WEBPATH
-      Default: ./
+      Default: /
     -x, --x509cert
       X509 Certificate file to use instead of username/password
       Environment Variable: STREAMS_X509CERT

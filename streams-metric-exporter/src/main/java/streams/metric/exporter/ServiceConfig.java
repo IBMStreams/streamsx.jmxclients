@@ -18,12 +18,18 @@ package streams.metric.exporter;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.internal.Console;
 import com.beust.jcommander.internal.DefaultConsole;
 
-import streams.metric.exporter.cli.validators.FileExistsValidator;
+import streams.metric.exporter.cli.ServerProtocolValidator;
+import streams.metric.exporter.rest.Protocol;
+import streams.metric.exporter.cli.FileExistsValidator;
+import streams.metric.exporter.cli.ServerProtocolConverter;
 
 public class ServiceConfig {
+	
+	// Command line arguments with defaults from environment variables
 
     @Parameter(names = "--help", description = Constants.DESC_HELP, help = true)
     private boolean help;
@@ -61,13 +67,21 @@ public class ServiceConfig {
     @Parameter(names = { "-r", "--refresh" }, description = Constants.DESC_REFRESHRATE, required = false)
     private int refreshRateSeconds = Integer.parseInt(getEnvDefault(Constants.ENV_REFRESHRATE,Constants.DEFAULT_REFRESHRATE));
 
-    @Parameter(names = "--truststore", description = Constants.DESC_TRUSTSTORE, required = false, validateWith = FileExistsValidator.class)
-    private String truststore = getEnvDefault(Constants.ENV_TRUSTSTORE,Constants.DEFAULT_TRUSTSTORE);
+    @Parameter(names = "--jmxtruststore", description = Constants.DESC_JMX_TRUSTSTORE, required = false, validateWith = FileExistsValidator.class)
+    private String truststore = getEnvDefault(Constants.ENV_JMX_TRUSTSTORE,Constants.DEFAULT_JMX_TRUSTSTORE);
 
-    @Parameter(names = "--sslOption", description = Constants.DESC_PROTOCOL, required = false)
-    private String sslOption = getEnvDefault(Constants.ENV_PROTOCOL,Constants.DEFAULT_PROTOCOL);;
+    @Parameter(names = "--jmxssloption", description = Constants.DESC_JMX_SSLOPTION, required = false)
+    private String sslOption = getEnvDefault(Constants.ENV_JMX_SSLOPTION,Constants.DEFAULT_JMX_SSLOPTION);
     
-
+    @Parameter(names = "--serverprotocol", description = Constants.DESC_SERVER_PROTOCOL, required = false, validateWith = ServerProtocolValidator.class)
+    private String serverProtocol = getEnvDefault(Constants.ENV_SERVER_PROTOCOL,Constants.DEFAULT_SERVER_PROTOCOL);
+    
+    @Parameter(names = "--serverkeystore", description = Constants.DESC_SERVER_KEYSTORE, required = false, validateWith = FileExistsValidator.class)
+    private String serverKeystore = getEnvDefault(Constants.ENV_SERVER_KEYSTORE,Constants.DEFAULT_SERVER_KEYSTORE);
+    
+    @Parameter(names = "--serverkeystorepwd", description = Constants.DESC_SERVER_KEYSTORE_PWD, required = false)
+    private String serverKeystorePwd = getEnvDefault(Constants.ENV_SERVER_KEYSTORE_PWD,Constants.DEFAULT_SERVER_KEYSTORE_PWD);
+    
     public String getPassword(boolean hasConsole) {
         // Choose the appropriate JCommander console implementation to use
         Console console = null;
@@ -180,14 +194,6 @@ public class ServiceConfig {
         this.refreshRateSeconds = refreshRateSeconds;
     }
 
-    public void setProtocol(String p) {
-        sslOption = p;
-    }
-
-    public String getProtocol() {
-        return sslOption;
-    }
-
     public void setTruststore(String path) {
         truststore = path;
     }
@@ -203,8 +209,54 @@ public class ServiceConfig {
     public void setHelp(boolean help) {
         this.help = help;
     }
+    
+    public String getSslOption() {
+		return sslOption;
+	}
 
-    @Override
+	public void setSslOption(String sslOption) {
+		this.sslOption = sslOption;
+	}
+
+	//public String getServerProtocol() {
+	//	return serverProtocol;
+	//}
+
+	public void setServerProtocol(String serverProtocol) {
+		this.serverProtocol = serverProtocol;
+	}
+
+	public String getServerKeystore() {
+		return serverKeystore;
+	}
+
+	public void setServerKeystore(String serverKeystore) {
+		this.serverKeystore = serverKeystore;
+	}
+
+	public String getServerKeystorePwd() {
+		return serverKeystorePwd;
+	}
+
+	public void setServerKeystorePwd(String serverKeystorePwd) {
+		this.serverKeystorePwd = serverKeystorePwd;
+	}
+	
+	 
+	// Validated values.  Cannot just use jcommander because we now accept environment variables
+	public Protocol getServerProtocol() throws ParameterException {
+		return ServerProtocolConverter.convertProtocol(serverProtocol);
+	}
+	
+	public void validateConfig() throws ParameterException {
+		if (!ServerProtocolValidator.isValid(serverProtocol)) {
+            throw new ParameterException(String.format(Constants.INVALID_SERVER_PROTOCOL, serverProtocol));
+		}
+	}
+	
+	
+
+	@Override
     public String toString() {
         StringBuilder result = new StringBuilder();
         String newline = System.getProperty("line.separator");
@@ -233,10 +285,15 @@ public class ServiceConfig {
         result.append(newline);
         result.append("refreshRateSeconds: " + this.getRefreshRateSeconds());
         result.append(newline);
-        result.append("truststore: " + getTruststore());
+        result.append("jmxtruststore: " + getTruststore());
         result.append(newline);
-        result.append("protocol: " + getProtocol());
-
+        result.append("jmxssloption: " + getSslOption());
+        result.append(newline);
+        result.append("serverprotocol: " + getServerProtocol().toString());
+        result.append(newline);
+        result.append("serverkeystore: " + getServerKeystore());
+        result.append(newline);
+        result.append("serverkeystorepwd: " + getServerKeystorePwd());
         return result.toString();
     }
      
