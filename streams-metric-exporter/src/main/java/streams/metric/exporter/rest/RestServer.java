@@ -27,15 +27,13 @@ import org.slf4j.LoggerFactory;
 import io.prometheus.client.exporter.MetricsServlet;
 
 import org.glassfish.grizzly.http.server.HttpServer;
-import org.glassfish.grizzly.http.server.NetworkListener;
 import org.glassfish.grizzly.servlet.ServletRegistration;
 import org.glassfish.grizzly.servlet.WebappContext;
 import org.glassfish.grizzly.ssl.SSLContextConfigurator;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
-import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.glassfish.jersey.jackson.JacksonFeature;
+
 
 public class RestServer {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
@@ -93,8 +91,8 @@ public class RestServer {
         }
         // Prometheus servlet
         // FUTURE: if we go with plugin this needs to be variant if it is created or not
-        ServletRegistration prometheus = context.addServlet("PrometheusContainer",new MetricsServlet());
-        prometheus.addMapping("/prometheus");
+        //ServletRegistration prometheus = context.addServlet("PrometheusContainer",new MetricsServlet());
+        //prometheus.addMapping("/prometheus");
         
         context.deploy(theServer);
         

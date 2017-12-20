@@ -52,6 +52,13 @@ public class RootResource {
     public RootResource() {
         jobTrackerModule.addSerializer(StreamsInstanceTracker.class, new StreamsInstanceJobMonitorSerializer());
     }
+    
+    // Default page
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response getRoot() throws WebApplicationException {
+    	return Response.status(Response.Status.OK).entity("try using the /jobtracker or /prometheus url").build();
+    }
 
     // if Instance does not exist, returns 404
     @Path("instance")
