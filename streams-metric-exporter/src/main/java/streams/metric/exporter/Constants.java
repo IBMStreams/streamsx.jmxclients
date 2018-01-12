@@ -75,9 +75,9 @@ public class Constants {
 		DESC_JMX_TRUSTSTORE = "Java keystore of certificates/signers to trust from JMX Server\n      Environment Variable: " + ENV_JMX_TRUSTSTORE,
 		DESC_JMX_SSLOPTION = "SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)\n      Environment Variable: " + ENV_JMX_SSLOPTION,
 		DESC_NOCONSOLE = "Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.",
-		DESC_SERVER_PROTOCOL = "http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)",
-		DESC_SERVER_KEYSTORE = "Java keystore containing server certificate and key to identify server side of this application",
-		DESC_SERVER_KEYSTORE_PWD = "Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match"
+		DESC_SERVER_PROTOCOL = "http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)\n      Environment Variable: " + ENV_SERVER_PROTOCOL,
+		DESC_SERVER_KEYSTORE = "Java keystore containing server certificate and key to identify server side of this application\n      Environment Variable: " + ENV_SERVER_KEYSTORE,
+		DESC_SERVER_KEYSTORE_PWD = "Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match\n      Environment Variable: " + ENV_SERVER_KEYSTORE_PWD
 	;
 	
 	public static final String
