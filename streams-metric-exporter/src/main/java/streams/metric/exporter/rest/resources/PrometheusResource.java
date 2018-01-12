@@ -29,6 +29,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.WebApplicationException;
 
 import io.prometheus.client.CollectorRegistry;
+import streams.metric.exporter.error.StreamsTrackerException;
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 @Path("/prometheus")
 public class PrometheusResource {
@@ -40,8 +42,12 @@ public class PrometheusResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public Response getInstanceInfo() throws IOException,
-            WebApplicationException {
+            WebApplicationException,
+    		StreamsTrackerException{
     	
+        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
+                .getInstance();    	
+        
     	StringWriter writer = new StringWriter();
     	
     	io.prometheus.client.exporter.common.TextFormat.write004(writer, CollectorRegistry.defaultRegistry.metricFamilySamples());
