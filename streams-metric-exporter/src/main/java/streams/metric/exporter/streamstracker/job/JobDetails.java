@@ -289,7 +289,7 @@ public class JobDetails implements NotificationListener {
 
 	public void setHealth(JobMXBean.Health health) {
 		this.health = health;
-		metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.streamsInstanceName, this.name).set((this.getHealth() == JobMXBean.Health.HEALTHY?1:0));
+		metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, this.streamsInstanceName, this.name).set((this.getHealth() == JobMXBean.Health.HEALTHY?1:0));
 
 	}
 
@@ -698,7 +698,7 @@ public class JobDetails implements NotificationListener {
 		// When this job is removed, remove all metrics for this job
 		// (really its the specific instance of the metric for the streams objects of this job)
 		LOGGER.debug("removeExportedMetrics()");
-		metricsExporter.removeAllChildStreamsMetrics(this.streamsInstanceName,name);
+		metricsExporter.removeAllChildStreamsMetrics(this.domain, this.streamsInstanceName,name);
 	}
 	private void updateExportedMetrics() {
 		/* Use this.jobMetrics to update the exported metrics */
@@ -789,6 +789,7 @@ public class JobDetails implements NotificationListener {
 //										" to: " + metric.get("value"));
 								metricsExporter.getStreamsMetric(operatorMetricName,
 										StreamsObjectType.OPERATOR,
+										this.domain,
 										this.streamsInstanceName,
 										name,
 										operatorName).set((long)metric.get("value"));
@@ -811,6 +812,7 @@ public class JobDetails implements NotificationListener {
 								default:
 									metricsExporter.getStreamsMetric(metricName,
 											StreamsObjectType.OPERATOR_INPUTPORT,
+											this.domain,
 											this.streamsInstanceName,
 											name,
 											operatorName,
@@ -835,6 +837,7 @@ public class JobDetails implements NotificationListener {
 								default:
 									metricsExporter.getStreamsMetric(metricName,
 											StreamsObjectType.OPERATOR_OUTPUTPORT,
+											this.domain,
 											this.streamsInstanceName,
 											name,
 											operatorName,
@@ -846,18 +849,18 @@ public class JobDetails implements NotificationListener {
 						
 					} // End Operator Loop
 				} // End PE Loop
-				metricsExporter.getStreamsMetric("pecount", StreamsObjectType.JOB,this.streamsInstanceName, name).set(peArray.size());
-				metricsExporter.getStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB, this.streamsInstanceName,name).set(ncpu);
-				metricsExporter.getStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, this.streamsInstanceName,name).set(nrmc);
-				metricsExporter.getStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB,this.streamsInstanceName,name).set(nmc);
+				metricsExporter.getStreamsMetric("pecount", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, name).set(peArray.size());
+				metricsExporter.getStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,name).set(ncpu);
+				metricsExporter.getStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,name).set(nrmc);
+				metricsExporter.getStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,name).set(nmc);
 				if (numconnections > 0)
 					avgcongestion = totalcongestion / numconnections;
 				// else it was initialized to 0;
-				metricsExporter.getStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName, name).set(totalcongestion);
-				metricsExporter.getStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName,name).set(avgcongestion);
-				metricsExporter.getStreamsMetric("max_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName,name).set(maxcongestion);
+				metricsExporter.getStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, name).set(totalcongestion);
+				metricsExporter.getStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,name).set(avgcongestion);
+				metricsExporter.getStreamsMetric("max_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,name).set(maxcongestion);
 				if (mincongestion == 999) mincongestion = 0;
-				metricsExporter.getStreamsMetric("min_congestionFactor", StreamsObjectType.JOB, this.streamsInstanceName,name).set(mincongestion);
+				metricsExporter.getStreamsMetric("min_congestionFactor", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,name).set(mincongestion);
 			} catch (ParseException e) {
 				throw new IllegalStateException(e);
 			}

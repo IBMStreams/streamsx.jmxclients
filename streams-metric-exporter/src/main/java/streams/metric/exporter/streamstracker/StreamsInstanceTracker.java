@@ -412,7 +412,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         // Loop through old list and remove any not in the new list
         for (String key : prevInstanceResourceMetrics.keySet()) {
         	if (!instanceResourceMetrics.containsKey(key))
-        		metricsExporter.removeAllChildStreamsMetrics(this.instanceInfo.getInstanceName(),key);
+        		metricsExporter.removeAllChildStreamsMetrics(this.domainName,this.instanceInfo.getInstanceName(),key);
         }
         // Set exiting and new ones
         for (String resourceName : instanceResourceMetrics.keySet()) {
@@ -420,6 +420,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         	for (String metricName : rmap.keySet()) {
 				metricsExporter.getStreamsMetric(metricName,
 						StreamsObjectType.RESOURCE,
+						this.domainName,
 						this.instanceInfo.getInstanceName(),
 						resourceName).set((long)rmap.get(metricName));
         	}
@@ -505,7 +506,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
         if (instanceInfo.isInstanceAvailable()) {
         	LOGGER.trace("*** Calling updateInstanceResourceMetrics()");
-        	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(jobMap.size());
+        	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE,
+        			this.domainName,
+        			this.instanceInfo.getInstanceName()).set(jobMap.size());
             updateInstanceResourceMetrics();
         }
 
@@ -925,7 +928,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         LOGGER.debug("** addJobToMap (jobid: " + jobid + ") time: "
                 + sw.getTime());
         
-		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(jobMap.size());
+		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(jobMap.size());
 
     }
 
@@ -941,7 +944,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         LOGGER.debug("** removeJobFromMap (jobid: " + jobid + ") time: "
                 + sw.getTime());
         
-		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(jobMap.size());
+		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(jobMap.size());
 
     }   
     
@@ -1107,7 +1110,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     					this.instanceInfo.setInstanceStartTime(null);
     					resetTracker();
     					clearTracker();
-    					metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
+    					metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
     				}
     			}
     			break;
@@ -1138,13 +1141,13 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     
     private void createExportedInstanceMetrics() {
     	metricsExporter.createStreamsMetric("status", StreamsObjectType.INSTANCE, "Instance status, 1: running, .5: partially up, 0: stopped, failed, unknown");
-    	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
+    	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
     	metricsExporter.createStreamsMetric("jobCount", StreamsObjectType.INSTANCE, "Number of jobs currently deployed into the streams instance");
-    	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.instanceInfo.getInstanceName()).set(0);
+    	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(0);
     }
     
     private void removeExportedInstanceMetrics() {
-		metricsExporter.removeAllChildStreamsMetrics(this.instanceInfo.getInstanceName());
+		metricsExporter.removeAllChildStreamsMetrics(this.domainName, this.instanceInfo.getInstanceName());
     }
     
     private double getInstanceStatusAsMetric() {

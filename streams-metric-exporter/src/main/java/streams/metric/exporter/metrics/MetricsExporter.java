@@ -58,12 +58,12 @@ public abstract class MetricsExporter {
 	}
 	
 	public enum StreamsObjectType {
-		INSTANCE("streams_instance_", new String[] { "instancename" }),
-		RESOURCE("streams_resource_", new String[] { "instancename", "resource"}),
-		JOB("streams_job_",new String[] { "instancename", "jobname" }),
-		OPERATOR("streams_operator_",new String[] { "instancename", "jobname", "operatorname" }), 
-		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "instancename", "jobname", "operatorname", "inputportname" }), 
-		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "instancename", "jobname", "operatorname","outputportname" });
+		INSTANCE("streams_instance_", new String[] { "domainname","instancename" }),
+		RESOURCE("streams_resource_", new String[] { "domainname","instancename", "resource"}),
+		JOB("streams_job_",new String[] { "domainname","instancename", "jobname" }),
+		OPERATOR("streams_operator_",new String[] { "domainname","instancename", "jobname", "operatorname" }), 
+		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "domainname","instancename", "jobname", "operatorname", "inputportname" }), 
+		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "domainname","instancename", "jobname", "operatorname","outputportname" });
 
 		private final String metric_prefix;
 		private final String[] labels;

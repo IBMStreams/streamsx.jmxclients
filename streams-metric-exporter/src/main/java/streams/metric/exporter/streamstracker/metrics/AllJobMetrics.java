@@ -176,7 +176,7 @@ public class AllJobMetrics {
 
         /******* HTTPS Interaction ********/
         try {
-            LOGGER.trace("* AllJobMetrics * Connect to Metrics URI and retrieve...");
+            LOGGER.trace("* AllJobMetrics * Connect to Metrics URI ({}) and retrieve...",uri);
 
             this.setAllMetrics(jmxContext.getWebClient().get(uri));
             this.setLastMetricsRefresh(new Date());
