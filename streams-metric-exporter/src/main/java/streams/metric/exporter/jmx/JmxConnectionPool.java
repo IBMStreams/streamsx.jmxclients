@@ -274,12 +274,12 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                     }
 
                 } catch (SecurityException e) {
-                    LOGGER.error("Initial JMX connection failed for security reasons, check username, password, or x509certificates");
+                    LOGGER.error("Initial JMX connection ({}) failed for security reasons, check username, password, or x509certificates",this.jmxUri);
                     LOGGER.trace("  SecurityException e:" + e);
 
                     throw e;
                 } catch (Exception e) {
-                    LOGGER.error("Intial JMX connection failed for unknown reason.  Not trying again");
+                    LOGGER.error("Intial JMX connection ({}) failed for unknown reason.  Not trying again",this.jmxUri);
                     LOGGER.info("  Exception e: " + e);
                     e.printStackTrace();
                     throw e;
@@ -364,7 +364,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                         initNetworkConnection();
                     } catch (Exception e) {
                         LOGGER.warn(
-                                "** Failed to reconnect to JMX Server. > " + e.getMessage());
+                                "** Failed to reconnect to JMX Server {}. => {}", jmxUri, e.getMessage());
                         scheduleReconnect();
                     }
                 }

@@ -55,6 +55,7 @@ import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
 import com.ibm.streams.management.job.JobMXBean;
 
+import streams.metric.exporter.Constants;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.jmx.JmxServiceContext;
@@ -143,15 +144,15 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             try {
                 refresh();
             } catch (StreamsTrackerException e) {
-                LOGGER.trace(
+                LOGGER.debug(
                         "Streams Tracker Periodic Refresh StreamsMonitorException: {}.",
                         e);
             } catch (UndeclaredThrowableException e) {
 
-                LOGGER.trace("StreamsMonitor Periodic Refresh UndeclaredThrowableException and unwrapping it");
+                LOGGER.debug("StreamsMonitor Periodic Refresh UndeclaredThrowableException and unwrapping it");
                 Throwable t = e.getUndeclaredThrowable();
                 if (t instanceof IOException) {
-                    LOGGER.trace("StreamsMonitor Periodic Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
+                    LOGGER.debug("StreamsMonitor Periodic Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
                 } else {
                     LOGGER.debug("StreamsMonitor Period Refresh unwrapped "
                             + t.getClass()
@@ -232,10 +233,15 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             initAllJobs();
         }
 
-        // Create timer to automatically refresh the status and metrics
-        Timer timer = new Timer("Refresher");
-        timer.scheduleAtFixedRate(refresher, this.refreshRateSeconds * 1000,
+        if (this.refreshRateSeconds != Constants.NO_REFRESH) {
+        	LOGGER.debug("Refresh rate set to {}, setting up timer process",this.refreshRateSeconds);
+        	// Create timer to automatically refresh the status and metrics
+        	Timer timer = new Timer("Refresher");
+        	timer.scheduleAtFixedRate(refresher, this.refreshRateSeconds * 1000,
                 refreshRateSeconds * 1000);
+        } else {
+        	LOGGER.debug("Refresh rate set to NO_REFRESH, Refreshes will be on-demand, not automatic");
+        }
 
     }
 
@@ -263,6 +269,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
     // Do not confuse with a Streams Instance, this refers to the instance of
     // this class
+    // If refresh rate is 0 (NO_REFRESH) then perform a refresh.
     public static StreamsInstanceTracker getInstance()
             throws StreamsTrackerException {
         if (!StreamsInstanceTracker.isInitialized) {
@@ -270,6 +277,34 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             throw new StreamsTrackerException(
                     StreamsTrackerErrorCode.STREAMS_MONITOR_UNAVAILABLE,
                     "StreamsInstanceTracker is not initialized");
+        }
+        
+        if (singletonInstance.refreshRateSeconds == Constants.NO_REFRESH) {
+        	LOGGER.debug("On-demand refresh of metrics...");
+        	try {
+        		singletonInstance.refresh();
+        		LOGGER.debug("On-=demand Refresh returned");
+            } catch (StreamsTrackerException e) {
+                LOGGER.debug(
+                        "Streams Tracker On-demand Refresh StreamsMonitorException: {}.",
+                        e);
+            } catch (UndeclaredThrowableException e) {
+
+                LOGGER.debug("StreamsMonitor On-demand Refresh UndeclaredThrowableException and unwrapping it");
+                Throwable t = e.getUndeclaredThrowable();
+                if (t instanceof IOException) {
+                    LOGGER.debug("StreamsMonitor On-demand Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
+                } else {
+                    LOGGER.debug("StreamsMonitor On-demand Refresh unwrapped "
+                            + t.getClass()
+                            + " which was unexpected, throw original undeclarable...");
+                    throw e;
+                }
+            } catch (Exception e) {
+                LOGGER.warn(
+                        "StreamsMonitor On-demand Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
+                        e);
+            }
         }
         
         return singletonInstance;
@@ -461,9 +496,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      * we need a way to recover and reset everything.
      */
     public synchronized void refresh() throws StreamsTrackerException {
-        LOGGER.trace("*** entering refresh()");
+        LOGGER.debug("*** Streams Instance Tracker Refresh");
 		LOGGER.trace("    current state: isInstanceAvailable: {}, jobsAvailable: {}, metricsAvailable {}",this.instanceInfo.isInstanceAvailable(), jobsAvailable, metricsAvailable);
-        
         if (!this.instanceInfo.isInstanceAvailable()) {
         	LOGGER.trace("*** Calling initStreamsInstance()");
             initStreamsInstance();

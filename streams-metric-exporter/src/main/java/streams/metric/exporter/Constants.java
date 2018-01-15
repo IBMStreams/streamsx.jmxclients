@@ -71,7 +71,7 @@ public class Constants {
 		DESC_USERNAME = "Streams login username. Use this or X509CERT\n      Environment Variable: " + ENV_USERNAME,
 		DESC_PASSWORD = "Streams login password. Recommend using environment variable\n      Environment Variable: " + ENV_PASSWORD,
 		DESC_X509CERT = "X509 Certificate file to use instead of username/password\n      Environment Variable: " + ENV_X509CERT,
-		DESC_REFRESHRATE = "Refresh rate of metrics in seconds\n      Environment Variable: " + ENV_REFRESHRATE,
+		DESC_REFRESHRATE = "Refresh rate of metrics in seconds or 0 for no automatic refresh\n      Environment Variable: " + ENV_REFRESHRATE,
 		DESC_JMX_TRUSTSTORE = "Java keystore of certificates/signers to trust from JMX Server\n      Environment Variable: " + ENV_JMX_TRUSTSTORE,
 		DESC_JMX_SSLOPTION = "SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)\n      Environment Variable: " + ENV_JMX_SSLOPTION,
 		DESC_NOCONSOLE = "Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.",
@@ -81,8 +81,10 @@ public class Constants {
 	;
 	
 	public static final String
-	    INVALID_SERVER_PROTOCOL = "%s is not a valid protocol.  Valid values include [http|https]"
+	    INVALID_SERVER_PROTOCOL = "%s is not a valid protocol.  Valid values include [http|https]",
+	    INVALID_REFRESHRATE = "%s is not a valid refresh rate.  Must be positive integer or 0 for no automatic refresh"
 	;
 	
+	public static final int NO_REFRESH = 0;
 
 }

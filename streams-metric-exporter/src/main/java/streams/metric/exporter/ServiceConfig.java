@@ -25,6 +25,7 @@ import com.beust.jcommander.internal.DefaultConsole;
 import streams.metric.exporter.cli.ServerProtocolValidator;
 import streams.metric.exporter.rest.Protocol;
 import streams.metric.exporter.cli.FileExistsValidator;
+import streams.metric.exporter.cli.RefreshRateValidator;
 import streams.metric.exporter.cli.ServerProtocolConverter;
 
 public class ServiceConfig {
@@ -251,6 +252,9 @@ public class ServiceConfig {
 	public void validateConfig() throws ParameterException {
 		if (!ServerProtocolValidator.isValid(serverProtocol)) {
             throw new ParameterException(String.format(Constants.INVALID_SERVER_PROTOCOL, serverProtocol));
+		}
+		if (!RefreshRateValidator.isValid(refreshRateSeconds)) {
+			throw new ParameterException(String.format(Constants.INVALID_REFRESHRATE, refreshRateSeconds));
 		}
 	}
 	

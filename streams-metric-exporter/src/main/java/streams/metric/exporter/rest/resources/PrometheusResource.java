@@ -26,6 +26,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.ws.rs.WebApplicationException;
 
 import io.prometheus.client.CollectorRegistry;
@@ -34,7 +38,9 @@ import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 @Path("/prometheus")
 public class PrometheusResource {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger("root."
+            + PrometheusResource.class.getName());
+    
     public PrometheusResource() {
     }
 
@@ -45,8 +51,13 @@ public class PrometheusResource {
             WebApplicationException,
     		StreamsTrackerException{
     	
+    	// At this time, if the auto-refresh is turned off, the call to getInstance() will cause the refresh() to occur.
         StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();    	
+                .getInstance();   
+        
+        LOGGER.debug("/prometheus endpoint handler: metricsAvailable={}, instanceAvailable={}",jobTracker.metricsAvailable(),jobTracker.getInstanceInfo().isInstanceAvailable());
+        
+        // Create streams_exporter_metrics_available and streams_exporter_instance_available
         
     	StringWriter writer = new StringWriter();
     	

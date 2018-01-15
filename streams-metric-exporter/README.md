@@ -10,7 +10,9 @@ IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pul
 
 The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.
 It is meant to be used as a Streams Application Metrics exporter.  It is not meant to monitor the internal system services of IBM Streams.
-This application improves performance over per-job metric scraping by periodically pulling all job metrics (via the JMX Server HTTP callbacks) and caching them.  Users can use the REST endpoints (including Prometheus endpoint) to get metrics and status of specific jobs.
+This application improves performance over per-job metric scraping by periodically (optionally on-demand) pulling all job metrics (via the JMX Server HTTP callbacks) and caching them.  Users can use the REST endpoints (including Prometheus endpoint) to get metrics and status of specific jobs.
+
+The service can be configured with periodic refresh (refresh rate > 0) or on-demand refresh (refresh rate == 0) when the HTTP/HTTPS endpoints are accessed.
 
 The REST service supports HTTP and HTTPS with One-way SSL Authentication.
 
@@ -93,15 +95,18 @@ Usage: streams-metric-exporter [options]
       Environment Variable: STREAMS_EXPORTER_PORT
       Default: 25500
     -r, --refresh
-      Refresh rate of metrics in seconds
+      Refresh rate of metrics in seconds or 0 for no automatic refresh
       Environment Variable: STREAMS_EXPORTER_REFRESHRATE
       Default: 10
     --serverkeystore
       Java keystore containing server certificate and key to identify server side of this application
+      Environment Variable: STREAMS_EXPORTER_SERVER_KEYSTORE 
     --serverkeystorepwd
       Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
+      Environment Variable: STREAMS_EXPORTER_SERVER_KEYSTORE_PWD 
     --serverprotocol
       http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
+      Environment Variable: STREAMS_EXPORTER_SERVER_PROTOCOL
       Default: http
     -u, --user
       Streams login username. Use this or X509CERT
