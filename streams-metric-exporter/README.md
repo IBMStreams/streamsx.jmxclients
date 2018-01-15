@@ -157,17 +157,34 @@ streams_operator_ip_nTuplesProcessed
 streams_job_max_congestionFactor
 ```
 
+| Metric Name Prefix | Description |
+| :----------------- | :---------- |
+| **streams_instance_**|instance level metrics and status|
+| **streams_resource_**|streams resource metrics|
+| **streams_job_**|streams job metrics|
+| **streams_pe_**|streams pe metrics|
+| **streams_pe_ip_**|streams pe input port metrics|
+| **streams_pe_op_**|streams pe output port metrics|
+| **streams_pe_op_connection_**|streams pe output port connection metrics|
+| **streams_operator_**|streams operator metrics|
+| **streams_operator_ip_**|streams operator input port metrics|
+| **streams_operator_op_**|streams operatore output port metrics|
+
 ## Metric Labels
 The prometheus metric names are not specific to streams objects (e.g. a specific job), rather, they are for an object type (e.g. operator input port).  The labels are used to identify the individual instances (e.g. job: job_1, operator: myBeacon, input port: StockTickersIn).
 
 | Label Name | Description     |
 | :------------- | :------------- |
+|**domainname**|name of the streams domain
 |**instancename**|name of streams instance (instance is reserved by prometheus)|
 |**jobname**| name of streams job (job is reserved by prometheus)|
 |**operatorname**| name of operator|
 |**inputportname**| name of input port|
 |**outputportname**| name of output port|
 |**resource**| name of streams resource|
+|**peid**|id of streams processing element|
+|**index**|index of pe input or output port|
+|**connectionid**|connection id of streams pe output port connection|
 
 ## Prometheus endpoint example
 

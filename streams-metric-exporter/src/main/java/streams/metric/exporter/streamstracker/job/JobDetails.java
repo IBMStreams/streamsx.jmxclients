@@ -679,8 +679,10 @@ public class JobDetails implements NotificationListener {
 	
 	private void createExportedMetrics() {
 		// Create our own metrics that will be aggregates of Streams metrics
-	    // Operator, Operator InputPort, and Operator OUtputPort metrics
+	    // PE, PE InputPort, PE OutputPort, PE Output Port Connection,
+		// Operator, Operator InputPort, and Operator OutputPort metrics
 		// are automatically created based on metrics discovered in json
+		
 		// job health
 		metricsExporter.createStreamsMetric("healthy", StreamsObjectType.JOB, "Job health, set to 1 of job is healthy else 0");
 		// job metrics
@@ -725,13 +727,15 @@ public class JobDetails implements NotificationListener {
 				/* PE Loop */
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
+					String peid = (String)pe.get("id");
 
 
 					JSONArray peMetricsArray = (JSONArray) pe.get("metrics");
 					/* PE Metrics Loop */
 					for (int j = 0; j < peMetricsArray.size(); j++) {
 						JSONObject metric = (JSONObject) peMetricsArray.get(j);
-						switch ((String) metric.get("name")) {
+						String metricName = (String)metric.get("name");
+						switch (metricName) {
 						case "nCpuMilliseconds":
 							ncpu += (long)metric.get("value");
 							break;
@@ -741,31 +745,84 @@ public class JobDetails implements NotificationListener {
 						case "nMemoryConsumption":
 							nmc += (long)metric.get("value");
 							break;
-						default:
 						}
+						metricsExporter.getStreamsMetric(metricName,
+								StreamsObjectType.PE,
+								this.domain,
+								this.streamsInstanceName,
+								name,
+								peid).set((long)metric.get("value"));
 					}
 					
+					/* PE inputPorts Loop */
+					JSONArray inputPorts = (JSONArray) pe.get("inputPorts");
+					for (int portnum = 0; portnum < inputPorts.size(); portnum++) {
+						JSONObject port = (JSONObject)inputPorts.get(portnum);
+						String indexWithinPE = Long.toString((long)port.get("indexWithinPE"));
+						JSONArray metricsArray = (JSONArray) port.get("metrics");
+						for (int m = 0; m < metricsArray.size(); m++) {
+							JSONObject metric = (JSONObject) metricsArray.get(m);
+							String metricName = (String)metric.get("name");
+//							System.out.println("PE INPUT PORT METRIC: " + metricName);
+							metricsExporter.getStreamsMetric(metricName,
+									StreamsObjectType.PE_INPUTPORT,
+									this.domain,
+									this.streamsInstanceName,
+									name,
+									peid,
+									indexWithinPE).set((long)metric.get("value"));
+						}	// End PE Input Ports Metrics Loop		
+					} // End PE inputPorts loop			
+									
 					/* PE outputPorts Loop */
 					JSONArray outputPorts = (JSONArray) pe.get("outputPorts");
-					for (int oportnum = 0; oportnum < outputPorts.size(); oportnum++) {
-						JSONObject oport = (JSONObject)outputPorts.get(oportnum);
-						JSONArray connections = (JSONArray) oport.get("connections");
+					for (int portnum = 0; portnum < outputPorts.size(); portnum++) {
+						JSONObject port = (JSONObject)outputPorts.get(portnum);
+						
+						String indexWithinPE = Long.toString((long)port.get("indexWithinPE"));
+						JSONArray metricsArray = (JSONArray) port.get("metrics");
+						for (int m = 0; m < metricsArray.size(); m++) {
+							JSONObject metric = (JSONObject) metricsArray.get(m);
+							String metricName = (String)metric.get("name");
+//							System.out.println("PE OUTPUT PORT METRIC: " + metricName);
+							metricsExporter.getStreamsMetric(metricName,
+									StreamsObjectType.PE_OUTPUTPORT,
+									this.domain,
+									this.streamsInstanceName,
+									name,
+									peid,
+									indexWithinPE).set((long)metric.get("value"));
+						}	// End PE Output Ports Metrics Loop		
+						
+						
+						/* PE outputPorts Connections Loop */
+						JSONArray connections = (JSONArray) port.get("connections");
 						for (int con = 0; con < connections.size(); con++) {
 							numconnections++;
 							JSONObject connection = (JSONObject)connections.get(con);
-							JSONArray metricsArray = (JSONArray) connection.get("metrics");
-							for (int m = 0; m < metricsArray.size(); m++) {
-								JSONObject metric = (JSONObject) metricsArray.get(m);
-								switch ((String)metric.get("name")) {
+							String connectionId = (String)connection.get("id");
+							JSONArray cMetricsArray = (JSONArray) connection.get("metrics");
+							for (int m = 0; m < cMetricsArray.size(); m++) {
+								JSONObject metric = (JSONObject) cMetricsArray.get(m);
+								String metricName = (String)metric.get("name");
+								switch (metricName) {
 								case "congestionFactor":
 									curcongestion = (long)metric.get("value");
 									totalcongestion += curcongestion;
 									if (curcongestion > maxcongestion) maxcongestion = curcongestion;
 									if (curcongestion < mincongestion) mincongestion = curcongestion;
 								}
+								metricsExporter.getStreamsMetric(metricName,
+										StreamsObjectType.PE_OUTPUTPORT_CONNECTION,
+										this.domain,
+										this.streamsInstanceName,
+										name,
+										peid,
+										indexWithinPE,
+										connectionId).set((long)metric.get("value"));								
 							}
-						}
-					}
+						} // End PE outputPort Connectdions Loop
+					} // End PE outputPort loop
 
 					/* PE operator Loop */
 					JSONArray operatorArray = (JSONArray)pe.get("operators");

@@ -61,6 +61,10 @@ public abstract class MetricsExporter {
 		INSTANCE("streams_instance_", new String[] { "domainname","instancename" }),
 		RESOURCE("streams_resource_", new String[] { "domainname","instancename", "resource"}),
 		JOB("streams_job_",new String[] { "domainname","instancename", "jobname" }),
+		PE("streams_pe_",new String[] { "domainname", "instancename", "jobname", "peid"}),
+		PE_INPUTPORT("streams_pe_ip_",new String[] {"domainname","instancename", "jobname","peid","index"}),
+		PE_OUTPUTPORT("streams_pe_op_",new String[] {"domainname","instancename","jobname","peid","index"}),
+		PE_OUTPUTPORT_CONNECTION("streams_pe_op_connection_",new String[] {"domainname","instancename","jobname","peid","index","connectionid"}),
 		OPERATOR("streams_operator_",new String[] { "domainname","instancename", "jobname", "operatorname" }), 
 		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "domainname","instancename", "jobname", "operatorname", "inputportname" }), 
 		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "domainname","instancename", "jobname", "operatorname","outputportname" });
@@ -91,6 +95,18 @@ public abstract class MetricsExporter {
 				description = "Streams resource metric";
 			case JOB:
 				description = "Streams job metric";
+				break;
+			case PE:
+				description = "Streams pe metric";
+				break;
+			case PE_INPUTPORT:
+				description = "Streams pe input port metric";
+				break;
+			case PE_OUTPUTPORT:
+				description = "Streams pe output port metric";
+				break;
+			case PE_OUTPUTPORT_CONNECTION:
+				description = "Streams pe output port connection metric";
 				break;
 			case OPERATOR:
 				description = "Streams operator metric";
