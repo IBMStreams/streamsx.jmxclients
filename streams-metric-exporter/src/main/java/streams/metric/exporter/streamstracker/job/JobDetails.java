@@ -849,6 +849,7 @@ public class JobDetails implements NotificationListener {
 										this.domain,
 										this.streamsInstanceName,
 										name,
+										peid,
 										operatorName).set((long)metric.get("value"));
 								break;
 							}
@@ -872,6 +873,7 @@ public class JobDetails implements NotificationListener {
 											this.domain,
 											this.streamsInstanceName,
 											name,
+											peid,
 											operatorName,
 											inputPortName).set((long)metric.get("value"));
 									break;
@@ -897,6 +899,7 @@ public class JobDetails implements NotificationListener {
 											this.domain,
 											this.streamsInstanceName,
 											name,
+											peid,
 											operatorName,
 											outputPortName).set((long)metric.get("value"));
 									break;

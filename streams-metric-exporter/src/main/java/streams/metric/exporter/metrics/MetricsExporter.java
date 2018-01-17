@@ -65,9 +65,9 @@ public abstract class MetricsExporter {
 		PE_INPUTPORT("streams_pe_ip_",new String[] {"domainname","instancename", "jobname","peid","index"}),
 		PE_OUTPUTPORT("streams_pe_op_",new String[] {"domainname","instancename","jobname","peid","index"}),
 		PE_OUTPUTPORT_CONNECTION("streams_pe_op_connection_",new String[] {"domainname","instancename","jobname","peid","index","connectionid"}),
-		OPERATOR("streams_operator_",new String[] { "domainname","instancename", "jobname", "operatorname" }), 
-		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "domainname","instancename", "jobname", "operatorname", "inputportname" }), 
-		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "domainname","instancename", "jobname", "operatorname","outputportname" });
+		OPERATOR("streams_operator_",new String[] { "domainname","instancename", "jobname", "peid", "operatorname" }), 
+		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "domainname","instancename", "jobname", "peid", "operatorname", "inputportname" }), 
+		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "domainname","instancename", "jobname", "peid", "operatorname","outputportname" });
 
 		private final String metric_prefix;
 		private final String[] labels;
