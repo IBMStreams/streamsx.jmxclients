@@ -14,10 +14,8 @@ services:
     environment:
       - STREAMS_DOMAIN_ID
       - STREAMS_INSTANCE_ID
-      - STREAMS_EXPORTER_HOST=0.0.0.0
-      - STREAMS_EXPORTER_JMXCONNECT
   prometheus:
-    image: "prom/prometheus:v2.0.0"
+    image: "prom/prometheus:v2.1.0"
     ports:
      - 9090:9090
     volumes:
