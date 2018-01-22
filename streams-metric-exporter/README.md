@@ -137,6 +137,8 @@ password: <enter streamsadmin password>
 /prometheus
 ```
 ## prometheus.yml
+This file configures how prometheus will scrape the streams-metric-exporter.  By default, the metrics are cached and retrieved every 10 seconds.  If you desire for the exporter to work as a "proper" prometheus exporter, set the refresh rate (--refresh) to 0, which causes refreshes to be manual and performed whenever an end point is accessed (the /prometheus endpoint for example).
+
 ```yml
   - job_name: "ibmstreams"
     scrape_interval: "15s"
@@ -145,8 +147,10 @@ password: <enter streamsadmin password>
     - targets: ['localhost:25500']
 ```
 ## Metric Names
-The set of metrics exposed in continuously increasing as this is active development
+The exact set of metric names exposed is a mix of static and dynamically named metrics.
 The metric names chosen for this endpoint are a hybrid of prometheus naming conventions and the pre-defined metrics of IBMStreams.
+Metric prefixes are static and based on which Streams objects the metrics are produced for.
+
 The pattern for metric names is<br>
 
 ```streams_<objecttype>[_<subobjecttype>]_[_<aggregationtype>]_<streams metric>```
@@ -172,6 +176,7 @@ streams_job_max_congestionFactor
 
 ## Metric Labels
 The prometheus metric names are not specific to streams objects (e.g. a specific job), rather, they are for an object type (e.g. operator input port).  The labels are used to identify the individual instances (e.g. job: job_1, operator: myBeacon, input port: StockTickersIn).
+Note: the streams-metric-exporter resolves operator input and output ports to names rather than indexes.  This is easier for use in queries.
 
 | Label Name | Description     |
 | :------------- | :------------- |
@@ -191,15 +196,19 @@ The prometheus metric names are not specific to streams objects (e.g. a specific
 ```
 # HELP streams_instance_jobCount Number of jobs currently deployed into the streams instance
 # TYPE streams_instance_jobCount gauge
-streams_instance_jobCount{instancename="StreamsInstance",} 3.0
+streams_instance_jobCount{domainname="StreamsDomain",instancename="StreamsInstance",} 1.0
 
 # HELP streams_job_pecount Number of pes deployed for this job
 # TYPE streams_job_pecount gauge
-streams_job_pecount{instancename="StreamsInstance",jobname="MultiPEJob",} 2.0
+streams_job_pecount{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",} 2.0
 
 # HELP streams_operator_ip_nTuplesProcessed Streams operator input port metric: nTuplesProcessed
 # TYPE streams_operator_ip_nTuplesProcessed gauge
-streams_operator_ip_nTuplesProcessed{instancename="StreamsInstance",jobname="CompositeJob",operatorname="SubCompositeToMain.SubCompFunctor",inputportname="SubCompIn",} 1227489.0
+streams_operator_ip_nTuplesProcessed{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",peid="1",operatorname="FilterStream",inputportname="BeaconStream",} 675632.0
+
+# HELP streams_pe_op_connection_congestionFactor Streams pe output port connection metric: congestionFactor
+# TYPE streams_pe_op_connection_congestionFactor gauge
+streams_pe_op_connection_congestionFactor{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",peid="1",index="0",connectionid="o0p1i0p0",} 0.0
 ```
 
 # Grafana Examples
@@ -247,6 +256,7 @@ export STREAMS_INSTANCE_ID=<instance id>
 ```
 5. Build / Run Docker Images
 ```
+docker-compose build
 docker-compose up
 ```
 6. Create Prometheus data source in grafana
@@ -268,6 +278,14 @@ admin/admin
 10. Navigate to Home Dashboard
 ```
 IBM Streams Sample Dashboard
+```
+11. View raw metrics output from /prometheus endpoint
+```
+http://localhost:25500
+```
+12. Query the prometheus ui
+```
+http://localhost:9090
 ```
 
 # Cached REST endpoints
