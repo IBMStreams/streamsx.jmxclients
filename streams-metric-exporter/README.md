@@ -129,6 +129,13 @@ StreamsInstance -u streamsadmin
 
 password: <enter streamsadmin password>
 ```
+## Changing the default logging
+The default logging configuration (log4j.properties) is stored in the executable jar.  To override the defaults, create a log4j.properties file and point to it using the log4j.configuration java property.  For example:
+```
+java -Dlog4j.configuration=file:${PWD}/log4j.properties -jar target/executable-streams-metric-exporter.jar -j \
+service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i \
+StreamsInstance -u streamsadmin
+```
 # Prometheus Integration
 
 ## Endpoint
