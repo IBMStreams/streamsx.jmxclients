@@ -227,7 +227,7 @@ See [dashboards directory](dashboards/README.md) for more information.
 
 The easiest way to try out the Streams Metric Exporter is to run it using Docker.  Included in this release is a Dockerfile for building the image and a docker-compose.yml file for starting it up with Prometheus and Grafana instances.
 
-The versions of Prometheus and Grafana specified in the docker-compose.yml file are those that were used for initial testing.
+The versions of Prometheus and Grafana specified in the docker-compose.yml file are those that were used for testing.
 
 ## Prerequisites
 
@@ -236,7 +236,7 @@ The versions of Prometheus and Grafana specified in the docker-compose.yml file 
 * Docker Engine (version 17.05.0.ce used in development)
 * Docker Compose (version 1.9.0-5 with .yml file format 2 used in development)
 * Access to Dockerhub or local repository with Images:
-  * ibmjava:sfj (or any 1.8 version)
+  * ibmjava:sfj-alpine (or any 1.8 version)
   * prom/prometheus (2.0.0 used in development)
   * grafana/grafana (4.6.1 used in development)
 
@@ -294,8 +294,15 @@ http://localhost:25500
 ```
 http://localhost:9090
 ```
+13. Attach to the streamsexporter instance and tail the more detailed logfile
+```
+docker exec -it docker_streamsexporter_1 /bin/ash
+# tail -f StreamsMetricExporter.log
+```
 
 # Cached REST endpoints
+The original version of streams-metric-exporter provided REST endpoints that returned json information.  The REST endpoints are still available in this version.  The reason to use these REST endpoints over those available directly from IBM Streams is that by default the auto-refresh is used, and these endpoints only retrieve from the metrics cached in the streams-metric-exporter.  Beware, however, if you turn auto-refresh off (--refresh 0) then each of these access points will cause the metrics to be pulled from the Streams JMX Server.
+
 ## /instance
 Retrieve status of instance being monitored
 
