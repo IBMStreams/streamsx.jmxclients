@@ -70,6 +70,11 @@ public class JobDetails implements NotificationListener {
 	private Date lastMetricsRefresh = null;
 	private Date lastMetricsFailure = null;
 	private boolean lastMetricsRefreshFailed = false;
+	
+	private String jobSnapshot = null;
+	private Date lastSnapshotRefresh = null;
+	private Date lastSnapshotFailure = null;
+	private boolean lastSnapshotRefreshFailed = false;
 
 	private String adlFile = null;
 	private String applicationName = null;
@@ -108,6 +113,7 @@ public class JobDetails implements NotificationListener {
 		setJobBean(jobBean);
 		setStatus(JobMXBean.Status.UNKNOWN);
 		setJobMetrics(null);
+		setJobSnapshot(null);
 		createExportedMetrics();
 
 		MXBeanSource beanSource = null;
@@ -194,6 +200,15 @@ public class JobDetails implements NotificationListener {
 		this.jobMetrics = resolvePortNames(jobMetrics);
 		updateExportedMetrics();
 	}
+	
+	public String getJobSnapshot() {
+		return jobSnapshot;
+	}
+
+	public void setJobSnapshot(String jobSnapshot) {
+		this.jobSnapshot = jobSnapshot;
+		updateExportedMetrics();
+	}
 
 	public JobMXBean.Status getStatus() {
 		return status;
@@ -225,6 +240,30 @@ public class JobDetails implements NotificationListener {
 
 	public void setLastMetricsRefreshFailed(boolean lastMetricsRefreshFailed) {
 		this.lastMetricsRefreshFailed = lastMetricsRefreshFailed;
+	}
+	
+	public Date getLastSnapshotRefresh() {
+		return lastSnapshotRefresh;
+	}
+
+	public void setLastSnapshotRefresh(Date lastSnapshotRefresh) {
+		this.lastSnapshotRefresh = lastSnapshotRefresh;
+	}
+
+	public Date getLastSnapshotFailure() {
+		return lastSnapshotFailure;
+	}
+
+	public void setLastSnapshotFailure(Date lastSnapshotFailure) {
+		this.lastSnapshotFailure = lastSnapshotFailure;
+	}
+
+	public boolean isLastSnapshotRefreshFailed() {
+		return lastSnapshotRefreshFailed;
+	}
+
+	public void setLastSnapshotRefreshFailed(boolean lastSnapshotRefreshFailed) {
+		this.lastSnapshotRefreshFailed = lastSnapshotRefreshFailed;
 	}
 
 	public String getAdlFile() {
@@ -363,6 +402,9 @@ public class JobDetails implements NotificationListener {
 		ji.setLastMetricsFailure(lastMetricsFailure);
 		ji.setLastMetricsRefresh(lastMetricsRefresh);
 		ji.setLastMetricsRefreshFailed(lastMetricsRefreshFailed);
+		ji.setLastSnapshotFailure(lastSnapshotFailure);
+		ji.setLastSnapshotRefresh(lastSnapshotRefresh);
+		ji.setLastSnapshotRefreshFailed(lastSnapshotRefreshFailed);
 		ji.setName(name);
 		ji.setOutputPath(outputPath);
 		ji.setStartedByUser(startedByUser);
@@ -371,6 +413,7 @@ public class JobDetails implements NotificationListener {
 		//ji.setJobMetrics(resolvePortNames(jobMetrics));
 		// Already resolved
 		ji.setJobMetrics(jobMetrics);
+		ji.setJobSnapshot(jobSnapshot);
 
 		return ji;
 
@@ -425,11 +468,14 @@ public class JobDetails implements NotificationListener {
 		result.append("Job: " + this.getJobid() + ": " + this.getStatus());
 		result.append(", applicationName: " + this.getApplicationName());
 		result.append(" Metrics: " + this.getJobMetrics());
+		result.append(" Snapshot: " + this.getJobSnapshot());
 		return result.toString();
 	}
 
 	/*
 	 * getJobSnapshot: method to grab snapshot of job from JMX Server
+	 * NOTE: This existed before we started caching the snapshots to get PE launchCount
+	 * This is left for on-demand behavior of snaphot REST call
 	 */
 
 	public String getSnapshot(int maximumDepth, boolean includeStaticAttributes) throws StreamsTrackerException {
@@ -924,6 +970,38 @@ public class JobDetails implements NotificationListener {
 			} catch (ParseException e) {
 				throw new IllegalStateException(e);
 			}
-		}
+		} // end if metrics != null
+		
+		// Pull metrics from snapshot
+
+		if (this.jobSnapshot != null) {
+
+			JSONParser parser = new JSONParser();
+			try {
+				JSONObject snapshotObject = (JSONObject) parser.parse(this.jobSnapshot);
+
+				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
+				
+				// Metrics to create
+				long launchCount = 0;
+				
+				/* PE Loop */
+				for (int i = 0; i < peArray.size(); i++) {
+					JSONObject pe = (JSONObject) peArray.get(i);
+					String peid = (String)pe.get("id");
+					
+					launchCount = (long)pe.get("launchCount");
+					
+					metricsExporter.getStreamsMetric("launchCount",
+							StreamsObjectType.PE,
+							this.domain,
+							this.streamsInstanceName,
+							name,
+							peid).set(launchCount);	
+				} // End pe loop
+			} catch (ParseException e) {
+				throw new IllegalStateException(e);
+			}
+		} // end if snapshot != null
 	}
 }

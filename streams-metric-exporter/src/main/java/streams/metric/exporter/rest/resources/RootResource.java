@@ -96,6 +96,19 @@ public class RootResource {
         return Response.status(200).entity(jobTracker.getAllJobMetrics())
                 .build();
     }
+    
+    // If instance is not started or exists, then returns 404
+    @Path("snapshots")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getAllJobSnapshots() throws StreamsTrackerException,
+            WebApplicationException {
+        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
+                .getInstance();
+
+        return Response.status(200).entity(jobTracker.getAllJobSnapshots())
+                .build();
+    }
 
     @Path("joblist/")
     @GET
@@ -130,10 +143,14 @@ public class RootResource {
             UriBuilder mub = jub.clone();
             URI metricsUri = mub.path("metrics").build();
             j.put("metrics", metricsUri.toASCIIString());
-
+            
             UriBuilder sub = jub.clone();
             URI snapshotUri = sub.path("snapshot").build();
             j.put("snapshot", snapshotUri.toASCIIString());
+
+            UriBuilder snub = jub.clone();
+            URI snapshotNowUri = snub.path("snapshotnow").build();
+            j.put("snapshotnow", snapshotNowUri.toASCIIString());
 
             jlist.add(j);
         }
