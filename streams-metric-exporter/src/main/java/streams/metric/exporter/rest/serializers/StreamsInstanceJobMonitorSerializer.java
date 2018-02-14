@@ -67,7 +67,9 @@ public class StreamsInstanceJobMonitorSerializer extends
         jgen.writeBooleanField("jobMetricsAvailable",
                 monitor.metricsAvailable());
         jgen.writeStringField("instanceResourceMetricsLastUpdateTime", convertTime(monitor.getInstanceResourceMetricsLastUpdated()));
-
+        jgen.writeBooleanField("jobSnapshotsAvailable",
+                monitor.snapshotsAvailable());
+        
         if (monitor.jobsAvailable()) {
             Iterator<Map.Entry<BigInteger, JobInfo>> it = monitor
                     .getCurrentJobMap().entrySet().iterator();
@@ -84,8 +86,14 @@ public class StreamsInstanceJobMonitorSerializer extends
                         .toString());
                 jgen.writeStringField("applicationName", entry.getValue()
                         .getApplicationName());
-                jgen.writeStringField("metrics", entry.getValue()
-                        .getJobMetrics());
+//                jgen.writeStringField("metrics", entry.getValue()
+//                        .getJobMetrics());
+//                jgen.writeStringField("snapshot", entry.getValue()
+//                        .getJobSnapshot());
+                jgen.writeFieldName("metrics");
+                jgen.writeRawValue(entry.getValue().getJobMetrics());
+                jgen.writeFieldName("snapshot");
+                jgen.writeRawValue(entry.getValue().getJobSnapshot());
                         
                 jgen.writeEndObject();
                 jgen.writeEndObject();

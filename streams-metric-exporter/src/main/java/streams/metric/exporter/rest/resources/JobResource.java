@@ -86,10 +86,10 @@ public class JobResource {
 
     }
 
-    @Path("snapshot")
+    @Path("snapshotnow")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getJobSnapshot(
+    public Response getJobSnapshotNow(
             @DefaultValue("1") @QueryParam("depth") int maximumDepth,
             @DefaultValue("true") @QueryParam("static") boolean includeStaticAttributes)
             throws StreamsTrackerException, WebApplicationException {
@@ -137,6 +137,34 @@ public class JobResource {
         return r;
 
     }
+    
+    @Path("snapshot")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getJobSnapshot() throws StreamsTrackerException,
+            WebApplicationException, JsonProcessingException {
+        ObjectMapper om = new ObjectMapper();
+
+        Response r = null;
+
+        // Create return format
+        JobSnapshotBody body = new JobSnapshotBody(ji.getLastSnapshotRefresh(),
+                ji.getLastSnapshotFailure(), ji.isLastSnapshotRefreshFailed(),
+                ji.getJobSnapshot());
+
+        // If the metrics refresh failed, use NOT_MODIFIED so client can
+        // understand we are sending cached info
+        // More cached than it usually is :)
+        if (ji.isLastSnapshotRefreshFailed()) {
+            r = Response.status(Response.Status.NOT_MODIFIED)
+                    .entity(om.writeValueAsString(body)).build();
+        } else {
+            r = Response.status(Response.Status.OK)
+                    .entity(om.writeValueAsString(body)).build();
+        }
+        return r;
+
+    }    
 
     /******** SUPPORTING CLASSES FOR OUTPUT FORMATTING ********/
     private class JobMetricsBody {
@@ -152,6 +180,23 @@ public class JobResource {
             this.lastMetricsFailure = lastMetricsFailure;
             this.lastMetricsRefreshFailed = lastMetricsRefreshFailed;
             this.jobMetrics = jobMetrics;
+        }
+    }
+    
+    /******** SUPPORTING CLASSES FOR OUTPUT FORMATTING ********/
+    private class JobSnapshotBody {
+        public Date lastSnapshotRefresh = null;
+        public Date lastSnapshotFailure = null;
+        public boolean lastSnapshotRefreshFailed = false;
+        @JsonRawValue
+        public String jobSnapshot;
+
+        public JobSnapshotBody(Date lastSnapshotRefresh, Date lastSnapshotFailure,
+                boolean lastSnapshotRefreshFailed, String jobSnapshot) {
+            this.lastSnapshotRefresh = lastSnapshotRefresh;
+            this.lastSnapshotFailure = lastSnapshotFailure;
+            this.lastSnapshotRefreshFailed = lastSnapshotRefreshFailed;
+            this.jobSnapshot = jobSnapshot;
         }
     }
 }

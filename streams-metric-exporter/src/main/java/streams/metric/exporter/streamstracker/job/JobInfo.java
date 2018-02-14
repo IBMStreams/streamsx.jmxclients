@@ -39,7 +39,10 @@ public class JobInfo {
     private Date lastMetricsRefresh = null;
     private Date lastMetricsFailure = null;
     private boolean lastMetricsRefreshFailed = false;
-
+    private Date lastSnapshotRefresh = null;
+    private Date lastSnapshotFailure = null;
+    private boolean lastSnapshotRefreshFailed = false;
+    
     private String adlFile = null;
     private String applicationName = null;
     private String applicationPath = null;
@@ -57,6 +60,9 @@ public class JobInfo {
 
     @JsonRawValue
     private String jobMetrics = null;
+    
+    @JsonRawValue
+    private String jobSnapshot = null;
 
     public BigInteger getId() {
         return id;
@@ -118,8 +124,41 @@ public class JobInfo {
     public void setLastMetricsRefreshFailed(boolean lastMetricsRefreshFailed) {
         this.lastMetricsRefreshFailed = lastMetricsRefreshFailed;
     }
+    
 
-    public String getAdlFile() {
+    public Date getLastSnapshotRefresh() {
+		return lastSnapshotRefresh;
+	}
+
+	public void setLastSnapshotRefresh(Date lastSnapshotRefresh) {
+		this.lastSnapshotRefresh = lastSnapshotRefresh;
+	}
+
+	public Date getLastSnapshotFailure() {
+		return lastSnapshotFailure;
+	}
+
+	public void setLastSnapshotFailure(Date lastSnapshotFailure) {
+		this.lastSnapshotFailure = lastSnapshotFailure;
+	}
+
+	public boolean isLastSnapshotRefreshFailed() {
+		return lastSnapshotRefreshFailed;
+	}
+
+	public void setLastSnapshotRefreshFailed(boolean lastSnapshotRefreshFailed) {
+		this.lastSnapshotRefreshFailed = lastSnapshotRefreshFailed;
+	}
+
+	public String getJobSnapshot() {
+		return jobSnapshot;
+	}
+
+	public void setJobSnapshot(String jobSnapshot) {
+		this.jobSnapshot = jobSnapshot;
+	}
+
+	public String getAdlFile() {
         return adlFile;
     }
 
@@ -233,7 +272,9 @@ public class JobInfo {
 
     public JobInfo(BigInteger id, JobMXBean jobBean, JobMXBean.Status status,
             String jobMetrics, Date lastMetricsRefresh,
-            Date lastMetricsFailure, boolean lastMetricsRefreshFailed) {
+            Date lastMetricsFailure, boolean lastMetricsRefreshFailed,
+            String jobSnapshot, Date lastSnapshotRefresh,
+            Date lastSnapshotFailure, boolean lastSnapshotRefreshFailed) {
         setId(id);
         setJobBean(jobBean);
         setStatus(status);
@@ -245,6 +286,14 @@ public class JobInfo {
         setLastMetricsRefresh(lastMetricsRefresh);
         setLastMetricsFailure(lastMetricsFailure);
         setLastMetricsRefreshFailed(lastMetricsRefreshFailed);
+        if (jobSnapshot == null) {
+            setJobSnapshot("");
+        } else {
+            setJobSnapshot(jobSnapshot);
+        }
+        setLastSnapshotRefresh(lastSnapshotRefresh);
+        setLastSnapshotFailure(lastSnapshotFailure);
+        setLastSnapshotRefreshFailed(lastSnapshotRefreshFailed);        
     }
 
     public JobInfo() {

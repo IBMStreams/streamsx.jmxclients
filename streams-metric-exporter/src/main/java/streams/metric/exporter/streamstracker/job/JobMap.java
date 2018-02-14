@@ -158,6 +158,17 @@ public class JobMap {
         }
     }
     
+    public synchronized void setJobSnapshotFailed(Date failureDate) {
+        Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap
+                .entrySet().iterator();
+        while (it.hasNext()) {
+            Map.Entry<BigInteger, JobDetails> pair = it.next();
+            JobDetails curInfo = (JobDetails) pair.getValue();
+            curInfo.setLastSnapshotFailure(failureDate);
+            curInfo.setLastSnapshotRefreshFailed(true); 
+        }
+    }    
+    
     @Override
     public String toString() {  
         StringBuilder result = new StringBuilder();
