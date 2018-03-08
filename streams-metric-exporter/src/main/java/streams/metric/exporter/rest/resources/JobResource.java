@@ -38,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
 public class JobResource {
@@ -94,8 +94,8 @@ public class JobResource {
             @DefaultValue("true") @QueryParam("static") boolean includeStaticAttributes)
             throws StreamsTrackerException, WebApplicationException {
 
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();
 
         String snapshot = null;
         snapshot = jobTracker.getJobSnapshot(ji.getId().intValue(),

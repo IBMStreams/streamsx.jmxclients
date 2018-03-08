@@ -32,7 +32,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
 public class JobsResource {
@@ -46,8 +46,8 @@ public class JobsResource {
         ArrayList<JobInfo> jia = null;
         ObjectMapper om = new ObjectMapper();
 
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();
 
         jia = jobTracker.getAllJobInfo();
 
@@ -67,8 +67,8 @@ public class JobsResource {
         Response r = null;
         JobInfo ji = null;
 
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();
 
         ji = jobTracker.getJobInfo(id);
 

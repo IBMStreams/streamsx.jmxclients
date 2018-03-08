@@ -82,4 +82,6 @@ public class InstanceInfo {
     public void setInstanceExists(boolean instanceExists) {
         this.instanceExists = instanceExists;
     }
+    
+    public void close(){}
 }

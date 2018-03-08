@@ -26,11 +26,11 @@ import java.util.Map;
 
 import io.prometheus.client.Gauge;
 import streams.metric.exporter.metrics.MetricsExporter;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 
 public class PrometheusMetricsExporter extends MetricsExporter {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 	// Singleton Pattern
 	static MetricsExporter singletonExporter = null;
 

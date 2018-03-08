@@ -45,7 +45,7 @@ import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.jmx.MXBeanSourceProvider;
 import streams.metric.exporter.rest.Protocol;
 import streams.metric.exporter.rest.RestServer;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 import java.io.FileInputStream;
 
@@ -63,7 +63,7 @@ public class Launcher {
     private JmxServiceContext jmxContext = null;
 
     private ServiceConfig config = null;
-    static private StreamsInstanceTracker jobTracker = null;
+    static private StreamsDomainTracker domainTracker = null;
     static private RestServer restServer = null;
 
     public Launcher(ServiceConfig config) {
@@ -171,7 +171,7 @@ public class Launcher {
         }
 
         try {
-            jobTracker = StreamsInstanceTracker.initInstance(
+            domainTracker = StreamsDomainTracker.initDomainTracker(
                     jmxContext, config.getDomainName(), config.getInstanceName(),
                     config.getRefreshRateSeconds(), config.getSslOption());
         } catch (StreamsTrackerException e) {
@@ -181,10 +181,10 @@ public class Launcher {
 
         if (LOGGER.isDebugEnabled()) {
             sw.stop();
-            LOGGER.debug("Timing for initial startup of StreamsInstanceTracker (milliseconds): " + sw.getTime()) ;
+            LOGGER.debug("Timing for initial startup of StreamsDomainTracker (milliseconds): " + sw.getTime()) ;
         }
         
-        LOGGER.info("...Streams Tracker started.");
+        LOGGER.info("...Streams Domain Tracker started.");
         return true;
     }
 

@@ -25,10 +25,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 public abstract class MetricsExporter {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 	
 	// Metric Labels Index, allows us to remove child metrics by label
 	private MetricLabelIndex metricIndex = new MetricLabelIndex();

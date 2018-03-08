@@ -14,7 +14,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package streams.metric.exporter.streamstracker;
+package streams.metric.exporter.streamstracker.instance;
 
 import java.math.BigInteger;
 import java.net.MalformedURLException;

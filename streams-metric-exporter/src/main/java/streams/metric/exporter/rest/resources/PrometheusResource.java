@@ -34,7 +34,7 @@ import javax.ws.rs.WebApplicationException;
 
 import io.prometheus.client.CollectorRegistry;
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 @Path("/prometheus")
 public class PrometheusResource {
@@ -52,8 +52,8 @@ public class PrometheusResource {
     		StreamsTrackerException{
     	
     	// At this time, if the auto-refresh is turned off, the call to getInstance() will cause the refresh() to occur.
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();   
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();   
         
         LOGGER.debug("/prometheus endpoint handler: metricsAvailable={}, instanceAvailable={}",jobTracker.metricsAvailable(),jobTracker.getInstanceInfo().isInstanceAvailable());
         

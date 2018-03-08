@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.instance.InstanceInfo;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
@@ -40,9 +40,9 @@ import streams.metric.exporter.streamstracker.job.JobInfo;
  * Serializes a StreamsInstanceJobMonitor instance to JSON.
  */
 public class StreamsInstanceJobMonitorSerializer extends
-        JsonSerializer<StreamsInstanceTracker> {
+        JsonSerializer<StreamsDomainTracker> {
     @Override
-    public void serialize(StreamsInstanceTracker monitor,
+    public void serialize(StreamsDomainTracker monitor,
             JsonGenerator jgen, SerializerProvider provider)
             throws IOException, JsonProcessingException {
         jgen.writeStartObject();

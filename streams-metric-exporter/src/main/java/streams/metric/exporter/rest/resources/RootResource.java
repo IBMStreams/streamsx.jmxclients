@@ -36,7 +36,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.rest.serializers.StreamsInstanceJobMonitorSerializer;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,7 +50,7 @@ public class RootResource {
     UriInfo uriInfo;
 
     public RootResource() {
-        jobTrackerModule.addSerializer(StreamsInstanceTracker.class, new StreamsInstanceJobMonitorSerializer());
+        jobTrackerModule.addSerializer(StreamsDomainTracker.class, new StreamsInstanceJobMonitorSerializer());
     }
     
     // Default page
@@ -60,130 +60,143 @@ public class RootResource {
     	return Response.status(Response.Status.OK).entity("try using the /jobtracker or /prometheus url").build();
     }
 
-    // if Instance does not exist, returns 404
-    @Path("instance")
+    // if Domain does not exist, returns 404
+    @Path("domain")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getInstanceInfo() throws StreamsTrackerException,
+    public Response getDomainInfo() throws StreamsTrackerException,
             WebApplicationException {
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();
 
-        return Response.status(200).entity(jobTracker.getInstanceInfo())
+        return Response.status(200).entity(jobTracker.getDomainInfo())
                 .build();
-    }
-
-    @Path("instance/resourceMetrics")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getInstanceResourceMetrics() throws StreamsTrackerException, WebApplicationException, JsonProcessingException {
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker.getInstance();
-        ObjectMapper om = new ObjectMapper();
-
-        return Response.status(Response.Status.OK).entity(
-                   om.writeValueAsString(jobTracker.getInstanceResourceMetrics())).build();
-    }
-
-    // If instance is not started or exists, then returns 404
-    @Path("metrics")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllJobMetrics() throws StreamsTrackerException,
-            WebApplicationException {
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
-
-        return Response.status(200).entity(jobTracker.getAllJobMetrics())
-                .build();
-    }
+    }    
     
-    // If instance is not started or exists, then returns 404
-    @Path("snapshots")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllJobSnapshots() throws StreamsTrackerException,
-            WebApplicationException {
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
-
-        return Response.status(200).entity(jobTracker.getAllJobSnapshots())
-                .build();
-    }
-
-    @Path("joblist/")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getJobList() throws StreamsTrackerException,
-            WebApplicationException, JsonProcessingException {
-        Response r = null;
-        ArrayList<JobInfo> jia = null;
-        ObjectMapper om = new ObjectMapper();
-
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
-
-        jia = jobTracker.getAllJobInfo();
-
-        Map<String, Object> m = new HashMap<String, Object>();
-
-        m.put("total", new Integer(jia.size()));
-
-        ArrayList<Object> jlist = new ArrayList<Object>();
-
-        for (JobInfo curJob : jia) {
-            Map<String, Object> j = new HashMap<String, Object>();
-            j.put("id", curJob.getId());
-            j.put("name", curJob.getName());
-
-            UriBuilder jub = uriInfo.getBaseUriBuilder();
-            URI jobUri = jub.path("jobs").path(String.valueOf(curJob.getId()))
-                    .build();
-            j.put("jobInfo", jobUri.toASCIIString());
-
-            UriBuilder mub = jub.clone();
-            URI metricsUri = mub.path("metrics").build();
-            j.put("metrics", metricsUri.toASCIIString());
-            
-            UriBuilder sub = jub.clone();
-            URI snapshotUri = sub.path("snapshot").build();
-            j.put("snapshot", snapshotUri.toASCIIString());
-
-            UriBuilder snub = jub.clone();
-            URI snapshotNowUri = snub.path("snapshotnow").build();
-            j.put("snapshotnow", snapshotNowUri.toASCIIString());
-
-            jlist.add(j);
-        }
-
-        m.put("jobs", jlist);
-
-        r = Response.status(Response.Status.OK)
-                .entity(om.writeValueAsString(m)).build();
-
-        return r;
-
-    }
-
-    // If instance does not exist, then returns 404
-    // If it exists and is not working, then return empty list with count 0
-    @Path("jobs/")
-    public JobsResource getJobs() throws StreamsTrackerException,
-            WebApplicationException, JsonProcessingException {
-
-        return new JobsResource();
-    }
-
-    
+//    // if Instance does not exist, returns 404
+//    @Path("instance")
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response getInstanceInfo() throws StreamsTrackerException,
+//            WebApplicationException {
+//        StreamsDomainTracker jobTracker = StreamsDomainTracker
+//                .getInstance();
+//
+//        return Response.status(200).entity(jobTracker.getInstanceInfo())
+//                .build();
+//    }
+//
+//    @Path("instance/resourceMetrics")
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response getInstanceResourceMetrics() throws StreamsTrackerException, WebApplicationException, JsonProcessingException {
+//        StreamsDomainTracker jobTracker = StreamsDomainTracker.getInstance();
+//        ObjectMapper om = new ObjectMapper();
+//
+//        return Response.status(Response.Status.OK).entity(
+//                   om.writeValueAsString(jobTracker.getInstanceResourceMetrics())).build();
+//    }
+//
+//    // If instance is not started or exists, then returns 404
+//    @Path("metrics")
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response getAllJobMetrics() throws StreamsTrackerException,
+//            WebApplicationException {
+//        StreamsDomainTracker jobTracker = StreamsDomainTracker
+//                .getInstance();
+//
+//        return Response.status(200).entity(jobTracker.getAllJobMetrics())
+//                .build();
+//    }
+//    
+//    // If instance is not started or exists, then returns 404
+//    @Path("snapshots")
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response getAllJobSnapshots() throws StreamsTrackerException,
+//            WebApplicationException {
+//        StreamsDomainTracker jobTracker = StreamsDomainTracker
+//                .getInstance();
+//
+//        return Response.status(200).entity(jobTracker.getAllJobSnapshots())
+//                .build();
+//    }
+//
+//    @Path("joblist/")
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response getJobList() throws StreamsTrackerException,
+//            WebApplicationException, JsonProcessingException {
+//        Response r = null;
+//        ArrayList<JobInfo> jia = null;
+//        ObjectMapper om = new ObjectMapper();
+//
+//        StreamsDomainTracker jobTracker = StreamsDomainTracker
+//                .getInstance();
+//
+//        jia = jobTracker.getAllJobInfo();
+//
+//        Map<String, Object> m = new HashMap<String, Object>();
+//
+//        m.put("total", new Integer(jia.size()));
+//
+//        ArrayList<Object> jlist = new ArrayList<Object>();
+//
+//        for (JobInfo curJob : jia) {
+//            Map<String, Object> j = new HashMap<String, Object>();
+//            j.put("id", curJob.getId());
+//            j.put("name", curJob.getName());
+//
+//            UriBuilder jub = uriInfo.getBaseUriBuilder();
+//            URI jobUri = jub.path("jobs").path(String.valueOf(curJob.getId()))
+//                    .build();
+//            j.put("jobInfo", jobUri.toASCIIString());
+//
+//            UriBuilder mub = jub.clone();
+//            URI metricsUri = mub.path("metrics").build();
+//            j.put("metrics", metricsUri.toASCIIString());
+//            
+//            UriBuilder sub = jub.clone();
+//            URI snapshotUri = sub.path("snapshot").build();
+//            j.put("snapshot", snapshotUri.toASCIIString());
+//
+//            UriBuilder snub = jub.clone();
+//            URI snapshotNowUri = snub.path("snapshotnow").build();
+//            j.put("snapshotnow", snapshotNowUri.toASCIIString());
+//
+//            jlist.add(j);
+//        }
+//
+//        m.put("jobs", jlist);
+//
+//        r = Response.status(Response.Status.OK)
+//                .entity(om.writeValueAsString(m)).build();
+//
+//        return r;
+//
+//    }
+//
+//    // If instance does not exist, then returns 404
+//    // If it exists and is not working, then return empty list with count 0
+//    @Path("jobs/")
+//    public JobsResource getJobs() throws StreamsTrackerException,
+//            WebApplicationException, JsonProcessingException {
+//
+//        return new JobsResource();
+//    }
+//
+//    
     // Internal debugging resource
-    @Path("jobtracker")
+    @Path("/{parameter: jobtracker|streamsexporter}")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response jobtracker() throws StreamsTrackerException,
             JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
         om.registerModule(jobTrackerModule);
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();
 
         return Response.status(Response.Status.OK)
                 .entity(om.writeValueAsString(jobTracker)).build();
