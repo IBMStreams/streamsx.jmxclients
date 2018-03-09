@@ -58,6 +58,7 @@ public abstract class MetricsExporter {
 	}
 	
 	public enum StreamsObjectType {
+		DOMAIN("streams_domain_", new String[] { "domainname" }),
 		INSTANCE("streams_instance_", new String[] { "domainname","instancename" }),
 		RESOURCE("streams_resource_", new String[] { "domainname","instancename", "resource"}),
 		JOB("streams_job_",new String[] { "domainname","instancename", "jobname" }),
@@ -88,6 +89,9 @@ public abstract class MetricsExporter {
 		public String metricDescriptionPrefix() {
 			String description;
 			switch (this) {
+			case DOMAIN:
+				description = "Streams domain metric";
+				break;
 			case INSTANCE:
 				description = "Streams instance metric";
 				break;

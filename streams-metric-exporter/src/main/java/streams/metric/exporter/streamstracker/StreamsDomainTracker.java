@@ -16,45 +16,21 @@
 
 package streams.metric.exporter.streamstracker;
 
-import java.math.BigInteger;
 import java.net.MalformedURLException;
-import java.text.Format;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.TimerTask;
 import java.util.Timer;
-import java.util.Date;
-import java.text.SimpleDateFormat;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
-
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.AttributeChangeNotification;
 import javax.management.NotificationFilterSupport;
 import javax.management.ObjectName;
 import javax.management.NotificationListener;
 import javax.management.InstanceNotFoundException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.json.simple.JSONObject;
-import org.json.simple.JSONArray;
-import org.json.simple.parser.JSONParser;
-import org.apache.commons.lang.time.StopWatch;
-
 import com.ibm.streams.management.ObjectNameBuilder;
-import com.ibm.streams.management.OperationListenerMXBean;
-import com.ibm.streams.management.OperationStatusMessage;
 import com.ibm.streams.management.domain.DomainMXBean;
-import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.job.JobMXBean;
-
 import streams.metric.exporter.Constants;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
 import streams.metric.exporter.error.StreamsTrackerException;
@@ -64,15 +40,7 @@ import streams.metric.exporter.jmx.MXBeanSourceProviderListener;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
-import streams.metric.exporter.streamstracker.instance.InstanceInfo;
 import streams.metric.exporter.streamstracker.instance.InstanceMap;
-import streams.metric.exporter.streamstracker.job.JobDetails;
-import streams.metric.exporter.streamstracker.job.JobInfo;
-import streams.metric.exporter.streamstracker.job.JobMap;
-import streams.metric.exporter.streamstracker.metrics.AllJobMetrics;
-import streams.metric.exporter.streamstracker.snapshots.AllJobSnapshots;
-
-import com.ibm.streams.management.Metric;
 import com.ibm.streams.management.Notifications;
 
 /*
@@ -131,10 +99,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     /*****************************************
      * INSTANCE MAP
      **************************************/
-    /* Instance Map Info */
     private InstanceMap instanceMap = null;
-    //private ConcurrentSkipListMap<BigInteger, JobDetails> jobMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
-    //private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
+  
 
     /*************************************************************
      * SINGLETON METHODS
@@ -172,35 +138,10 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         }
         
         if (singletonInstance.refreshRateSeconds == Constants.NO_REFRESH) {
-        	LOGGER.debug("On-demand refresh of metrics and snapshots...");
-        	try {
+        		LOGGER.debug("On-demand refresh of metrics and snapshots...");
         		singletonInstance.refresh();
-        		LOGGER.debug("On-=demand Refresh returned");
-            } catch (StreamsTrackerException e) {
-                LOGGER.debug(
-                        "Streams Tracker On-demand Refresh StreamsMonitorException: {}.",
-                        e);
-            } catch (UndeclaredThrowableException e) {
-
-                LOGGER.debug("StreamsMonitor On-demand Refresh UndeclaredThrowableException and unwrapping it");
-                Throwable t = e.getUndeclaredThrowable();
-                if (t instanceof IOException) {
-                    LOGGER.debug("StreamsMonitor On-demand Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
-                } else {
-                    LOGGER.debug("StreamsMonitor On-demand Refresh unwrapped "
-                            + t.getClass()
-                            + " which was unexpected, throw original undeclarable...");
-                    throw e;
-                }
-            } catch (Exception e) {
-                LOGGER.warn(
-                        "StreamsMonitor On-demand Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
-                        e);
-            }
-        }
-        
+        }   
         return singletonInstance;
-
     }   
     
     
@@ -211,33 +152,9 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     private TimerTask refresher = new TimerTask() {
         @Override
         public void run() {
-            // Exceptions at this level should just be logged so that we
-            // continue to refresh
-            // Some are expected in recoverable situations so only log at low
-            // level
-            try {
-                refresh();
-            } catch (StreamsTrackerException e) {
-                LOGGER.debug(
-                        "Streams Tracker Periodic Refresh StreamsMonitorException: {}.",
-                        e);
-            } catch (UndeclaredThrowableException e) {
 
-                LOGGER.debug("StreamsMonitor Periodic Refresh UndeclaredThrowableException and unwrapping it");
-                Throwable t = e.getUndeclaredThrowable();
-                if (t instanceof IOException) {
-                    LOGGER.debug("StreamsMonitor Periodic Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
-                } else {
-                    LOGGER.debug("StreamsMonitor Period Refresh unwrapped "
-                            + t.getClass()
-                            + " which was unexpected, throw original undeclarable...");
-                    throw e;
-                }
-            } catch (Exception e) {
-                LOGGER.warn(
-                        "StreamsMonitor Periodic Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
-                        e);
-            }
+
+            refresh();
 
         }
     };
@@ -279,22 +196,52 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     }
 
 
-    /******************************************************
+    /******************************************************************
      * REFRESH
      * 
      * Primary mechanism for updating internal state
      * from Streams JMX Server
      * 
      * Triggered by Auto-Refresh Timer or Manually 
-     ******************************************************/
-    public synchronized void refresh() throws StreamsTrackerException {
+     * Exceptions at this level should just be logged so that we
+     * continue to refresh.
+     * Some are expected in recoverable situations so only log at low
+     * level.
+     * Unexpected exceptions should be thrown
+     *****************************************************************/
+    public synchronized void refresh() {
         LOGGER.debug("*** Streams Domain Tracker Refresh");
 		LOGGER.trace("    current state: isDomainAvailable: {}",this.isDomainAvailable());
-        if (!this.isDomainAvailable()) {
-        	LOGGER.trace("*** Calling initStreamsDomain()");
-            initStreamsDomain(false);
-        }
-        
+		
+        try {
+        		//*** REFRESH LOGIC ***
+            
+            if (!this.isDomainAvailable()) {
+            	LOGGER.trace("*** Calling initStreamsDomain()");
+                initStreamsDomain(false);
+            }            
+                       
+        } catch (StreamsTrackerException e) {
+            LOGGER.debug(
+                    "Streams Tracker Refresh StreamsMonitorException: {}.",
+                    e);
+        } catch (UndeclaredThrowableException e) {
+
+            LOGGER.debug("StreamsMonitor Refresh UndeclaredThrowableException and unwrapping it");
+            Throwable t = e.getUndeclaredThrowable();
+            if (t instanceof IOException) {
+                LOGGER.debug("StreamsMonitor Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
+            } else {
+                LOGGER.debug("StreamsMonitor Refresh unwrapped "
+                        + t.getClass()
+                        + " which was unexpected, throw original undeclarable...");
+                throw e;
+            }
+        } catch (Exception e) {
+            LOGGER.warn(
+                    "StreamsMonitor Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
+                    e);
+        }		
     }
 
     /*******************************************************************************
@@ -304,7 +251,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * depending on if it is the first time it is run (on construction) in which
      * case it will cause the program to exit vs it is part of the recurring
      * refresh, in which case we assume it is a recoverable exception (e.g. jmx
-     * connection failure)and we will just try to re-initalize on the next
+     * connection failure) and we will just try to re-initalize on the next
      * refresh.
      *******************************************************************************/
     private synchronized void initStreamsDomain(boolean firstRun) throws StreamsTrackerException {
@@ -328,28 +275,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             
             this.setDomainAvailable(true);
             domainInfo.updateInfo(this.domainBean);
-
-
-
-//            // If instanceStartTime is null, then instance not ready, do not
-//            // need to
-//            // deal with individual statuses at this time
-//            if (this.instanceInfo.getInstanceStartTime() == null) {
-//                LOGGER.warn(
-//                        "Instance '{}' found, but is not started.  Current Status: {}",
-//                        new Object[] { this.instanceInfo.getInstanceName(),
-//                                this.instanceInfo.getInstanceStatus() });
-//                resetTracker();
-//                return;
-//            } else {
-//                // Force jobs and metrics to initialize by setting instance as
-//                // available
-//                LOGGER.info("Streams Instance '{}' found, Status: {}", new Object[] {
-//                        instance.getName(), instance.getStatus() });
-//                this.instanceInfo.setInstanceAvailable(true);
-//                jobsAvailable = false;
-//                metricsAvailable = false;
-//            }
 
             // Setup notifications (should handle exceptions)
             ObjectName domainObjName = ObjectNameBuilder.domain(this.domainName);
@@ -414,7 +339,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 	                            + this.domainName, ioe);
             }
         }
-        //createExportedDomainMetrics();
+        createExportedDomainMetrics();
     }
     
     
@@ -441,8 +366,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 //        	this.allJobSnapshots.setLastSnapshotFailure(new Date());
 //        	this.allJobSnapshots.setLastSnapshotRefreshFailed(true);
 //        }
-//        removeExportedInstanceMetrics();
-//        createExportedInstanceMetrics();
+        removeExportedDomainMetrics();
+        createExportedDomainMetrics();
     }
     
     
@@ -466,28 +391,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     					attributeName, acn.getOldValue(), acn.getNewValue());
     			domainInfo.updateInfo(this.domainBean);
     			
-    			// *** DO WE NEED TO HANDLE DOMAIN STATUS CHANGES....
-//    			if (attributeName.equals("Status")) {
-//    				InstanceMXBean.Status newValue = (InstanceMXBean.Status) acn
-//    						.getNewValue();
-//    				InstanceMXBean.Status oldValue = (InstanceMXBean.Status) acn
-//    						.getOldValue();
-//    				LOGGER.info("Streams Instance Status Changed from: " + oldValue
-//    						+ " to: " + newValue);
-//    				this.instanceInfo.setInstanceStatus((InstanceMXBean.Status) acn
-//    						.getNewValue());
-//    				if (newValue.equals(InstanceMXBean.Status.STOPPED)
-//    						|| newValue.equals(InstanceMXBean.Status.FAILED)
-//    						|| newValue.equals(InstanceMXBean.Status.UNKNOWN)) {
-//    					LOGGER.info("Instance Status reflects not availabe status ("
-//    							+ newValue
-//    							+ "), monitor will reset and reinitialize when instance is available");
-//    					this.instanceInfo.setInstanceStartTime(null);
-//    					resetTracker();
-//    					clearTracker();
-//    					metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
-//    				}
-//    			}
     			break;
 	        case Notifications.INSTANCE_CREATED:
 	            LOGGER.debug("Streams Instance created in domain, If tracking it or all instances, we need to add it to the instanceMap");
@@ -533,201 +436,11 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         return domainName;
     }
 
-//    public synchronized boolean jobsAvailable() {
-//        return jobsAvailable;
-//    }
-//
-//    public synchronized boolean metricsAvailable() {
-//        return metricsAvailable;
-//    }
-//    
-//    public synchronized boolean snapshotsAvailable() {
-//    	return snapshotsAvailable;
-//    }
-//
-//    public synchronized Long getInstanceResourceMetricsLastUpdated() {
-//        return instanceResourceMetricsLastUpdated;
-//    }
-//
-//    public synchronized Map<BigInteger, JobInfo> getCurrentJobMap() {
-//    	return instanceMap.getJobMap();
-//    }
-//
-//    public synchronized Map<String, BigInteger> getCurrentJobNameIndex() {
-//        return instanceMap.getCurrentJobNameIndex();
-//    }
-//
     public synchronized DomainInfo getDomainInfo() throws StreamsTrackerException {
         //verifyInstanceExists();
 
         return domainInfo;
     }
-
-//    private void verifyInstanceExists() throws StreamsTrackerException {
-//        if (instanceInfo == null) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.INSTANCE_NOT_FOUND,
-//                    "The InstanceInfo object does not exist.  This error should not occur.");
-//        } else if (!this.instanceInfo.isInstanceExists()) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.INSTANCE_NOT_FOUND,
-//                    "The Streams instance "
-//                            + this.instanceInfo.getInstanceName()
-//                            + " does not exist.");
-//        }
-//    }
-//
-//    public synchronized Map<String, Map<String, Long>> getInstanceResourceMetrics() throws StreamsTrackerException {
-//        verifyInstanceExists();
-//
-//        synchronized (instanceResourceMetrics) {
-//            return instanceResourceMetrics;
-//        }
-//    }
-//
-//    
-//    /* Get Resource Metrics */
-//    /* FUTURE: need to be notified of resources coming and going */
-//    /* For now, we will quickly just use a delta between this time and last time */
-//    private synchronized void updateInstanceResourceMetrics() throws StreamsTrackerException {
-//        verifyInstanceExists();
-//
-//        MXBeanSource beanSource = null;
-//        
-//        Map<String, Map<String, Long>> prevInstanceResourceMetrics = new HashMap<String, Map<String, Long>>(instanceResourceMetrics);
-//                
-//        try {
-//            beanSource = jmxContext.getBeanSourceProvider().getBeanSource();
-//
-//            InstanceMXBean instance = beanSource.getInstanceBean(domainName,
-//                this.instanceInfo.getInstanceName());
-//
-//            Map<String, Set<Metric>> jmxResourceMetrics = instance.retrieveResourceMetrics(false);
-//            instanceResourceMetrics.clear();
-//            for (Map.Entry<String, Set<Metric>> jmxEntry : jmxResourceMetrics.entrySet()) {
-//                Map<String, Long> metrics = new HashMap<String, Long>();
-//                for (Metric m : jmxEntry.getValue()) {
-//                    metrics.put(m.getName(), m.getValue());
-//                }
-//
-//                instanceResourceMetrics.put(jmxEntry.getKey(), metrics);
-//            }
-//            
-//            instanceResourceMetricsLastUpdated = System.currentTimeMillis();
-//        }
-//        catch (MalformedURLException me) {
-//            throw new StreamsTrackerException("Invalid JMX URL when retrieving instance bean", me);
-//        }
-//        catch (IOException ioe) {
-//            throw new StreamsTrackerException("JMX IO Exception when retrieving instance bean", ioe);
-//        }
-//        
-//        /* Process resource metrics for export */
-//        // Loop through old list and remove any not in the new list
-//        for (String key : prevInstanceResourceMetrics.keySet()) {
-//        	if (!instanceResourceMetrics.containsKey(key))
-//        		metricsExporter.removeAllChildStreamsMetrics(this.domainName,this.instanceInfo.getInstanceName(),key);
-//        }
-//        // Set exiting and new ones
-//        for (String resourceName : instanceResourceMetrics.keySet()) {
-//        	Map<String,Long> rmap = instanceResourceMetrics.get(resourceName);
-//        	for (String metricName : rmap.keySet()) {
-//				metricsExporter.getStreamsMetric(metricName,
-//						StreamsObjectType.RESOURCE,
-//						this.domainName,
-//						this.instanceInfo.getInstanceName(),
-//						resourceName).set((long)rmap.get(metricName));
-//        	}
-//        }
-//    }
-//
-//    public synchronized AllJobMetrics getAllJobMetrics() throws StreamsTrackerException {
-//
-//        if ((this.instanceInfo == null)
-//                || (!this.instanceInfo.isInstanceExists())) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.ALL_METRICS_NOT_AVAILABLE,
-//                    "The Streams instance "
-//                            + this.instanceInfo.getInstanceName()
-//                            + " does not exist.");
-//        } else if (allJobMetrics == null) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.ALL_METRICS_NOT_AVAILABLE,
-//                    "The allJobMetrics object does not exist. Metrics have never been able to be retrieved.");
-//        }
-//
-//        return allJobMetrics;
-//    }
-//    
-//    public synchronized AllJobSnapshots getAllJobSnapshots() throws StreamsTrackerException {
-//
-//        if ((this.instanceInfo == null)
-//                || (!this.instanceInfo.isInstanceExists())) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.ALL_SNAPSHOTS_NOT_AVAILABLE,
-//                    "The Streams instance "
-//                            + this.instanceInfo.getInstanceName()
-//                            + " does not exist.");
-//        } else if (allJobMetrics == null) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.ALL_SNAPSHOTS_NOT_AVAILABLE,
-//                    "The allJobSnapshots object does not exist. Snapshots have never been able to be retrieved.");
-//        }
-//
-//        return allJobSnapshots;
-//    }    
-//
-//    public synchronized ArrayList<JobInfo> getAllJobInfo() throws StreamsTrackerException {
-//        ArrayList<JobInfo> jia = null;
-//
-//        if ((this.instanceInfo == null)
-//                || (!this.instanceInfo.isInstanceExists())) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.ALL_JOBS_NOT_AVAILABLE,
-//                    "The Streams instance "
-//                            + this.instanceInfo.getInstanceName()
-//                            + " does not exist.");
-//        }
-//
-//        if (jobsAvailable) {
-//        	jia = instanceMap.getJobInfo();
-//        } else {
-//        	// empty array
-//        	jia = new ArrayList<JobInfo>();
-//        }
-//        return jia;
-//    }
-//
-//    public synchronized JobInfo getJobInfo(int jobid) throws StreamsTrackerException {
-//        JobInfo ji = null;
-//
-//        ji = instanceMap.getJobInfo(jobid);
-//        if (ji == null) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.JOB_NOT_FOUND, "Job id " + jobid
-//                            + " does not exist");
-//        }
-//        
-//        return ji;
-//    }
-//
-//    // Single job snapshot on demand
-//    // Was used before we started caching snapshots to get PE launchCounts
-//    public synchronized String getJobSnapshot(int jobid, int maximumDepth,
-//            boolean includeStaticAttributes) throws StreamsTrackerException {
-//        JobDetails jd = instanceMap.getJob(jobid);
-//
-//        if (jd == null) {
-//            throw new StreamsTrackerException(
-//                    StreamsTrackerErrorCode.JOB_NOT_FOUND, "Job id " + jobid
-//                            + " does not exist");
-//        }
-//
-//        return jd.getSnapshot(maximumDepth, includeStaticAttributes);
-//    }
-
-
-
 
 	String getProtocol() {
         return protocol;
@@ -1280,34 +993,39 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 //    }
 
 
+    /*********************************
+     * DOMAIN METRICS
+     *********************************/
+    private void createExportedDomainMetrics() {
+	    	metricsExporter.createStreamsMetric("status", StreamsObjectType.DOMAIN, "Domain status, 1: running, .5: starting, stopping, 0: stopped, removing, unknown");
+	    	metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
+	    	metricsExporter.createStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, "Number of instances currently created in the streams domain");
+	    	metricsExporter.getStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getInstances().size());
+    }
     
-//    private void createExportedInstanceMetrics() {
-//    	metricsExporter.createStreamsMetric("status", StreamsObjectType.INSTANCE, "Instance status, 1: running, .5: partially up, 0: stopped, failed, unknown");
-//    	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
-//    	metricsExporter.createStreamsMetric("jobCount", StreamsObjectType.INSTANCE, "Number of jobs currently deployed into the streams instance");
-//    	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(0);
-//    }
-//    
-//    private void removeExportedInstanceMetrics() {
-//		metricsExporter.removeAllChildStreamsMetrics(this.domainName, this.instanceInfo.getInstanceName());
-//    }
-//    
-//    private double getInstanceStatusAsMetric() {
-//    	double value = 0;
-//    	switch (this.instanceInfo.getInstanceStatus()) {
-//    	case RUNNING :
-//    		value = 1;
-//    		break;
-//    	case STARTING:
-//    	case PARTIALLY_RUNNING:
-//    	case PARTIALLY_FAILED:
-//    	case STOPPING:
-//    		value = 0.5;
-//    	default:
-//    		value = 0;
-//    	}
-//    	return value;
-//    }
+    private void removeExportedDomainMetrics() {
+		metricsExporter.removeAllChildStreamsMetrics(this.domainName);
+    }
+    
+    private double getDomainStatusAsMetric() {
+	    	double value = 0;
+	    	switch (this.domainInfo.getStatus()) {
+		    	case "running" :
+		    		value = 1;
+		    		break;
+		    	case "starting":
+		    	case "stopping":
+		    		value = 0.5;
+		    		break;
+		    	default:
+		    		value = 0;
+	    	}
+	    	return value;
+    }
+    
+    /**************************************
+     * JMX BEAN SOURCE PROVIDER LISTENER
+     **************************************/
 
     @Override
     public void beanSourceInterrupted(MXBeanSource bs) {

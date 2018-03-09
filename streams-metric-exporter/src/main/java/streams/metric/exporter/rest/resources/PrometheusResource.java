@@ -47,7 +47,7 @@ public class PrometheusResource {
     // if Instance does not exist, returns 404
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public Response getInstanceInfo() throws IOException,
+    public Response getDomainInfo() throws IOException,
             WebApplicationException,
     		StreamsTrackerException{
     	
@@ -55,7 +55,8 @@ public class PrometheusResource {
         StreamsDomainTracker jobTracker = StreamsDomainTracker
                 .getDomainTracker();   
         
-        LOGGER.debug("/prometheus endpoint handler: metricsAvailable={}, instanceAvailable={}",jobTracker.metricsAvailable(),jobTracker.getInstanceInfo().isInstanceAvailable());
+       //LOGGER.debug("/prometheus endpoint handler: metricsAvailable={}, instanceAvailable={}",jobTracker.metricsAvailable(),jobTracker.getInstanceInfo().isInstanceAvailable());
+        LOGGER.debug("/prometheus endpoint handler: domainAvailable={}",jobTracker.isDomainAvailable());
         
         // Create streams_exporter_metrics_available and streams_exporter_instance_available
         
