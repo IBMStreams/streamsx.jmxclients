@@ -76,27 +76,20 @@ import com.ibm.streams.management.Notifications;
 
 /*
  * StreamsInstanceTracker
- * 	Listens for Instance notifications to help update its status
- *  Has a periodic refresh() to also update status and retrieve periodic items (e.g. allJobMetrics)
- *  
- *  Pattern: Modified Singleton Pattern
- *  Driver: The Singleton pattern is used to allow JERSEY rest classes to get the instance
- *          easily without introducing Java Dependency Injection (could do that in the future)
- *          The modification is required because the instance needs some parameters and the 
- *          traditional singleton pattern does not support that
- *  Options: Could have used property file but due to time constraints and evolution stuck with
- *           parameters
- *  Usage: StraemsInstanceJobMonitor.initInstance(param1, param2, param3, ...)
- *         StreamsInstanceTracker.getInstance() 
- *           throws exception if instance was not initalized yet
- *  Future: Move to a Factory method so that multiple of these could exist for
- *          different domains / instances in a single run of the application
+ *  Initialization
+ *  		* Get InstanceMXBean
+ *  		* Register for JMX Notifications
+ *  		* Create InstanceInfo object
+ *  Refresh
+ *  		* Get Metrics Snapshot
+ *  		* Get Jobs Snapshot
+ *  		* Update JobMap using snapshot lists
+ *  Notification of Instance change
+ *  		* Update Instance Info
  */
 public class StreamsInstanceTracker implements NotificationListener, MXBeanSourceProviderListener {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + StreamsInstanceTracker.class.getName());
-
-    private static StreamsInstanceTracker singletonInstance = null;
 
     private static boolean isInitialized = false;
 
@@ -174,13 +167,13 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         }
     };
 
-    /*
+    /**************************************************************************
      * Constructor
      * 
      * Note: InstanceNotFoundException is a jmx exception we use not to be
      * confused with streams instance
-     */
-    private StreamsInstanceTracker(JmxServiceContext jmxContext,
+     ***************************************************************************/
+    public StreamsInstanceTracker(JmxServiceContext jmxContext,
             String domainName, String instanceName, int refreshRateSeconds,
             String protocol) throws StreamsTrackerException {
         LOGGER.trace("Constructing StreamsInstanceTracker");
@@ -191,46 +184,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         this.protocol = protocol;
         this.jmxContext.getBeanSourceProvider().addBeanSourceProviderListener(this);
         jobMap = new JobMap(instanceName);
-        // ** Domain Info **
-        MXBeanSource beanSource = null;
-        try {
-            beanSource = jmxContext.getBeanSourceProvider().getBeanSource();
-            DomainMXBean domain = beanSource.getDomainBean(this.domainName);
-            LOGGER.info("Streams Domain '{}' found, Status: {}",
-                    new Object[] { domain.getName(), domain.getStatus() });
-        } catch (UndeclaredThrowableException e) {
-            // Some InstanceNotFoundExceptions are wrapped in
-            // UndeclaredThrowableExceptions sadly
-
-            Throwable t = e.getUndeclaredThrowable();
-            if (t instanceof InstanceNotFoundException) {
-                LOGGER.error(
-                        "Domain '{}' not found when initializing.  Ensure the JMX URL specified is for the domain you are attempting to connect to.",
-                        this.domainName);
-                throw new StreamsTrackerException(
-                        StreamsTrackerErrorCode.DOMAIN_NOT_FOUND,
-                        "Domain name "
-                                + this.domainName
-                                + " does not match the domain of the JMX Server.",
-                        e);
-            } else {
-                LOGGER.trace("Unexpected exception ("
-                        + t.getClass()
-                        + ") when retrieving Streams domain information from JMX Server, throwing original undeclarable...");
-                throw e;
-            }
-        } catch (MalformedURLException e) {
-            throw new StreamsTrackerException(
-                    StreamsTrackerErrorCode.JMX_MALFORMED_URL,
-                    "Malformed URL error while retrieving domain information, domain: "
-                            + this.domainName, e);
-        } catch (IOException e) {
-            LOGGER.error("JMX IO Exception when retrieving domain information.  Not sure why JMX Connection Pool did not retry connection");
-            throw new StreamsTrackerException(
-                    StreamsTrackerErrorCode.JMX_IOERROR,
-                    "JMX IO error while retrieving domain information, domain: "
-                            + this.domainName, e);
-        }
 
         initStreamsInstance();
 
@@ -251,71 +204,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
     }
 
-    public static StreamsInstanceTracker initInstance(
-            JmxServiceContext jmxContext, String domainName,
-            String instanceName, int refreshRateSeconds, String protocol)
-            throws StreamsTrackerException {
-        if (singletonInstance != null) {
-            LOGGER.warn("Re-Initializing StreamsInstanceTracker");
-        } else {
-            LOGGER.debug("Initializing StreamsInstanceTracker");
-        }
-
-        try {
-            singletonInstance = new StreamsInstanceTracker(jmxContext,
-                    domainName, instanceName, refreshRateSeconds, protocol);
-            StreamsInstanceTracker.isInitialized = true;
-        } catch (StreamsTrackerException e) {
-            LOGGER.error("Initalization of StreamsInstanceTracker instance FAILED!!");
-            throw e;
-        }
-
-        return singletonInstance;
-    }
-
-    // Do not confuse with a Streams Instance, this refers to the instance of
-    // this class
-    // If refresh rate is 0 (NO_REFRESH) then perform a refresh.
-    public static StreamsInstanceTracker getInstance()
-            throws StreamsTrackerException {
-        if (!StreamsInstanceTracker.isInitialized) {
-            LOGGER.warn("An attempt to retrieve the instance of StreamsInstanceTracker was made before it was initialized");
-            throw new StreamsTrackerException(
-                    StreamsTrackerErrorCode.STREAMS_MONITOR_UNAVAILABLE,
-                    "StreamsInstanceTracker is not initialized");
-        }
-        
-        if (singletonInstance.refreshRateSeconds == Constants.NO_REFRESH) {
-        	LOGGER.debug("On-demand refresh of metrics and snapshots...");
-        	try {
-        		singletonInstance.refresh();
-        		LOGGER.debug("On-=demand Refresh returned");
-            } catch (StreamsTrackerException e) {
-                LOGGER.debug(
-                        "Streams Tracker On-demand Refresh StreamsMonitorException: {}.",
-                        e);
-            } catch (UndeclaredThrowableException e) {
-
-                LOGGER.debug("StreamsMonitor On-demand Refresh UndeclaredThrowableException and unwrapping it");
-                Throwable t = e.getUndeclaredThrowable();
-                if (t instanceof IOException) {
-                    LOGGER.debug("StreamsMonitor On-demand Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
-                } else {
-                    LOGGER.debug("StreamsMonitor On-demand Refresh unwrapped "
-                            + t.getClass()
-                            + " which was unexpected, throw original undeclarable...");
-                    throw e;
-                }
-            } catch (Exception e) {
-                LOGGER.warn(
-                        "StreamsMonitor On-demand Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
-                        e);
-            }
-        }
-        
-        return singletonInstance;
-
-    }
 
     public MetricsExporter getMetricsExporter() {
     	return metricsExporter;
@@ -353,8 +241,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         return jobMap.getCurrentJobNameIndex();
     }
 
-    public synchronized InstanceInfo getInstanceInfo() throws StreamsTrackerException {
-        verifyInstanceExists();
+    public synchronized InstanceInfo getInstanceInfo() {
+        //verifyInstanceExists();
 
         return instanceInfo;
     }
@@ -1345,6 +1233,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     	}
     	return value;
     }
+    
+    // Should do whatever necessary to shutdown and close this object
+    public void close() {}
 
     @Override
     public void beanSourceInterrupted(MXBeanSource bs) {

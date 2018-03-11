@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.instance.InstanceInfo;
+import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
 /**
@@ -47,79 +48,84 @@ public class StreamsInstanceJobMonitorSerializer extends
             throws IOException, JsonProcessingException {
         jgen.writeStartObject();
         jgen.writeStringField("domain", monitor.getDomainName());
-        jgen.writeObjectFieldStart("instance");
-
-        try {
-            InstanceInfo instanceInfo = monitor.getInstanceInfo();
-            jgen.writeBooleanField("available",
-                    instanceInfo.isInstanceAvailable());
-            jgen.writeStringField("name", instanceInfo.getInstanceName());
-            jgen.writeStringField("status", instanceInfo.getInstanceStatus()
-                    .toString());
-            jgen.writeStringField("instanceStartTime",
-                    convertTime(instanceInfo.getInstanceStartTime()));
-            jgen.writeEndObject();
-        } catch (StreamsTrackerException e) {
-            throw new IOException(e);
-        }
-
-        jgen.writeBooleanField("jobMapAvailable", monitor.jobsAvailable());
-        jgen.writeBooleanField("jobMetricsAvailable",
-                monitor.metricsAvailable());
-        jgen.writeStringField("instanceResourceMetricsLastUpdateTime", convertTime(monitor.getInstanceResourceMetricsLastUpdated()));
-        jgen.writeBooleanField("jobSnapshotsAvailable",
-                monitor.snapshotsAvailable());
-        
-        if (monitor.jobsAvailable()) {
-            Iterator<Map.Entry<BigInteger, JobInfo>> it = monitor
-                    .getCurrentJobMap().entrySet().iterator();
-            jgen.writeNumberField("jobCount", monitor.getCurrentJobMap().size());
-            jgen.writeArrayFieldStart("jobMap");
-            while (it.hasNext()) {
-                Map.Entry<BigInteger, JobInfo> entry = it.next();
-                //jgen.writeObjectFieldStart("mapEntry");
-                jgen.writeStartObject();
-                jgen.writeObjectFieldStart("jobInfo");
-
-                jgen.writeStringField("id", entry.getValue().getId().toString());
-                jgen.writeStringField("status", entry.getValue().getStatus()
-                        .toString());
-                jgen.writeStringField("applicationName", entry.getValue()
-                        .getApplicationName());
-//                jgen.writeStringField("metrics", entry.getValue()
-//                        .getJobMetrics());
-//                jgen.writeStringField("snapshot", entry.getValue()
-//                        .getJobSnapshot());
-                jgen.writeFieldName("metrics");
-                jgen.writeRawValue(entry.getValue().getJobMetrics());
-                jgen.writeFieldName("snapshot");
-                jgen.writeRawValue(entry.getValue().getJobSnapshot());
-                        
-                jgen.writeEndObject();
-                jgen.writeEndObject();
-            }
-
-            //jgen.writeEndObject();
-            jgen.writeEndArray();
-        }
-
-        if (monitor.metricsAvailable()) {
-            jgen.writeArrayFieldStart("jobNameIndex");
-
-            Iterator<Map.Entry<String, BigInteger>> it = monitor
-                    .getCurrentJobNameIndex().entrySet().iterator();
-
-            while (it.hasNext()) {
-                Map.Entry<String, BigInteger> entry = it.next();
-                //jgen.writeObjectFieldStart("mapEntry");
-                jgen.writeStartObject();
-                jgen.writeStringField("key", entry.getKey().toString());
-                jgen.writeStringField("value", entry.getValue().toString());
-                jgen.writeEndObject();
-            }
-
-            jgen.writeEndArray();
-        }
+        jgen.writeArrayFieldStart("instances");
+        Iterator<Map.Entry<String, StreamsInstanceTracker>> iit = monitor.getInstanceTrackerMap().entrySet().iterator();
+        while (iit.hasNext()) {
+        		jgen.writeStartObject();
+        		Map.Entry<String, StreamsInstanceTracker> InstanceEntry = iit.next();
+        		StreamsInstanceTracker sit = InstanceEntry.getValue();
+	        //try {
+	            InstanceInfo instanceInfo = sit.getInstanceInfo();
+	            jgen.writeBooleanField("available",
+	                    instanceInfo.isInstanceAvailable());
+	            jgen.writeStringField("name", instanceInfo.getInstanceName());
+	            jgen.writeStringField("status", instanceInfo.getInstanceStatus()
+	                    .toString());
+	            jgen.writeStringField("instanceStartTime",
+	                    convertTime(instanceInfo.getInstanceStartTime()));
+	        //} catch (StreamsTrackerException e) {
+	        //    throw new IOException(e);
+	        //}
+//
+//        jgen.writeBooleanField("jobMapAvailable", monitor.jobsAvailable());
+//        jgen.writeBooleanField("jobMetricsAvailable",
+//                monitor.metricsAvailable());
+//        jgen.writeStringField("instanceResourceMetricsLastUpdateTime", convertTime(monitor.getInstanceResourceMetricsLastUpdated()));
+//        jgen.writeBooleanField("jobSnapshotsAvailable",
+//                monitor.snapshotsAvailable());
+//        
+//        if (monitor.jobsAvailable()) {
+//            Iterator<Map.Entry<BigInteger, JobInfo>> it = monitor
+//                    .getCurrentJobMap().entrySet().iterator();
+//            jgen.writeNumberField("jobCount", monitor.getCurrentJobMap().size());
+//            jgen.writeArrayFieldStart("jobMap");
+//            while (it.hasNext()) {
+//                Map.Entry<BigInteger, JobInfo> entry = it.next();
+//                //jgen.writeObjectFieldStart("mapEntry");
+//                jgen.writeStartObject();
+//                jgen.writeObjectFieldStart("jobInfo");
+//
+//                jgen.writeStringField("id", entry.getValue().getId().toString());
+//                jgen.writeStringField("status", entry.getValue().getStatus()
+//                        .toString());
+//                jgen.writeStringField("applicationName", entry.getValue()
+//                        .getApplicationName());
+////                jgen.writeStringField("metrics", entry.getValue()
+////                        .getJobMetrics());
+////                jgen.writeStringField("snapshot", entry.getValue()
+////                        .getJobSnapshot());
+//                jgen.writeFieldName("metrics");
+//                jgen.writeRawValue(entry.getValue().getJobMetrics());
+//                jgen.writeFieldName("snapshot");
+//                jgen.writeRawValue(entry.getValue().getJobSnapshot());
+//                        
+//                jgen.writeEndObject();
+//                jgen.writeEndObject();
+//            }
+//
+//            //jgen.writeEndObject();
+//            jgen.writeEndArray();
+//        }
+//
+//        if (monitor.metricsAvailable()) {
+//            jgen.writeArrayFieldStart("jobNameIndex");
+//
+//            Iterator<Map.Entry<String, BigInteger>> it = monitor
+//                    .getCurrentJobNameIndex().entrySet().iterator();
+//
+//            while (it.hasNext()) {
+//                Map.Entry<String, BigInteger> entry = it.next();
+//                //jgen.writeObjectFieldStart("mapEntry");
+//                jgen.writeStartObject();
+//                jgen.writeStringField("key", entry.getKey().toString());
+//                jgen.writeStringField("value", entry.getValue().toString());
+//                jgen.writeEndObject();
+//            }
+//
+            jgen.writeEndObject(); // instances
+        		
+        } // end loop over instance trackers
+        jgen.writeEndArray();
     }
 
     private String convertTime(Long time) {

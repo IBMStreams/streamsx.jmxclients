@@ -16,6 +16,11 @@
 
 package streams.metric.exporter;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
+
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
@@ -23,6 +28,7 @@ import com.beust.jcommander.internal.Console;
 import com.beust.jcommander.internal.DefaultConsole;
 
 import streams.metric.exporter.cli.ServerProtocolValidator;
+import streams.metric.exporter.cli.InstanceListConverter;
 import streams.metric.exporter.rest.Protocol;
 import streams.metric.exporter.cli.FileExistsValidator;
 import streams.metric.exporter.cli.RefreshRateValidator;
@@ -52,7 +58,10 @@ public class ServiceConfig {
 
     @Parameter(names = { "-i", "--instance" }, description = Constants.DESC_INSTANCE_ID, required = false)
     private String instanceName = getEnvDefault(Constants.ENV_INSTANCE_ID,Constants.DEFAULT_INSTANCE_ID);
-
+    
+    @Parameter(names = { "--instancelist" }, listConverter = InstanceListConverter.class, description = Constants.DESC_INSTANCE_LIST, required = false)
+    private Set<String> instanceList = InstanceListConverter.convertInstanceList(getEnvDefault(Constants.ENV_INSTANCE_LIST,Constants.DEFAULT_INSTANCE_LIST));
+    
     @Parameter(names = { "-u", "--user" }, description = Constants.DESC_USERNAME, required = false)
     private String user = getEnvDefault(Constants.ENV_USERNAME,Constants.DEFAULT_USERNAME);
     
@@ -155,12 +164,52 @@ public class ServiceConfig {
         this.domainName = domainName;
     }
 
+    
+    /********************************************
+     * INSTANCE NAME LOGIC
+     * Somewhat complicated because we want
+     * to honor STREAMS_INSTANCE_ID unless
+     * We have specified a list or all
+     ********************************************/
+    
+    /* STREAMS_INSTANCE_ID */
     public String getInstanceName() {
-        return instanceName;
+    		return instanceName;
     }
-
     public void setInstanceName(String instanceName) {
-        this.instanceName = instanceName;
+    		this.instanceName = instanceName;
+    }
+    
+    public Set<String> getInstanceList() {
+    		return instanceList;
+    }
+    
+    /* STREAMS_EXPORTER_INSTANCE_LIST */
+    public void setInstanceList(Set<String> instanceList) {
+    		this.instanceList = instanceList;
+    }
+    
+    /* Derived based on precedence */
+    /* Returns empty set if we want all instances */
+    public Set<String> getInstanceNameSet() {
+    		HashSet<String> instanceNameSet = new HashSet<String>();
+    		/* If a list is specified or ALL then use it */
+    		if (getInstanceList().size() > 0) {
+    			if ((getInstanceList().size() == 1) && getInstanceList().contains(Constants.DEFAULT_INSTANCE_LIST)) {
+    				// Dont do anything at this time, let STREAMS_INSTANCE_ID be used
+    			} else if ((getInstanceList().size() == 1) && getInstanceList().contains("ALL")) {
+    				return instanceNameSet;  // empty list means all
+    			} else {
+    				return getInstanceList();
+    			}
+    		}
+    			
+    		/* Get from STREAMS_INSTANCE_ID (instanceName) if we get to here */
+    		if ((getInstanceName() != null) && (getInstanceName().length() > 0)) {
+    			instanceNameSet.add(getInstanceName());
+    		}
+    		
+        return instanceNameSet;
     }
 
     public String getUser() {
@@ -276,6 +325,17 @@ public class ServiceConfig {
         result.append("domain: " + this.getDomainName());
         result.append(newline);
         result.append("instance: " + this.getInstanceName());
+        result.append(newline);
+        result.append("instancelist: " + this.getInstanceList());
+        result.append(newline);
+        result.append("instanceNameSet.size(): " + this.getInstanceNameSet().size());
+        result.append(newline);
+        result.append("instanceNameSet: ");
+        if (this.getInstanceNameSet().size() == 0) {
+        		result.append("<ALL>");
+        } else {
+        		result.append( getInstanceNameSet());
+        }
         result.append(newline);
         result.append("user: " + this.getUser());
         result.append(newline);

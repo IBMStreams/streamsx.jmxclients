@@ -18,9 +18,15 @@ package streams.metric.exporter.streamstracker;
 
 import java.net.MalformedURLException;
 import java.util.TimerTask;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.Timer;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
+import java.math.BigInteger;
+
 import javax.management.Notification;
 import javax.management.AttributeChangeNotification;
 import javax.management.NotificationFilterSupport;
@@ -40,7 +46,10 @@ import streams.metric.exporter.jmx.MXBeanSourceProviderListener;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
-import streams.metric.exporter.streamstracker.instance.InstanceMap;
+import streams.metric.exporter.streamstracker.instance.InstanceTrackerMap;
+import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.job.JobInfo;
+
 import com.ibm.streams.management.Notifications;
 
 /*
@@ -66,7 +75,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     /*****************************************
      * SINGLETON PATTERN
      *****************************************/
-    private static StreamsDomainTracker singletonInstance = null;
+    private static StreamsDomainTracker domainTrackerSingleton = null;
     private static boolean isInitialized = false;
 
     /*****************************************
@@ -78,6 +87,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * CONFIGURATION
      *****************************************/
     private int refreshRateSeconds; // How often to retrieve bulk metrics
+    private boolean trackAllInstances = false;
+    private Set<String> requestedInstances = new HashSet<String>(); // Instances user is interested in
     private String protocol;
 
     /*****************************************
@@ -99,7 +110,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     /*****************************************
      * INSTANCE MAP
      **************************************/
-    private InstanceMap instanceMap = null;
+    private InstanceTrackerMap instanceTrackerMap = null;
   
 
     /*************************************************************
@@ -107,24 +118,24 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      *************************************************************/
     public static StreamsDomainTracker initDomainTracker(
             JmxServiceContext jmxContext, String domainName,
-            String instanceName, int refreshRateSeconds, String protocol)
+            Set<String> requestedInstances, int refreshRateSeconds, String protocol)
             throws StreamsTrackerException {
-        if (singletonInstance != null) {
+        if (domainTrackerSingleton != null) {
             LOGGER.warn("Re-Initializing StreamsDomainTracker");
         } else {
             LOGGER.debug("Initializing StreamsDomainTracker");
         }
 
         try {
-            singletonInstance = new StreamsDomainTracker(jmxContext,
-                    domainName, instanceName, refreshRateSeconds, protocol);
+            domainTrackerSingleton = new StreamsDomainTracker(jmxContext,
+                    domainName, requestedInstances, refreshRateSeconds, protocol);
             StreamsDomainTracker.isInitialized = true;
         } catch (StreamsTrackerException e) {
             LOGGER.error("Initalization of StreamsDomainTracker instance FAILED!!");
             throw e;
         }
 
-        return singletonInstance;
+        return domainTrackerSingleton;
     }    
     
     // If refresh rate is 0 (NO_REFRESH) then perform a refresh.
@@ -137,11 +148,11 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
                     "StreamsDomainTracker is not initialized");
         }
         
-        if (singletonInstance.refreshRateSeconds == Constants.NO_REFRESH) {
+        if (domainTrackerSingleton.refreshRateSeconds == Constants.NO_REFRESH) {
         		LOGGER.debug("On-demand refresh of metrics and snapshots...");
-        		singletonInstance.refresh();
+        		domainTrackerSingleton.refresh();
         }   
-        return singletonInstance;
+        return domainTrackerSingleton;
     }   
     
     
@@ -163,7 +174,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * CONSTRUCTOR
      *******************************************************************/
     private StreamsDomainTracker(JmxServiceContext jmxContext,
-            String domainName, String instanceName, int refreshRateSeconds,
+            String domainName, Set<String> requestedInstances, int refreshRateSeconds,
             String protocol) throws StreamsTrackerException {
     	
         LOGGER.trace("Constructing StreamsDomainTracker");
@@ -172,11 +183,25 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         this.refreshRateSeconds = refreshRateSeconds;
         this.protocol = protocol;
         this.jmxContext.getBeanSourceProvider().addBeanSourceProviderListener(this);
-        //instanceMap = new InstanceMap(domainName);
+        this.requestedInstances = requestedInstances;
+        
+        instanceTrackerMap = new InstanceTrackerMap();
+        // Are we tracking all instances
+        if (requestedInstances.size() == 0) {
+        		this.trackAllInstances = true;
+        } else {
+        		this.trackAllInstances = false;
+        }
+        
+		LOGGER.debug("requested instances ({})...",Arrays.toString(this.requestedInstances.toArray()));
+		LOGGER.debug("trackAllInstances: " + this.trackAllInstances);
 
+        // Get Domain
         domainInfo = new DomainInfo(this.domainName);
-
         initStreamsDomain(true);
+        
+
+        
 //
 //        if (this.instanceInfo.isInstanceAvailable()) {
 //            updateInstanceResourceMetrics();
@@ -246,6 +271,10 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 
     /*******************************************************************************
      * INIT STREAMS DOMAIN 
+     * 
+     * Get The Domain Bean
+     * 
+     * Setup any/all Instance Trackers we need
      * 
      * Exceptions thrown by this method will impact the program differently
      * depending on if it is the first time it is run (on construction) in which
@@ -340,6 +369,10 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             }
         }
         createExportedDomainMetrics();
+        
+        /* Create the Instance Trackers */
+        createUpdateStreamsInstanceTrackers();
+
     }
     
     
@@ -384,18 +417,19 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     				+ "; User Data: " + notification.getUserData());
 
     		switch (notificationType) {
-    		case AttributeChangeNotification.ATTRIBUTE_CHANGE:
-    			AttributeChangeNotification acn = (AttributeChangeNotification) notification;
-    			String attributeName = acn.getAttributeName();
-    			LOGGER.debug("Domain attribute changed: {} from {} to {}, updating Domain Info...",
-    					attributeName, acn.getOldValue(), acn.getNewValue());
-    			domainInfo.updateInfo(this.domainBean);
+	    		case AttributeChangeNotification.ATTRIBUTE_CHANGE:
+	    			AttributeChangeNotification acn = (AttributeChangeNotification) notification;
+	    			String attributeName = acn.getAttributeName();
+	    			LOGGER.debug("Domain attribute changed: {} from {} to {}, updating Domain Info...",
+	    					attributeName, acn.getOldValue(), acn.getNewValue());
+	    			domainInfo.updateInfo(this.domainBean);
     			
-    			break;
+	    			break;
 	        case Notifications.INSTANCE_CREATED:
 	            LOGGER.debug("Streams Instance created in domain, If tracking it or all instances, we need to add it to the instanceMap");
     				domainInfo.updateInfo(this.domainBean);
 
+    				createUpdateStreamsInstanceTrackers();
 	            //this.instanceInfo.setInstanceExists(false);
 	            //resetTracker();
 	            //clearTracker();
@@ -404,6 +438,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 	        case Notifications.INSTANCE_DELETED:
 	            LOGGER.debug("Instance deleted from domain, If tracking it or all instances, we need to update its status");
     				domainInfo.updateInfo(this.domainBean);
+    				
+    				createUpdateStreamsInstanceTrackers();
 
 	            //this.instanceInfo.setInstanceExists(false);
 	            //resetTracker();
@@ -435,8 +471,13 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     public String getDomainName() {
         return domainName;
     }
+    
+    public synchronized Map<String, StreamsInstanceTracker> getInstanceTrackerMap() {
+    		return instanceTrackerMap.getMap();
+    }
 
     public synchronized DomainInfo getDomainInfo() throws StreamsTrackerException {
+    	
         //verifyInstanceExists();
 
         return domainInfo;
@@ -461,6 +502,59 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 //        this.instanceMap.clear();
 //    }
 
+	
+	/******************************************************
+	 * INSTANCES TRACKER MAP and MANAGEMENT
+	 ******************************************************/
+	
+	/* Respond to initial creation and whenever instances added or removed */
+	private synchronized void createUpdateStreamsInstanceTrackers() {
+		Set<String> instancesToTrack = null;
+		
+		LOGGER.debug("createUpdateStreamsInstanceTrackers...");
+		if (this.trackAllInstances) {
+			instancesToTrack = domainInfo.getInstances();
+		} else {
+			instancesToTrack = this.requestedInstances;
+		}
+		
+		LOGGER.debug("requested instances ({})...",Arrays.toString(this.requestedInstances.toArray()));
+		LOGGER.debug("trackAllInstances: " + this.trackAllInstances);
+
+		
+		LOGGER.debug("Ensure we are tracking instances ({})...",Arrays.toString(instancesToTrack.toArray()));
+
+		for (String instanceName : instancesToTrack) {
+			
+			if (this.instanceTrackerMap.getInstanceTracker(instanceName) == null) {
+				LOGGER.debug("Instance ({}) not found in instanceTrackerMap, creating...", instanceName);
+				try {
+					StreamsInstanceTracker newInstanceTracker = new StreamsInstanceTracker(this.jmxContext,
+							this.domainName,
+							instanceName,
+							this.refreshRateSeconds,
+							this.protocol);
+					
+					this.instanceTrackerMap.addInstanceTrackerToMap(instanceName, newInstanceTracker);
+				} catch (StreamsTrackerException e) {
+					LOGGER.warn("Received a StreamsTrackerException while creating StreamsInstanceTracker for instance ({})",instanceName);
+				}
+			} else {
+				LOGGER.debug("Instance ({}) is being tracked.",instanceName);
+			}
+		}
+		
+		// Remove any instances that we no longer need to track
+		Set<String> currentTrackers = (Set<String>)instanceTrackerMap.getInstanceNames();
+		for (String curInstance : currentTrackers) {
+			if (!instancesToTrack.contains(curInstance) ) {
+				LOGGER.debug("Instance ({}) no longer needs to be tracked.  Removing from Instance Tracker Map.",curInstance);
+				instanceTrackerMap.getInstanceTracker(curInstance).close();
+				instanceTrackerMap.removeInstanceTrackerFromMap(curInstance);
+			}
+		}
+		
+	}
 
 
     // Initialize our tracking of jobs and metrics

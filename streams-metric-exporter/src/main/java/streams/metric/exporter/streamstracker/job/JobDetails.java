@@ -55,12 +55,13 @@ import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 
 /* Job Details including map of port names so metrics can have names for ports rather than just ids */
 public class JobDetails implements NotificationListener {
 	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 
-	private StreamsDomainTracker monitor;
+	private StreamsInstanceTracker monitor;
 	private String streamsInstanceName;
 	private BigInteger jobid;
 	private JobMXBean jobBean;
@@ -99,16 +100,16 @@ public class JobDetails implements NotificationListener {
 	/* Future: Make this pluggable, add Elasticsearch exporter */
 	private MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
 	
-	public JobDetails(StreamsDomainTracker monitor, BigInteger jobid, JobMXBean jobBean) {
+	public JobDetails(StreamsInstanceTracker monitor, BigInteger jobid, JobMXBean jobBean) {
 		this.monitor = monitor;
 
-		try {
+		//try {
 			this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
-		} catch (StreamsTrackerException sme) {
-			String message = "jobDetails Constructor: Error getting streams instance name from monitor, setting to UNKNOWN.";
-			LOGGER.warn(message, sme);
-			this.streamsInstanceName = "UNKNOWN";
-		}
+		//} catch (StreamsTrackerException sme) {
+		//	String message = "jobDetails Constructor: Error getting streams instance name from monitor, setting to UNKNOWN.";
+		//	LOGGER.warn(message, sme);
+		//	this.streamsInstanceName = "UNKNOWN";
+		//}
 		setJobid(jobid);
 		setJobBean(jobBean);
 		setStatus(JobMXBean.Status.UNKNOWN);
@@ -573,7 +574,7 @@ public class JobDetails implements NotificationListener {
 				} catch (IOException e) {
 					// Assuming this means that JMX connection was lost, mark
 					// everything as unavailable
-					monitor.resetDomainTracker();
+					monitor.resetTracker();
 				}
 	
 				break;

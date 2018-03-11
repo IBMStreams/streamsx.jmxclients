@@ -18,8 +18,9 @@ package streams.metric.exporter;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.io.IOException;
@@ -172,7 +173,7 @@ public class Launcher {
 
         try {
             domainTracker = StreamsDomainTracker.initDomainTracker(
-                    jmxContext, config.getDomainName(), config.getInstanceName(),
+                    jmxContext, config.getDomainName(), config.getInstanceNameSet(),
                     config.getRefreshRateSeconds(), config.getSslOption());
         } catch (StreamsTrackerException e) {
             LOGGER.error("Could not construct the StreamsInstanceJobMonitor, Exit!", e);
@@ -206,7 +207,7 @@ public class Launcher {
 
         if (config.isHelp()) {
             jc.usage();
-            System.exit(0);
+            System.exit(0); 
         }
         
         // Add validate config because we now accept environment variables, and jcommander does not handle that
@@ -220,6 +221,10 @@ public class Launcher {
         }
 
         LOGGER.trace("*** Settings ***\n" + config);
+        
+        // REMOVE!!!
+        System.exit(1);
+        
         Launcher launcher = new Launcher(config);
         if (launcher.checkValidJMXConnection()) {
         	if (launcher.startRestServer()) {
