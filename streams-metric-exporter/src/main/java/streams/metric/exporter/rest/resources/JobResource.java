@@ -86,29 +86,29 @@ public class JobResource {
 
     }
 
-    @Path("snapshotnow")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getJobSnapshotNow(
-            @DefaultValue("1") @QueryParam("depth") int maximumDepth,
-            @DefaultValue("true") @QueryParam("static") boolean includeStaticAttributes)
-            throws StreamsTrackerException, WebApplicationException {
-
-        StreamsDomainTracker jobTracker = StreamsDomainTracker
-                .getDomainTracker();
-
-        String snapshot = null;
-        snapshot = jobTracker.getJobSnapshot(ji.getId().intValue(),
-                maximumDepth, includeStaticAttributes);
-
-        if (snapshot == null) {
-            throw new WebApplicationException("Job " + ji.getId()
-                    + " returned an empty snapshot.",
-                    Response.Status.NO_CONTENT); // 204
-        }
-
-        return Response.status(200).entity(snapshot).build();
-    }
+//    @Path("snapshotnow")
+//    @GET
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public Response getJobSnapshotNow(
+//            @DefaultValue("1") @QueryParam("depth") int maximumDepth,
+//            @DefaultValue("true") @QueryParam("static") boolean includeStaticAttributes)
+//            throws StreamsTrackerException, WebApplicationException {
+//
+//        StreamsDomainTracker jobTracker = StreamsDomainTracker
+//                .getDomainTracker();
+//
+//        String snapshot = null;
+//        snapshot = jobTracker.getJobSnapshot(ji.getId().intValue(),
+//                maximumDepth, includeStaticAttributes);
+//
+//        if (snapshot == null) {
+//            throw new WebApplicationException("Job " + ji.getId()
+//                    + " returned an empty snapshot.",
+//                    Response.Status.NO_CONTENT); // 204
+//        }
+//
+//        return Response.status(200).entity(snapshot).build();
+//    }
 
     @Path("metrics")
     @GET

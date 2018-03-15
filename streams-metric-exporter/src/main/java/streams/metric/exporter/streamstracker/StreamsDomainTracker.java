@@ -20,6 +20,7 @@ import java.net.MalformedURLException;
 import java.util.TimerTask;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -199,14 +200,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         // Get Domain
         domainInfo = new DomainInfo(this.domainName);
         initStreamsDomain(true);
-        
-
-        
-//
-//        if (this.instanceInfo.isInstanceAvailable()) {
-//            updateInstanceResourceMetrics();
-//            initAllJobs();
-//        }
 
         if (this.refreshRateSeconds != Constants.NO_REFRESH) {
         	LOGGER.debug("Refresh rate set to {}, setting up timer process",this.refreshRateSeconds);
@@ -241,10 +234,28 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         try {
         		//*** REFRESH LOGIC ***
             
+        		// If previously marked unavailable, re-initialize it
             if (!this.isDomainAvailable()) {
             	LOGGER.trace("*** Calling initStreamsDomain()");
                 initStreamsDomain(false);
-            }            
+            } 
+            
+            // Any refresh we need to do to Domain?  
+            // Not at the moment, notifications 
+            
+            
+            // Refresh Instances
+            Iterator<Map.Entry<String, StreamsInstanceTracker>> iit = this.getInstanceTrackerMap().entrySet().iterator();
+            while (iit.hasNext()) {
+            		Map.Entry<String, StreamsInstanceTracker> InstanceEntry = iit.next();
+            		StreamsInstanceTracker sit = InstanceEntry.getValue();    
+            		
+            		sit.refresh();
+            }
+            
+            
+            
+            
                        
         } catch (StreamsTrackerException e) {
             LOGGER.debug(
@@ -556,6 +567,18 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 		
 	}
 
+    public synchronized StreamsInstanceTracker getInstanceTracker(String instanceName) throws StreamsTrackerException {
+        StreamsInstanceTracker sit = null;
+
+        sit = instanceTrackerMap.getInstanceTracker(instanceName);
+        if (sit == null) {
+            throw new StreamsTrackerException(
+                    StreamsTrackerErrorCode.INSTANCE_NOT_FOUND, "Instance Name " + instanceName
+                            + " does not exist, or is not being tracked");
+        }
+        
+        return sit;
+    }
 
     // Initialize our tracking of jobs and metrics
     // Used at startup and when we have lost contact to JMX or Instance

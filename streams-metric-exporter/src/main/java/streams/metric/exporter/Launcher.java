@@ -222,9 +222,6 @@ public class Launcher {
 
         LOGGER.trace("*** Settings ***\n" + config);
         
-        // REMOVE!!!
-        System.exit(1);
-        
         Launcher launcher = new Launcher(config);
         if (launcher.checkValidJMXConnection()) {
         	if (launcher.startRestServer()) {
