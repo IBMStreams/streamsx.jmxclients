@@ -1,58 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "panel",
-      "id": "dashlist",
-      "name": "Dashboard list",
-      "version": ""
-    },
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "4.6.1"
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph",
-      "version": ""
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "singlestat",
-      "name": "Singlestat",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "table",
-      "name": "Table",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "text",
-      "name": "Text",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -68,9 +14,9 @@
   },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 1,
+  "graphTooltip": 2,
   "hideControls": false,
-  "id": null,
+  "id": 3,
   "links": [],
   "refresh": "10s",
   "rows": [
@@ -87,7 +33,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "Prometheus",
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -116,7 +62,7 @@
           "nullText": null,
           "postfix": "",
           "postfixFontSize": "50%",
-          "prefix": "Streams Instane Status: ",
+          "prefix": "Streams Instance ($instancename) Status: ",
           "prefixFontSize": "50%",
           "rangeMaps": [
             {
@@ -135,8 +81,9 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "streams_instance_status",
+              "expr": "streams_instance_status{instancename=\"$instancename\"}",
               "format": "time_series",
+              "instant": true,
               "intervalFactor": 1,
               "legendFormat": "",
               "refId": "A",
@@ -201,7 +148,7 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(245, 54, 54, 0.9)"
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "Prometheus",
           "format": "none",
           "gauge": {
             "maxValue": 100,
@@ -249,8 +196,9 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "streams_instance_jobCount",
+              "expr": "streams_instance_jobCount{instancename=\"$instancename\"}",
               "format": "time_series",
+              "instant": true,
               "intervalFactor": 2,
               "legendFormat": "",
               "metric": "streams_instance_jobcount",
@@ -279,7 +227,7 @@
               "value": "current"
             }
           ],
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "Prometheus",
           "filterNull": true,
           "fontSize": "80%",
           "hideTimeOverride": true,
@@ -312,6 +260,7 @@
               "unit": "short"
             },
             {
+              "alias": "Job Name",
               "colorMode": null,
               "colors": [
                 "rgba(245, 54, 54, 0.9)",
@@ -328,7 +277,7 @@
           ],
           "targets": [
             {
-              "expr": "streams_job_healthy",
+              "expr": "streams_job_healthy{instancename=\"$instancename\",jobname=~\"$jobname\"}",
               "format": "time_series",
               "instant": true,
               "intervalFactor": 2,
@@ -340,7 +289,7 @@
           ],
           "timeFrom": "1s",
           "timeShift": null,
-          "title": "Job Health",
+          "title": "Instance \"$instancename\"  Job Health",
           "transform": "timeseries_aggregations",
           "transparent": false,
           "type": "table"
@@ -369,14 +318,91 @@
     },
     {
       "collapse": false,
-      "height": 263,
+      "height": 216,
       "panels": [
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": null,
+          "fill": 1,
+          "id": 15,
+          "legend": {
+            "alignAsTable": false,
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "streams_job_pecount{instancename=~\"$instancename\",jobname=~\"$jobname\"}",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "{{jobname}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Job PE Count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "decimals": 0,
+              "format": "none",
+              "label": "",
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 2,
           "legend": {
@@ -405,11 +431,11 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(streams_job_nCpuMilliseconds[5m])",
+              "expr": "rate(streams_pe_nCpuMilliseconds{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
-              "legendFormat": "{{jobname}}",
+              "legendFormat": "{{jobname}} peid: {{peid}}",
               "metric": "streams_job_nCpuMilliseconds",
               "refId": "A",
               "step": 2
@@ -418,7 +444,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Streams Jobs CPU Milliseconds Rate",
+          "title": "Streams PE CPU Milliseconds Rate",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -450,85 +476,6 @@
               "show": true
             }
           ]
-        },
-        {
-          "aliasColors": {},
-          "bars": false,
-          "dashLength": 10,
-          "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
-          "fill": 1,
-          "hideTimeOverride": false,
-          "id": 3,
-          "legend": {
-            "avg": false,
-            "current": false,
-            "max": false,
-            "min": false,
-            "show": true,
-            "total": false,
-            "values": false
-          },
-          "lines": true,
-          "linewidth": 1,
-          "links": [],
-          "nullPointMode": "null",
-          "percentage": false,
-          "pointradius": 5,
-          "points": false,
-          "renderer": "flot",
-          "seriesOverrides": [],
-          "spaceLength": 10,
-          "span": 6,
-          "stack": false,
-          "steppedLine": false,
-          "targets": [
-            {
-              "expr": "streams_job_nResidentMemoryConsumption",
-              "format": "time_series",
-              "interval": "",
-              "intervalFactor": 2,
-              "legendFormat": "{{jobname}}",
-              "metric": "",
-              "refId": "A",
-              "step": 2
-            }
-          ],
-          "thresholds": [],
-          "timeFrom": null,
-          "timeShift": null,
-          "title": "Streams Job Resident Memory",
-          "tooltip": {
-            "shared": true,
-            "sort": 0,
-            "value_type": "individual"
-          },
-          "type": "graph",
-          "xaxis": {
-            "buckets": null,
-            "mode": "time",
-            "name": null,
-            "show": true,
-            "values": []
-          },
-          "yaxes": [
-            {
-              "format": "deckbytes",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            },
-            {
-              "format": "short",
-              "label": null,
-              "logBase": 1,
-              "max": null,
-              "min": null,
-              "show": true
-            }
-          ]
         }
       ],
       "repeat": null,
@@ -540,14 +487,14 @@
     },
     {
       "collapse": false,
-      "height": 250,
+      "height": 184,
       "panels": [
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 4,
           "legend": {
@@ -574,10 +521,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "streams_job_max_congestionFactor",
+              "expr": "streams_pe_op_connection_congestionFactor{instancename=~\"$instancename\",jobname=~\"$jobname\"}",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{jobname}}",
+              "legendFormat": "{{jobname}} peid:{{peid}}",
               "metric": "streams_job_max_congestionFactor",
               "refId": "A",
               "step": 2
@@ -594,7 +541,7 @@
           ],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Job Max Congestion",
+          "title": "PE Congestion",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -632,7 +579,98 @@
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "Prometheus",
+          "fill": 1,
+          "hideTimeOverride": false,
+          "id": 3,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "streams_pe_nResidentMemoryConsumption{instancename=~\"$instancename\",jobname=~\"$jobname\"}",
+              "format": "time_series",
+              "interval": "",
+              "intervalFactor": 2,
+              "legendFormat": "{{jobname}} peid: {{peid}}",
+              "metric": "",
+              "refId": "A",
+              "step": 2
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "Streams PE Resident Memory",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "deckbytes",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Dashboard Row",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": 178,
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
           "fill": 1,
           "id": 5,
           "legend": {
@@ -661,10 +699,10 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(streams_operator_ip_nTuplesDropped[10m])",
+              "expr": "rate(streams_pe_ip_nTuplesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{jobname}}.{{operator}}.{{inputportname}}",
+              "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
               "refId": "A",
               "step": 2
             }
@@ -672,7 +710,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Dropped Tuples Rate",
+          "title": "PE InputPort Tuples Processed Rate",
           "tooltip": {
             "shared": true,
             "sort": 2,
@@ -692,7 +730,253 @@
               "label": null,
               "logBase": 1,
               "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
               "min": null,
+              "show": false
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "id": 12,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null as zero",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "rate(streams_pe_op_nTuplesSubmitted{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
+              "refId": "A",
+              "step": 2
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "PE OutputPort Tuples Submitted Rate",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        }
+      ],
+      "repeat": null,
+      "repeatIteration": null,
+      "repeatRowId": null,
+      "showTitle": false,
+      "title": "Dashboard Row",
+      "titleSize": "h6"
+    },
+    {
+      "collapse": false,
+      "height": 178,
+      "panels": [
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "id": 13,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null as zero",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "rate(streams_pe_ip_nTupleBytesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
+              "refId": "A",
+              "step": 2
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "PE InputPort Bytes Processed Rate",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
+              "show": false
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": "Prometheus",
+          "fill": 1,
+          "id": 14,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "hideEmpty": true,
+            "hideZero": true,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null as zero",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "rate(streams_pe_op_nTupleBytesSubmitted{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
+              "refId": "A",
+              "step": 2
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "PE OutputPort Bytes Submitted Rate",
+          "tooltip": {
+            "shared": true,
+            "sort": 2,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": "0",
               "show": true
             },
             {
@@ -715,16 +999,16 @@
     },
     {
       "collapse": false,
-      "height": 175,
+      "height": 250,
       "panels": [
         {
           "aliasColors": {},
           "bars": false,
           "dashLength": 10,
           "dashes": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": null,
           "fill": 1,
-          "id": 10,
+          "id": 16,
           "legend": {
             "avg": false,
             "current": false,
@@ -744,40 +1028,22 @@
           "renderer": "flot",
           "seriesOverrides": [],
           "spaceLength": 10,
-          "span": 12,
+          "span": 6,
           "stack": false,
           "steppedLine": false,
           "targets": [
             {
-              "expr": "streams_resource_memoryTotal",
+              "expr": "rate(streams_operator_ip_nTuplesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[2m])",
               "format": "time_series",
               "intervalFactor": 2,
-              "legendFormat": "{{resource}} (total memory)",
-              "refId": "A",
-              "step": 2
-            },
-            {
-              "expr": "streams_resource_memoryFree",
-              "format": "time_series",
-              "hide": true,
-              "intervalFactor": 2,
-              "legendFormat": "{{resource}} (free memory)",
-              "refId": "B",
-              "step": 2
-            },
-            {
-              "expr": "streams_resource_memoryTotal - streams_resource_memoryFree",
-              "format": "time_series",
-              "intervalFactor": 2,
-              "legendFormat": "{{resource}} (used memory)",
-              "refId": "C",
-              "step": 2
+              "legendFormat": "{{operatorname}} (pe: {{peid}})",
+              "refId": "A"
             }
           ],
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "Streams Instance Resource Memory",
+          "title": "Tuples Processed Rate by Operator",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -793,7 +1059,7 @@
           },
           "yaxes": [
             {
-              "format": "deckbytes",
+              "format": "short",
               "label": null,
               "logBase": 1,
               "max": null,
@@ -805,7 +1071,82 @@
               "label": null,
               "logBase": 1,
               "max": null,
+              "min": null,
+              "show": true
+            }
+          ]
+        },
+        {
+          "aliasColors": {},
+          "bars": false,
+          "dashLength": 10,
+          "dashes": false,
+          "datasource": null,
+          "fill": 1,
+          "id": 17,
+          "legend": {
+            "avg": false,
+            "current": false,
+            "max": false,
+            "min": false,
+            "show": true,
+            "total": false,
+            "values": false
+          },
+          "lines": true,
+          "linewidth": 1,
+          "links": [],
+          "nullPointMode": "null",
+          "percentage": false,
+          "pointradius": 5,
+          "points": false,
+          "renderer": "flot",
+          "seriesOverrides": [],
+          "spaceLength": 10,
+          "span": 6,
+          "stack": false,
+          "steppedLine": false,
+          "targets": [
+            {
+              "expr": "streams_pe_launchCount{instancename=~\"$instancename\",jobname=~\"$jobname\"}",
+              "format": "time_series",
+              "intervalFactor": 2,
+              "legendFormat": "{{jobname}}:{{peid}}",
+              "refId": "A"
+            }
+          ],
+          "thresholds": [],
+          "timeFrom": null,
+          "timeShift": null,
+          "title": "PE Launch Count",
+          "tooltip": {
+            "shared": true,
+            "sort": 0,
+            "value_type": "individual"
+          },
+          "type": "graph",
+          "xaxis": {
+            "buckets": null,
+            "mode": "time",
+            "name": null,
+            "show": true,
+            "values": []
+          },
+          "yaxes": [
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
               "min": "0",
+              "show": true
+            },
+            {
+              "format": "short",
+              "label": null,
+              "logBase": 1,
+              "max": null,
+              "min": null,
               "show": true
             }
           ]
@@ -823,10 +1164,59 @@
   "style": "dark",
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "allValue": null,
+        "current": {
+          "text": "StreamsInstance",
+          "value": "StreamsInstance"
+        },
+        "datasource": "Prometheus",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Streams Instance",
+        "multi": false,
+        "name": "instancename",
+        "options": [],
+        "query": "label_values(instancename)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Job Name",
+        "multi": true,
+        "name": "jobname",
+        "options": [],
+        "query": "label_values(jobname)",
+        "refresh": 1,
+        "regex": "",
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      }
+    ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-3h",
     "to": "now"
   },
   "timepicker": {
@@ -855,6 +1245,6 @@
     ]
   },
   "timezone": "browser",
-  "title": "IBM Streams Sample Dashboard",
+  "title": "IBM Streams Instance Dashboard",
   "version": 1
 }
