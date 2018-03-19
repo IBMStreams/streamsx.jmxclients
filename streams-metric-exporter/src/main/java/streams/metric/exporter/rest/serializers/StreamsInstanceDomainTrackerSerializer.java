@@ -43,11 +43,13 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 	@Override
 	public void serialize(StreamsDomainTracker monitor, JsonGenerator jgen, SerializerProvider provider)
 			throws IOException, JsonProcessingException {
+
 		jgen.writeStartObject();
 		jgen.writeStringField("domain", monitor.getDomainName());
 		try {
-		jgen.writeObjectField("domainInfo",monitor.getDomainInfo());
-		} catch (Exception e) {}
+			jgen.writeObjectField("domainInfo", monitor.getDomainInfo());
+		} catch (Exception e) {
+		}
 		jgen.writeArrayFieldStart("instances");
 		Iterator<Map.Entry<String, StreamsInstanceTracker>> iit = monitor.getInstanceTrackerMap().entrySet().iterator();
 		while (iit.hasNext()) {
@@ -69,7 +71,7 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 			jgen.writeStringField("instanceResourceMetricsLastUpdateTime",
 					convertTime(sit.getInstanceResourceMetricsLastUpdated()));
 			jgen.writeBooleanField("jobSnapshotsAvailable", sit.snapshotsAvailable());
-			
+
 			if (sit.jobsAvailable()) {
 				jgen.writeArrayFieldStart("jobNameIndex");
 
@@ -77,7 +79,6 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 
 				while (it.hasNext()) {
 					Map.Entry<String, BigInteger> entry = it.next();
-					// jgen.writeObjectFieldStart("mapEntry");
 					jgen.writeStartObject();
 					jgen.writeStringField("key", entry.getKey().toString());
 					jgen.writeStringField("value", entry.getValue().toString());
@@ -99,28 +100,33 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 					jgen.writeStringField("id", entry.getValue().getId().toString());
 					jgen.writeStringField("status", entry.getValue().getStatus().toString());
 					jgen.writeStringField("applicationName", entry.getValue().getApplicationName());
-					// jgen.writeStringField("metrics", entry.getValue()
-					// .getJobMetrics());
-					// jgen.writeStringField("snapshot", entry.getValue()
-					// .getJobSnapshot());
 					jgen.writeFieldName("metrics");
-					jgen.writeRawValue(entry.getValue().getJobMetrics());
+					String jobMetrics = entry.getValue().getJobMetrics();
+					if (jobMetrics != null) {
+						jgen.writeRawValue(jobMetrics);
+					} else {
+						jgen.writeNull();
+					}
 					jgen.writeFieldName("snapshot");
-					jgen.writeRawValue(entry.getValue().getJobSnapshot());
+					String jobSnapshot = entry.getValue().getJobSnapshot();
+					if (jobSnapshot != null) {
+						jgen.writeRawValue(entry.getValue().getJobSnapshot());
+					} else {
+						jgen.writeNull();
+					}
 
 					jgen.writeEndObject();
 					jgen.writeEndObject();
 				}
 
-				// jgen.writeEndObject();
 				jgen.writeEndArray();
 			}
-
 
 			jgen.writeEndObject(); // instances
 
 		} // end loop over instance trackers
 		jgen.writeEndArray();
+
 	}
 
 	private String convertTime(Long time) {

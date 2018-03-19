@@ -21,6 +21,7 @@ import java.util.TimerTask;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -34,6 +35,8 @@ import javax.management.NotificationFilterSupport;
 import javax.management.ObjectName;
 import javax.management.NotificationListener;
 import javax.management.InstanceNotFoundException;
+
+import org.apache.commons.lang.time.StopWatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.ibm.streams.management.ObjectNameBuilder;
@@ -231,8 +234,17 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         LOGGER.debug("*** Streams Domain Tracker Refresh");
 		LOGGER.trace("    current state: isDomainAvailable: {}",this.isDomainAvailable());
 		
+
+		
         try {
         		//*** REFRESH LOGIC ***
+            
+            StopWatch stopwatch = null;
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch = new StopWatch();
+                stopwatch.reset();
+                stopwatch.start();
+            }
             
         		// If previously marked unavailable, re-initialize it
             if (!this.isDomainAvailable()) {
@@ -253,10 +265,11 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             		sit.refresh();
             }
             
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch.stop();
+                LOGGER.debug("StreamsDomainTracker Refresh Time (ms) :" + stopwatch.getTime());              
+            }
             
-            
-            
-                       
         } catch (StreamsTrackerException e) {
             LOGGER.debug(
                     "Streams Tracker Refresh StreamsMonitorException: {}.",

@@ -37,13 +37,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Path("/")
 public class RootResource {
 
-    private SimpleModule jobTrackerModule = new SimpleModule("JobTrackerModule");
+    private SimpleModule domainTrackerModule = new SimpleModule("JobTrackerModule");
 
     @Context
     UriInfo uriInfo;
 
     public RootResource() {
-        jobTrackerModule.addSerializer(StreamsDomainTracker.class, new StreamsInstanceDomainTrackerSerializer());
+        domainTrackerModule.addSerializer(StreamsDomainTracker.class, new StreamsInstanceDomainTrackerSerializer());
     }
     
     // Default page
@@ -83,11 +83,12 @@ public class RootResource {
     public Response jobtracker() throws StreamsTrackerException,
             JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
-        om.registerModule(jobTrackerModule);
-        StreamsDomainTracker jobTracker = StreamsDomainTracker
+        om.registerModule(domainTrackerModule);
+        StreamsDomainTracker domainTracker = StreamsDomainTracker
                 .getDomainTracker();
 
+        String domainTrackerJson = om.writeValueAsString(domainTracker);
         return Response.status(Response.Status.OK)
-                .entity(om.writeValueAsString(jobTracker)).build();
+                .entity(domainTrackerJson).build();
     }
 }

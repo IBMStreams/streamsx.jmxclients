@@ -65,7 +65,7 @@ public class PrometheusMetricsExporter extends MetricsExporter {
 	}
 	
 	public void removeAllChildStreamsMetrics(String... labelValues) {
-		LOGGER.debug("removeAllChildStreamsMetrics({})",labelValues.toString());
+		LOGGER.debug("removeAllChildStreamsMetrics({})",Arrays.asList(labelValues));
 		Set<Metric> metricsToRemove;
 		metricsToRemove = super.removeAllChildMetricsFromIndex(labelValues);
 		LOGGER.trace("metricsToRemove.size: {}",metricsToRemove.size());

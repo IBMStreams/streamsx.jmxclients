@@ -157,8 +157,8 @@ public abstract class MetricsExporter {
 				return false;
 			}
 			if (compareList.size() > 0)  {
-				LOGGER.trace("compareList size: {}: {}",compareList.size(),Arrays.toString(compareList.toArray()));
-				LOGGER.trace("this.labelValues size: {}: {}",labelValues.size(),Arrays.toString(labelValues.toArray()));
+				//LOGGER.trace("compareList size: {}: {}",compareList.size(),Arrays.toString(compareList.toArray()));
+				//LOGGER.trace("this.labelValues size: {}: {}",labelValues.size(),Arrays.toString(labelValues.toArray()));
 				List<String> subList = this.labelValues.subList(0, compareList.size());
 				return (subList.equals(compareList));
 			}
