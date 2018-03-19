@@ -32,7 +32,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
@@ -66,18 +65,15 @@ public class JobsResource {
         return r;
     }
 
-//    @Path("{id}")
-//    public JobResource getJob(@PathParam("id") int id)
-//            throws StreamsTrackerException, WebApplicationException {
-//        Response r = null;
-//        JobInfo ji = null;
-//
-//        StreamsDomainTracker jobTracker = StreamsDomainTracker
-//                .getDomainTracker();
-//
-//        ji = jobTracker.getJobInfo(id);
-//
-//        return new JobResource(ji);
-//
-//    }
+    @Path("{id}")
+    public JobResource getJob(@PathParam("id") int id)
+            throws StreamsTrackerException, WebApplicationException {
+
+        JobInfo ji = null;
+
+        ji = sit.getJobInfo(id);
+
+        return new JobResource(sit,ji);
+
+    }
 }

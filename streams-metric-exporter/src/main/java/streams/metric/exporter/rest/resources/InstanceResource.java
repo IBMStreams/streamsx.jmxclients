@@ -41,6 +41,7 @@ import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 import streams.metric.exporter.streamstracker.metrics.AllJobMetrics;
+import streams.metric.exporter.streamstracker.snapshots.AllJobSnapshots;
 
 public class InstanceResource {
 
@@ -83,7 +84,7 @@ public class InstanceResource {
 		AllJobMetrics ajm = sit.getAllJobMetrics();
 
 		// Create return format
-		InstanceMetricsBody body = new InstanceMetricsBody(ajm.getLastMetricsRefresh(), ajm.getLastMetricsFailure(),
+		InstanceMetricsBody body = new InstanceMetricsBody(sit.getInstanceInfo().getInstanceName(),ajm.getLastMetricsRefresh(), ajm.getLastMetricsFailure(),
 				ajm.isLastMetricsRefreshFailed(), ajm.getAllMetrics());
 
 		// If the metrics refresh failed, use NOT_MODIFIED so client can
@@ -98,14 +99,115 @@ public class InstanceResource {
 
 	}
 
+	@Path("snapshots")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getJobSnapshots() throws StreamsTrackerException, WebApplicationException, JsonProcessingException {
+		ObjectMapper om = new ObjectMapper();
+
+		Response r = null;
+
+		AllJobSnapshots ajs = sit.getAllJobSnapshots();
+
+		// Create return format
+		InstanceSnapshotsBody body = new InstanceSnapshotsBody(sit.getInstanceInfo().getInstanceName(),ajs.getLastSnaphostRefresh(), ajs.getLastSnapshotFailure(),
+				ajs.isLastSnapshotRefreshFailed(), ajs.getAllSnapshots());
+
+		// If the snapshots refresh failed, use NOT_MODIFIED so client can
+		// understand we are sending cached info
+		// More cached than it usually is :)
+		if (ajs.isLastSnapshotRefreshFailed()) {
+			r = Response.status(Response.Status.NOT_MODIFIED).entity(om.writeValueAsString(body)).build();
+		} else {
+			r = Response.status(Response.Status.OK).entity(om.writeValueAsString(body)).build();
+		}
+		return r;
+
+	}
+
+	@Path("/resourceMetrics")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getInstanceResourceMetrics()
+			throws StreamsTrackerException, WebApplicationException, JsonProcessingException {
+		ObjectMapper om = new ObjectMapper();
+
+		return Response.status(Response.Status.OK).entity(om.writeValueAsString(sit.getInstanceResourceMetrics()))
+				.build();
+	}
+
 	@Path("jobs/")
 	public JobsResource getJobs() throws StreamsTrackerException, WebApplicationException, JsonProcessingException {
 
 		return new JobsResource(sit);
 	}
 
+	@Path("joblist/")
+	@GET
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response getJobList(@Context UriInfo uriInfo)
+			throws StreamsTrackerException, WebApplicationException, JsonProcessingException {
+		Response r = null;
+		ArrayList<JobInfo> jia = null;
+		ObjectMapper om = new ObjectMapper();
+
+		jia = sit.getAllJobInfo();
+
+		Map<String, Object> m = new HashMap<String, Object>();
+
+		m.put("total", new Integer(jia.size()));
+
+		ArrayList<Object> jlist = new ArrayList<Object>();
+
+		for (JobInfo curJob : jia) {
+			Map<String, Object> j = new HashMap<String, Object>();
+			j.put("id", curJob.getId());
+			j.put("name", curJob.getName());
+
+			// UriBuilder jub = uriInfo.getBaseUriBuilder();
+			UriBuilder jub = uriInfo.getAbsolutePathBuilder();
+
+			List<PathSegment> ps = uriInfo.getPathSegments();
+			StringBuilder newPath = new StringBuilder();
+			if (ps.size() > 0) {
+				for (int i = 0; i < ps.size() - 1; i++) {
+					newPath.append(ps.get(i).getPath());
+					newPath.append("/");
+				}
+			}
+
+			jub.replacePath(newPath.toString());
+
+			URI jobUri = jub.path("jobs").path(String.valueOf(curJob.getId())).build();
+			j.put("jobInfo", jobUri.toASCIIString());
+
+			UriBuilder mub = jub.clone();
+			URI metricsUri = mub.path("metrics").build();
+			j.put("metrics", metricsUri.toASCIIString());
+
+			UriBuilder sub = jub.clone();
+			URI snapshotUri = sub.path("snapshot").build();
+			j.put("snapshot", snapshotUri.toASCIIString());
+
+			UriBuilder snub = jub.clone();
+			URI snapshotNowUri = snub.path("snapshotnow").build();
+			j.put("snapshotnow", snapshotNowUri.toASCIIString());
+
+			jlist.add(j);
+		}
+
+		m.put("jobs", jlist);
+
+		r = Response.status(Response.Status.OK).entity(om.writeValueAsString(m)).build();
+
+		return r;
+
+	}
+
 	/******** SUPPORTING CLASSES FOR OUTPUT FORMATTING ********/
 	private class InstanceMetricsBody {
+		@SuppressWarnings("unused")
+		public String instanceName = null;
 		@SuppressWarnings("unused")
 		public Date lastMetricsRefresh = null;
 		@SuppressWarnings("unused")
@@ -115,79 +217,36 @@ public class InstanceResource {
 		@JsonRawValue
 		public String instanceMetrics;
 
-		public InstanceMetricsBody(Date lastMetricsRefresh, Date lastMetricsFailure, boolean lastMetricsRefreshFailed,
+		public InstanceMetricsBody(String instanceName, Date lastMetricsRefresh, Date lastMetricsFailure, boolean lastMetricsRefreshFailed,
 				String instanceMetrics) {
+			this.instanceName = instanceName;
+
 			this.lastMetricsRefresh = lastMetricsRefresh;
 			this.lastMetricsFailure = lastMetricsFailure;
 			this.lastMetricsRefreshFailed = lastMetricsRefreshFailed;
 			this.instanceMetrics = instanceMetrics;
 		}
 	}
-	
-  @Path("joblist/")
-  @GET
-  @Produces(MediaType.APPLICATION_JSON)
-  public Response getJobList(@Context UriInfo uriInfo) throws StreamsTrackerException,
-          WebApplicationException, JsonProcessingException {
-      Response r = null;
-      ArrayList<JobInfo> jia = null;
-      ObjectMapper om = new ObjectMapper();
+	/******** SUPPORTING CLASSES FOR OUTPUT FORMATTING ********/
+	private class InstanceSnapshotsBody {
+		@SuppressWarnings("unused")
+		public String instanceName = null;
+		@SuppressWarnings("unused")
+		public Date lastSnapshotsRefresh = null;
+		@SuppressWarnings("unused")
+		public Date lastSnapshotsFailure = null;
+		@SuppressWarnings("unused")
+		public boolean lastSnapshotsRefreshFailed = false;
+		@JsonRawValue
+		public String instanceSnapshots;
 
-      jia = sit.getAllJobInfo();
-
-      Map<String, Object> m = new HashMap<String, Object>();
-
-      m.put("total", new Integer(jia.size()));
-
-      ArrayList<Object> jlist = new ArrayList<Object>();
-
-      for (JobInfo curJob : jia) {
-          Map<String, Object> j = new HashMap<String, Object>();
-          j.put("id", curJob.getId());
-          j.put("name", curJob.getName());
-
-          //UriBuilder jub = uriInfo.getBaseUriBuilder();
-          UriBuilder jub = uriInfo.getAbsolutePathBuilder();
-          
-          List<PathSegment> ps = uriInfo.getPathSegments();
-          System.out.println("PathSegment: " + ps.toString());
-          StringBuilder newPath = new StringBuilder();
-          if (ps.size() > 0) {
-	          for (int i = 0;i<ps.size() - 1;i++) {
-	        	  	newPath.append(ps.get(i).getPath());
-	        	  	newPath.append("/");
-	          }
-          }
-          
-          jub.replacePath(newPath.toString());
-          
-          URI jobUri = jub.path("jobs").path(String.valueOf(curJob.getId()))
-                  .build();
-          j.put("jobInfo", jobUri.toASCIIString());
-
-          UriBuilder mub = jub.clone();
-          URI metricsUri = mub.path("metrics").build();
-          j.put("metrics", metricsUri.toASCIIString());
-          
-          UriBuilder sub = jub.clone();
-          URI snapshotUri = sub.path("snapshot").build();
-          j.put("snapshot", snapshotUri.toASCIIString());
-
-          UriBuilder snub = jub.clone();
-          URI snapshotNowUri = snub.path("snapshotnow").build();
-          j.put("snapshotnow", snapshotNowUri.toASCIIString());
-
-          jlist.add(j);
-      }
-
-      m.put("jobs", jlist);
-
-      r = Response.status(Response.Status.OK)
-              .entity(om.writeValueAsString(m)).build();
-
-      return r;
-
-  }
-
-
+		public InstanceSnapshotsBody(String instanceName, Date lastSnapshotsRefresh, Date lastSnapshotsFailure, boolean lastSnapshotsRefreshFailed,
+				String instanceSnapshots) {
+			this.instanceName = instanceName;
+			this.lastSnapshotsRefresh = lastSnapshotsRefresh;
+			this.lastSnapshotsFailure = lastSnapshotsFailure;
+			this.lastSnapshotsRefreshFailed = lastSnapshotsRefreshFailed;
+			this.instanceSnapshots = instanceSnapshots;
+		}
+	}
 }

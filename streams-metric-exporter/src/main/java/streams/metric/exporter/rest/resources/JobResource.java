@@ -20,13 +20,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
@@ -38,14 +34,16 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 import streams.metric.exporter.streamstracker.job.JobInfo;
 
 public class JobResource {
 
+	private StreamsInstanceTracker sit;
     private JobInfo ji;
 
-    public JobResource(JobInfo ji) {
+    public JobResource(StreamsInstanceTracker sit, JobInfo ji) {
+    		this.sit = sit;
         this.ji = ji;
     }
 
@@ -86,29 +84,26 @@ public class JobResource {
 
     }
 
-//    @Path("snapshotnow")
-//    @GET
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response getJobSnapshotNow(
-//            @DefaultValue("1") @QueryParam("depth") int maximumDepth,
-//            @DefaultValue("true") @QueryParam("static") boolean includeStaticAttributes)
-//            throws StreamsTrackerException, WebApplicationException {
-//
-//        StreamsDomainTracker jobTracker = StreamsDomainTracker
-//                .getDomainTracker();
-//
-//        String snapshot = null;
-//        snapshot = jobTracker.getJobSnapshot(ji.getId().intValue(),
-//                maximumDepth, includeStaticAttributes);
-//
-//        if (snapshot == null) {
-//            throw new WebApplicationException("Job " + ji.getId()
-//                    + " returned an empty snapshot.",
-//                    Response.Status.NO_CONTENT); // 204
-//        }
-//
-//        return Response.status(200).entity(snapshot).build();
-//    }
+    @Path("snapshotnow")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getJobSnapshotNow(
+            @DefaultValue("1") @QueryParam("depth") int maximumDepth,
+            @DefaultValue("true") @QueryParam("static") boolean includeStaticAttributes)
+            throws StreamsTrackerException, WebApplicationException {
+
+        String snapshot = null;
+        snapshot = sit.getJobSnapshot(ji.getId().intValue(),
+                maximumDepth, includeStaticAttributes);
+
+        if (snapshot == null) {
+            throw new WebApplicationException("Job " + ji.getId()
+                    + " returned an empty snapshot.",
+                    Response.Status.NO_CONTENT); // 204
+        }
+
+        return Response.status(200).entity(snapshot).build();
+    }
 
     @Path("metrics")
     @GET
@@ -168,9 +163,12 @@ public class JobResource {
 
     /******** SUPPORTING CLASSES FOR OUTPUT FORMATTING ********/
     private class JobMetricsBody {
-        public Date lastMetricsRefresh = null;
-        public Date lastMetricsFailure = null;
-        public boolean lastMetricsRefreshFailed = false;
+        @SuppressWarnings("unused")
+		public Date lastMetricsRefresh = null;
+        @SuppressWarnings("unused")
+		public Date lastMetricsFailure = null;
+        @SuppressWarnings("unused")
+		public boolean lastMetricsRefreshFailed = false;
         @JsonRawValue
         public String jobMetrics;
 
@@ -185,9 +183,12 @@ public class JobResource {
     
     /******** SUPPORTING CLASSES FOR OUTPUT FORMATTING ********/
     private class JobSnapshotBody {
-        public Date lastSnapshotRefresh = null;
-        public Date lastSnapshotFailure = null;
-        public boolean lastSnapshotRefreshFailed = false;
+        @SuppressWarnings("unused")
+		public Date lastSnapshotRefresh = null;
+        @SuppressWarnings("unused")
+		public Date lastSnapshotFailure = null;
+        @SuppressWarnings("unused")
+		public boolean lastSnapshotRefreshFailed = false;
         @JsonRawValue
         public String jobSnapshot;
 

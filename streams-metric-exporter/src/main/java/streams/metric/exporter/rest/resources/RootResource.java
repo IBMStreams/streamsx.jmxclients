@@ -16,19 +16,12 @@
 
 package streams.metric.exporter.rest.resources;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.WebApplicationException;
 
@@ -37,11 +30,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.rest.serializers.StreamsInstanceDomainTrackerSerializer;
-import streams.metric.exporter.rest.serializers.StreamsInstanceListSerializer;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
-import streams.metric.exporter.streamstracker.instance.InstanceInfo;
-import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
-import streams.metric.exporter.streamstracker.job.JobInfo;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -85,45 +74,6 @@ public class RootResource {
     		return new InstancesResource();
     		
     }
-
-//  
-//    @Path("instance/resourceMetrics")
-//    @GET
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response getInstanceResourceMetrics() throws StreamsTrackerException, WebApplicationException, JsonProcessingException {
-//        StreamsDomainTracker jobTracker = StreamsDomainTracker.getInstance();
-//        ObjectMapper om = new ObjectMapper();
-//
-//        return Response.status(Response.Status.OK).entity(
-//                   om.writeValueAsString(jobTracker.getInstanceResourceMetrics())).build();
-//    }
-//
-//    // If instance is not started or exists, then returns 404
-//    @Path("metrics")
-//    @GET
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response getAllJobMetrics() throws StreamsTrackerException,
-//            WebApplicationException {
-//        StreamsDomainTracker jobTracker = StreamsDomainTracker
-//                .getInstance();
-//
-//        return Response.status(200).entity(jobTracker.getAllJobMetrics())
-//                .build();
-//    }
-//    
-//    // If instance is not started or exists, then returns 404
-//    @Path("snapshots")
-//    @GET
-//    @Produces(MediaType.APPLICATION_JSON)
-//    public Response getAllJobSnapshots() throws StreamsTrackerException,
-//            WebApplicationException {
-//        StreamsDomainTracker jobTracker = StreamsDomainTracker
-//                .getInstance();
-//
-//        return Response.status(200).entity(jobTracker.getAllJobSnapshots())
-//                .build();
-//    }
-//
 
 
     // Internal debugging resource
