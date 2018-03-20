@@ -26,11 +26,11 @@ import java.util.Map;
 
 import io.prometheus.client.Gauge;
 import streams.metric.exporter.metrics.MetricsExporter;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 
 public class PrometheusMetricsExporter extends MetricsExporter {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 	// Singleton Pattern
 	static MetricsExporter singletonExporter = null;
 
@@ -65,7 +65,7 @@ public class PrometheusMetricsExporter extends MetricsExporter {
 	}
 	
 	public void removeAllChildStreamsMetrics(String... labelValues) {
-		LOGGER.debug("removeAllChildStreamsMetrics({})",labelValues.toString());
+		LOGGER.debug("removeAllChildStreamsMetrics({})",Arrays.asList(labelValues));
 		Set<Metric> metricsToRemove;
 		metricsToRemove = super.removeAllChildMetricsFromIndex(labelValues);
 		LOGGER.trace("metricsToRemove.size: {}",metricsToRemove.size());

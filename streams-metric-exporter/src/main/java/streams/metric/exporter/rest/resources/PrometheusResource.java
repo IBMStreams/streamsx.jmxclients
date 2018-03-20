@@ -34,7 +34,7 @@ import javax.ws.rs.WebApplicationException;
 
 import io.prometheus.client.CollectorRegistry;
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 @Path("/prometheus")
 public class PrometheusResource {
@@ -47,15 +47,16 @@ public class PrometheusResource {
     // if Instance does not exist, returns 404
     @GET
     @Produces(MediaType.TEXT_PLAIN)
-    public Response getInstanceInfo() throws IOException,
+    public Response getDomainInfo() throws IOException,
             WebApplicationException,
     		StreamsTrackerException{
     	
     	// At this time, if the auto-refresh is turned off, the call to getInstance() will cause the refresh() to occur.
-        StreamsInstanceTracker jobTracker = StreamsInstanceTracker
-                .getInstance();   
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();   
         
-        LOGGER.debug("/prometheus endpoint handler: metricsAvailable={}, instanceAvailable={}",jobTracker.metricsAvailable(),jobTracker.getInstanceInfo().isInstanceAvailable());
+       //LOGGER.debug("/prometheus endpoint handler: metricsAvailable={}, instanceAvailable={}",jobTracker.metricsAvailable(),jobTracker.getInstanceInfo().isInstanceAvailable());
+        LOGGER.debug("/prometheus endpoint handler: domainAvailable={}",jobTracker.isDomainAvailable());
         
         // Create streams_exporter_metrics_available and streams_exporter_instance_available
         

@@ -13,7 +13,6 @@ services:
      - 25500:25500
     environment:
       - STREAMS_DOMAIN_ID
-      - STREAMS_INSTANCE_ID
   prometheus:
     image: "prom/prometheus:v2.1.0"
     ports:

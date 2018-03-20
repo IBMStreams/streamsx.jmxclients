@@ -16,10 +16,6 @@
 
 package streams.metric.exporter.rest.resources;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -30,50 +26,45 @@ import javax.ws.rs.WebApplicationException;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import streams.metric.exporter.error.StreamsTrackerException;
+import streams.metric.exporter.rest.serializers.StreamsInstanceListSerializer;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
-import streams.metric.exporter.streamstracker.job.JobInfo;
 
-public class JobsResource {
+public class InstancesResource {
 	
-	private StreamsInstanceTracker sit;
+    private SimpleModule instancesModule = new SimpleModule("InstancesModule");
 
-	public JobsResource(StreamsInstanceTracker sit) {
-		this.sit = sit;
-	}
-	
+    public InstancesResource() {
+        instancesModule.addSerializer(StreamsDomainTracker.class, new StreamsInstanceListSerializer());
+    }
     // If instance does not exist, then returns 404
     // If it exists and is not working, then return empty list with count 0
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    public Response getAllJobs() throws StreamsTrackerException,
+    public Response getAllInstances() throws StreamsTrackerException,
             WebApplicationException, JsonProcessingException {
-        Response r = null;
-        ArrayList<JobInfo> jia = null;
         ObjectMapper om = new ObjectMapper();
+        om.registerModule(instancesModule);
+        StreamsDomainTracker jobTracker = StreamsDomainTracker
+                .getDomainTracker();
 
-        jia = sit.getAllJobInfo();
-
-        Map<String, Object> m = new HashMap<String, Object>();
-        m.put("total", new Integer(jia.size()));
-        m.put("jobs", jia);
-
-        r = Response.status(Response.Status.OK)
-                .entity(om.writeValueAsString(m)).build();
-
-        return r;
+        return Response.status(Response.Status.OK)
+                .entity(om.writeValueAsString(jobTracker)).build();
     }
 
-    @Path("{id}")
-    public JobResource getJob(@PathParam("id") int id)
+    @Path("{instanceName}")
+    public InstanceResource getInstance(@PathParam("instanceName") String instanceName)
             throws StreamsTrackerException, WebApplicationException {
+        StreamsInstanceTracker sit = null;
 
-        JobInfo ji = null;
+        StreamsDomainTracker domainTracker = StreamsDomainTracker
+                .getDomainTracker();
+        sit = domainTracker.getInstanceTracker(instanceName);
 
-        ji = sit.getJobInfo(id);
-
-        return new JobResource(sit,ji);
+        return new InstanceResource(sit);
 
     }
 }

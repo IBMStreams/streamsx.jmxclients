@@ -54,11 +54,12 @@ import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 
 /* Job Details including map of port names so metrics can have names for ports rather than just ids */
 public class JobDetails implements NotificationListener {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 
 	private StreamsInstanceTracker monitor;
 	private String streamsInstanceName;
@@ -102,13 +103,13 @@ public class JobDetails implements NotificationListener {
 	public JobDetails(StreamsInstanceTracker monitor, BigInteger jobid, JobMXBean jobBean) {
 		this.monitor = monitor;
 
-		try {
+		//try {
 			this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
-		} catch (StreamsTrackerException sme) {
-			String message = "jobDetails Constructor: Error getting streams instance name from monitor, setting to UNKNOWN.";
-			LOGGER.warn(message, sme);
-			this.streamsInstanceName = "UNKNOWN";
-		}
+		//} catch (StreamsTrackerException sme) {
+		//	String message = "jobDetails Constructor: Error getting streams instance name from monitor, setting to UNKNOWN.";
+		//	LOGGER.warn(message, sme);
+		//	this.streamsInstanceName = "UNKNOWN";
+		//}
 		setJobid(jobid);
 		setJobBean(jobBean);
 		setStatus(JobMXBean.Status.UNKNOWN);

@@ -25,10 +25,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
-import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 public abstract class MetricsExporter {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 	
 	// Metric Labels Index, allows us to remove child metrics by label
 	private MetricLabelIndex metricIndex = new MetricLabelIndex();
@@ -58,6 +58,7 @@ public abstract class MetricsExporter {
 	}
 	
 	public enum StreamsObjectType {
+		DOMAIN("streams_domain_", new String[] { "domainname" }),
 		INSTANCE("streams_instance_", new String[] { "domainname","instancename" }),
 		RESOURCE("streams_resource_", new String[] { "domainname","instancename", "resource"}),
 		JOB("streams_job_",new String[] { "domainname","instancename", "jobname" }),
@@ -88,6 +89,9 @@ public abstract class MetricsExporter {
 		public String metricDescriptionPrefix() {
 			String description;
 			switch (this) {
+			case DOMAIN:
+				description = "Streams domain metric";
+				break;
 			case INSTANCE:
 				description = "Streams instance metric";
 				break;
@@ -153,8 +157,8 @@ public abstract class MetricsExporter {
 				return false;
 			}
 			if (compareList.size() > 0)  {
-				LOGGER.trace("compareList size: {}: {}",compareList.size(),Arrays.toString(compareList.toArray()));
-				LOGGER.trace("this.labelValues size: {}: {}",labelValues.size(),Arrays.toString(labelValues.toArray()));
+				//LOGGER.trace("compareList size: {}: {}",compareList.size(),Arrays.toString(compareList.toArray()));
+				//LOGGER.trace("this.labelValues size: {}: {}",labelValues.size(),Arrays.toString(labelValues.toArray()));
 				List<String> subList = this.labelValues.subList(0, compareList.size());
 				return (subList.equals(compareList));
 			}
