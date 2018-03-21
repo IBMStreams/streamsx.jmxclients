@@ -68,6 +68,7 @@ under the License.
 			<scope>system</scope>
 			<systemPath>${STREAMS_INSTALL}/lib/com.ibm.streams.management.mx.jar</systemPath>
 		</dependency>
+<!--
 		<dependency>
 			<groupId>test</groupId>
 			<artifactId>jmxremote_optional.jar</artifactId>
@@ -75,6 +76,14 @@ under the License.
 			<scope>system</scope>
 			<systemPath>${STREAMS_INSTALL}/ext/lib/jmxremote_optional.jar</systemPath>
 		</dependency>
+-->
+
+		<dependency>
+			<groupId>org.glassfish.external</groupId>
+			<artifactId>opendmk_jmxremote_optional_jar</artifactId>
+			<version>1.0-b01-ea</version>
+		</dependency>
+
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
@@ -144,6 +153,11 @@ under the License.
 			<version>1.3.4</version> </dependency> -->
 		<!-- <dependency> <groupId>io.swagger</groupId> <artifactId>swagger-jersey2-jaxrs</artifactId> 
 			<version>1.5.0</version> </dependency> -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>1.7.21</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<!-- <pluginManagement> -->
@@ -187,12 +201,14 @@ under the License.
 										<include>com.ibm.streams.management.mx.jar</include>
 									</includes>
 								</resource>
+<!--
 								<resource>
 									<directory>${STREAMS_INSTALL}/ext/lib</directory>
 									<includes>
 										<include>jmxremote_optional.jar</include>
 									</includes>
 								</resource>
+-->
 							</resources>
 						</configuration>
 					</execution>
@@ -203,6 +219,7 @@ under the License.
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.1.0</version>
 				<configuration>
 					<finalName>executable-${project.artifactId}</finalName>
 
