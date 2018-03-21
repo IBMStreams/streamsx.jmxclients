@@ -55,8 +55,7 @@ public class PrometheusResource {
         StreamsDomainTracker jobTracker = StreamsDomainTracker
                 .getDomainTracker();   
         
-       //LOGGER.debug("/prometheus endpoint handler: metricsAvailable={}, instanceAvailable={}",jobTracker.metricsAvailable(),jobTracker.getInstanceInfo().isInstanceAvailable());
-        LOGGER.debug("/prometheus endpoint handler: domainAvailable={}",jobTracker.isDomainAvailable());
+        LOGGER.trace("/prometheus endpoint handler: domainAvailable={}",jobTracker.isDomainAvailable());
         
         // Create streams_exporter_metrics_available and streams_exporter_instance_available
         

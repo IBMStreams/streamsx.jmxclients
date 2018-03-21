@@ -16,8 +16,8 @@
 
 package streams.metric.exporter.metrics;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import java.util.Arrays;
@@ -25,10 +25,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
 public abstract class MetricsExporter {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
+	//private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 	
 	// Metric Labels Index, allows us to remove child metrics by label
 	private MetricLabelIndex metricIndex = new MetricLabelIndex();

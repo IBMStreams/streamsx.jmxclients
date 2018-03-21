@@ -42,8 +42,8 @@ public class AllJobMetrics {
     private String instanceName;
     private JmxServiceContext jmxContext;
 
-    private InstanceMXBean instance;
-    private String protocol;
+    //private InstanceMXBean instance;
+    //private String protocol;
 
     // Primary attributes for consumer
     private Date lastMetricsRefresh = null;
@@ -86,13 +86,13 @@ public class AllJobMetrics {
     }
 
     public AllJobMetrics(JmxServiceContext jmxContext, String domainName,
-            String instanceName, String protocol) throws IOException,
+            String instanceName) throws IOException,
             StreamsTrackerException {
 
         this.domainName = domainName;
         this.instanceName = instanceName;
         this.jmxContext = jmxContext;
-        this.protocol = protocol;
+        //this.protocol = protocol;
 
         this.refresh();
 
@@ -107,7 +107,6 @@ public class AllJobMetrics {
         LOGGER.trace("Entered");
         LOGGER.trace("** Refreshing all jobs metrics");
 
-        StringBuilder newMetrics = new StringBuilder();
         String uri = null;
         Date previousRefresh = null;
         if (this.lastMetricsRefresh != null) {
@@ -176,7 +175,7 @@ public class AllJobMetrics {
 
         /******* HTTPS Interaction ********/
         try {
-            LOGGER.trace("* AllJobMetrics * Connect to Metrics URI ({}) and retrieve...",uri);
+            LOGGER.debug("Instance ({}) Metrics HTTP Retrieve from URI ({}) ...",this.instanceName,uri);
 
             this.setAllMetrics(jmxContext.getWebClient().get(uri));
             this.setLastMetricsRefresh(new Date());

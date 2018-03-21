@@ -26,9 +26,6 @@ import javax.ws.rs.ext.Provider;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import streams.metric.exporter.rest.RestServer;
-
 import javax.ws.rs.WebApplicationException;
 
 @Provider

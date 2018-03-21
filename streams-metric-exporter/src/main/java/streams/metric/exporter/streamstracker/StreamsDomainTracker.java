@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.Timer;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
-import java.math.BigInteger;
 
 import javax.management.Notification;
 import javax.management.AttributeChangeNotification;
@@ -52,7 +51,6 @@ import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
 import streams.metric.exporter.streamstracker.instance.InstanceTrackerMap;
 import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
-import streams.metric.exporter.streamstracker.job.JobInfo;
 
 import com.ibm.streams.management.Notifications;
 
@@ -153,7 +151,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         }
         
         if (domainTrackerSingleton.refreshRateSeconds == Constants.NO_REFRESH) {
-        		LOGGER.debug("On-demand refresh of metrics and snapshots...");
+        		LOGGER.debug("DOMAIN: On-demand refresh of metrics and snapshots...");
         		domainTrackerSingleton.refresh();
         }   
         return domainTrackerSingleton;
@@ -167,10 +165,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     private TimerTask refresher = new TimerTask() {
         @Override
         public void run() {
-
-
+    			LOGGER.debug("DOMAIN: Automatic refresh of metrics and snapshots...");
             refresh();
-
         }
     };
 
@@ -196,9 +192,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         } else {
         		this.trackAllInstances = false;
         }
-        
-		LOGGER.debug("requested instances ({})...",Arrays.toString(this.requestedInstances.toArray()));
-		LOGGER.debug("trackAllInstances: " + this.trackAllInstances);
 
         // Get Domain
         domainInfo = new DomainInfo(this.domainName);
@@ -231,18 +224,25 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * Unexpected exceptions should be thrown
      *****************************************************************/
     public synchronized void refresh() {
-        LOGGER.debug("*** Streams Domain Tracker Refresh");
+        LOGGER.debug("*** DOMAIN Refresh: {}",this.domainName);
 		LOGGER.trace("    current state: isDomainAvailable: {}",this.isDomainAvailable());
 		
-
+		StopWatch outerwatch = null;
+        StopWatch stopwatch = null;
+        LinkedHashMap<String, Long> timers = null;
+        if (LOGGER.isDebugEnabled()) {
+        		outerwatch = new StopWatch();
+            stopwatch = new StopWatch();
+            timers = new LinkedHashMap<String, Long>();
+        }
 		
         try {
         		//*** REFRESH LOGIC ***
             
-            StopWatch stopwatch = null;
             if (LOGGER.isDebugEnabled()) {
-                stopwatch = new StopWatch();
+            		outerwatch.reset();
                 stopwatch.reset();
+                outerwatch.start();
                 stopwatch.start();
             }
             
@@ -251,6 +251,14 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             	LOGGER.trace("*** Calling initStreamsDomain()");
                 initStreamsDomain(false);
             } 
+            
+            
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch.stop();
+                timers.put("initStreamsDomain", stopwatch.getTime());
+                stopwatch.reset();
+                stopwatch.start();
+            }
             
             // Any refresh we need to do to Domain?  
             // Not at the moment, notifications 
@@ -263,32 +271,45 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             		StreamsInstanceTracker sit = InstanceEntry.getValue();    
             		
             		sit.refresh();
+            		
+            		if (LOGGER.isDebugEnabled()) {
+            			stopwatch.stop();
+            			timers.put("refreshInstance(" + sit.getInstanceInfo().getInstanceName() + ")",stopwatch.getTime());
+            			stopwatch.reset();
+            			stopwatch.start();
+            		}
             }
             
             if (LOGGER.isDebugEnabled()) {
+            		outerwatch.stop();
                 stopwatch.stop();
-                LOGGER.debug("StreamsDomainTracker Refresh Time (ms) :" + stopwatch.getTime());              
+                LOGGER.debug("*** DOMAIN Refresh timing (ms):");
+                for (Map.Entry<String, Long> entry : timers.entrySet()) {
+                    LOGGER.debug("      " + entry.getKey() + " time: "
+                            + entry.getValue());
+                }
+                LOGGER.debug("*** DOMAIN Refresh total time: " + outerwatch.getTime());
             }
             
         } catch (StreamsTrackerException e) {
             LOGGER.debug(
-                    "Streams Tracker Refresh StreamsMonitorException: {}.",
+                    "DOMAIN Refresh StreamsMonitorException: {}.",
                     e);
         } catch (UndeclaredThrowableException e) {
 
-            LOGGER.debug("StreamsMonitor Refresh UndeclaredThrowableException and unwrapping it");
+            LOGGER.debug("DOMAIN Refresh UndeclaredThrowableException and unwrapping it");
             Throwable t = e.getUndeclaredThrowable();
             if (t instanceof IOException) {
-                LOGGER.debug("StreamsMonitor Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
+                LOGGER.debug("DOMAIN Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
             } else {
-                LOGGER.debug("StreamsMonitor Refresh unwrapped "
+                LOGGER.debug("DOMAIN Refresh unwrapped "
                         + t.getClass()
                         + " which was unexpected, throw original undeclarable...");
                 throw e;
             }
         } catch (Exception e) {
             LOGGER.warn(
-                    "StreamsMonitor Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
+                    "DOMAIN Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
                     e);
         }		
     }
@@ -392,6 +413,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 	                            + this.domainName, ioe);
             }
         }
+        
         createExportedDomainMetrics();
         
         /* Create the Instance Trackers */
@@ -535,28 +557,30 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 	private synchronized void createUpdateStreamsInstanceTrackers() {
 		Set<String> instancesToTrack = null;
 		
-		LOGGER.debug("createUpdateStreamsInstanceTrackers...");
+		LOGGER.trace("createUpdateStreamsInstanceTrackers...");
 		if (this.trackAllInstances) {
 			instancesToTrack = domainInfo.getInstances();
 		} else {
 			instancesToTrack = this.requestedInstances;
 		}
 		
-		LOGGER.debug("requested instances ({})...",Arrays.toString(this.requestedInstances.toArray()));
-		LOGGER.debug("trackAllInstances: " + this.trackAllInstances);
-
-		
-		LOGGER.debug("Ensure we are tracking instances ({})...",Arrays.toString(instancesToTrack.toArray()));
+		LOGGER.debug("*** Setting streams instances to track");
+		if (this.trackAllInstances) {
+			LOGGER.debug("    Configuration set to track ALL instances");
+			LOGGER.debug("    Current Instances in the domain: {}",Arrays.toString(instancesToTrack.toArray()));
+		} else {
+			LOGGER.debug("    Configuration set to track specified instances");
+			LOGGER.debug("    Specified instances: {}",Arrays.toString(instancesToTrack.toArray()));
+		}
 
 		for (String instanceName : instancesToTrack) {
 			
 			if (this.instanceTrackerMap.getInstanceTracker(instanceName) == null) {
-				LOGGER.debug("Instance ({}) not found in instanceTrackerMap, creating...", instanceName);
+				LOGGER.debug("    Instance ({}) not currently being tracked, initializing instance tracking...", instanceName);
 				try {
 					StreamsInstanceTracker newInstanceTracker = new StreamsInstanceTracker(this.jmxContext,
 							this.domainName,
 							instanceName,
-							this.refreshRateSeconds,
 							this.protocol);
 					
 					this.instanceTrackerMap.addInstanceTrackerToMap(instanceName, newInstanceTracker);
@@ -564,7 +588,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 					LOGGER.warn("Received a StreamsTrackerException while creating StreamsInstanceTracker for instance ({})",instanceName);
 				}
 			} else {
-				LOGGER.debug("Instance ({}) is being tracked.",instanceName);
+				LOGGER.debug("    Instance ({}) is already being tracked.",instanceName);
 			}
 		}
 		
@@ -572,12 +596,13 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 		Set<String> currentTrackers = (Set<String>)instanceTrackerMap.getInstanceNames();
 		for (String curInstance : currentTrackers) {
 			if (!instancesToTrack.contains(curInstance) ) {
-				LOGGER.debug("Instance ({}) no longer needs to be tracked.  Removing from Instance Tracker Map.",curInstance);
+				LOGGER.debug("    Instance ({}) no longer needs to be tracked.  Removing from Instance Tracker Map.",curInstance);
 				instanceTrackerMap.getInstanceTracker(curInstance).close();
 				instanceTrackerMap.removeInstanceTrackerFromMap(curInstance);
 			}
 		}
-		
+		LOGGER.debug("*** Setting streams instances to track complete.");
+
 	}
 
     public synchronized StreamsInstanceTracker getInstanceTracker(String instanceName) throws StreamsTrackerException {
@@ -593,534 +618,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         return sit;
     }
 
-    // Initialize our tracking of jobs and metrics
-    // Used at startup and when we have lost contact to JMX or Instance
-//    private synchronized void initAllJobs() throws StreamsTrackerException {
-//
-//        initJobMap();
-//
-//        if (this.instanceInfo.isInstanceAvailable() && jobsAvailable) {
-//
-//            StopWatch stopwatch = null;
-//            LinkedHashMap<String, Long> timers = null;
-//            if (LOGGER.isDebugEnabled()) {
-//                stopwatch = new StopWatch();
-//                timers = new LinkedHashMap<String, Long>();
-//                stopwatch.reset();
-//                stopwatch.start();
-//            }
-//
-//            // Initialize Metrics
-//            try {
-//                // Try to only create it if it does not exist and rely on the
-//                // clearing of the metrics so we preserve our timing attributes
-//                if (allJobMetrics == null) {
-//                    allJobMetrics = new AllJobMetrics(this.jmxContext,
-//                            this.domainName,
-//                            this.instanceInfo.getInstanceName(), this.protocol);
-//                } else {
-//                    allJobMetrics.clear();
-//                }
-//
-//                if (LOGGER.isDebugEnabled()) {
-//                    stopwatch.stop();
-//                    timers.put("Initialize AllJobMetrics", stopwatch.getTime());
-//                    stopwatch.reset();
-//                    stopwatch.start();
-//                }
-//
-//                // Assume available, may need a more detailed check in the
-//                // future
-//                metricsAvailable = true;
-//
-//                // Do not refresh from server because the constructor pulled
-//                // them
-//                if (metricsAvailable)
-//                    updateAllJobMetrics(false);
-//            } catch (IOException e) {
-//                LOGGER.warn("JMX IO Exception when initializing all job metrics, resetting monitor. Exception message: "
-//                        + e.getLocalizedMessage());
-//                resetTracker();
-//            }
-//            
-//            if (LOGGER.isDebugEnabled()) {
-//                stopwatch.stop();
-//                timers.put("updateAllJobMetrics(false)", stopwatch.getTime());
-//                LOGGER.debug("Profiling for Inializing job map");
-//                for (Map.Entry<String, Long> entry : timers.entrySet()) {
-//                    LOGGER.debug("Timing for " + entry.getKey() + ": "
-//                            + entry.getValue());
-//                }
-//                stopwatch.reset();
-//                stopwatch.start();
-//            }            
-//
-//            // Initialize Snapshots
-//            try {
-//                // Try to only create it if it does not exist and rely on the
-//                // clearing of the metrics so we preserve our timing attributes
-//                if (allJobSnapshots == null) {
-//                    allJobSnapshots = new AllJobSnapshots(this.jmxContext,
-//                            this.domainName,
-//                            this.instanceInfo.getInstanceName(), this.protocol);
-//                } else {
-//                    allJobSnapshots.clear();
-//                }
-//
-//                if (LOGGER.isDebugEnabled()) {
-//                    stopwatch.stop();
-//                    timers.put("Initialize AllJobSnapshots", stopwatch.getTime());
-//                    stopwatch.reset();
-//                    stopwatch.start();
-//                }
-//
-//                // Assume available, may need a more detailed check in the
-//                // future
-//                snapshotsAvailable = true;
-//
-//                // Do not refresh from server because the constructor pulled
-//                // them
-//                if (snapshotsAvailable)
-//                    updateAllJobSnapshots(false);
-//            } catch (IOException e) {
-//                LOGGER.warn("JMX IO Exception when initializing all job snapshots, resetting monitor. Exception message: "
-//                        + e.getLocalizedMessage());
-//                resetTracker();
-//            }            
-//            
-//            if (LOGGER.isDebugEnabled()) {
-//                stopwatch.stop();
-//                timers.put("updateAllJobSnapshots(false)", stopwatch.getTime());
-//                LOGGER.debug("Profiling for Initializing job map");
-//                for (Map.Entry<String, Long> entry : timers.entrySet()) {
-//                    LOGGER.debug("Timing for " + entry.getKey() + ": "
-//                            + entry.getValue());
-//                }
-//            }
-//
-//        }
-//
-//    }
 
-    // Initialize our JobMap
-    // Used at startup and when we have lost contact to JMX or Instance
-//    private synchronized void initJobMap() {
-//        String domainName = this.domainName;
-//        String instanceName = this.instanceInfo.getInstanceName();
-//        InstanceMXBean instance = null;
-//
-//        if (this.instanceInfo.isInstanceAvailable()) {
-//
-//            StopWatch stopwatch = null;
-//            LinkedHashMap<String, Long> timers = null;
-//            if (LOGGER.isDebugEnabled()) {
-//                stopwatch = new StopWatch();
-//                timers = new LinkedHashMap<String, Long>();
-//            }
-//
-//            try {
-//
-//                instance = jmxContext.getBeanSourceProvider().getBeanSource()
-//                        .getInstanceBean(domainName, instanceName);
-//
-//                // Get list of Jobs
-//                if (LOGGER.isDebugEnabled()) {
-//                    stopwatch.reset();
-//                    stopwatch.start();
-//                }
-//
-//                LOGGER.debug("Get list of all jobs...");
-//                Set<BigInteger> jobs = null;
-//
-//                jobs = jmxContext.getBeanSourceProvider().getBeanSource()
-//                        .getInstanceBean(domainName, instanceName).getJobs();
-//
-//                if (LOGGER.isDebugEnabled()) {
-//                    stopwatch.stop();
-//                    timers.put("getJobs", stopwatch.getTime());
-//                    stopwatch.reset();
-//                    stopwatch.start();
-//                }
-//
-//                ObjectName opListenerObj = instance.createOperationListener();
-//                OperationListenerMXBean opListener = JMX.newMXBeanProxy(
-//                        jmxContext.getBeanSourceProvider().getBeanSource()
-//                                .getMBeanServerConnection(), opListenerObj,
-//                        OperationListenerMXBean.class, true);
-//                instance.registerAllJobs(opListener.getId());
-//
-//                // *** Wait for all jobs to be registered *** //
-//                LOGGER.debug("Waiting for jobs to be registered...");
-//                int numMessages = 0;
-//                boolean registerCompleted = false;
-//                boolean registerError = false;
-//                List<OperationStatusMessage> messageList = new ArrayList<OperationStatusMessage>();
-//                while (!registerCompleted && !registerError) {
-//                    // System.out.println("opListener.getMessages()...");
-//                    // Found issue in testing when messages were not ready, and
-//                    // tried to
-//                    // get them again
-//                    // it raised a ConcurrentModificationException, but if we
-//                    // ignore
-//                    // and
-//                    // try again, everything
-//                    // works. So eat it for now.
-//                    try {
-//                        messageList = opListener.getMessages();
-//                    } catch (java.util.ConcurrentModificationException e) {
-//                    }
-//
-//                    numMessages = messageList.size();
-//
-//                    if (numMessages > 0) {
-//                        for (OperationStatusMessage osm : messageList) {
-//                            if (osm.getStatus() == OperationListenerMXBean.Status.COMPLETED)
-//                                registerCompleted = true;
-//                            if (osm.getStatus() == OperationListenerMXBean.Status.ERROR)
-//                                registerError = true;
-//                        }
-//                    }
-//                }
-//
-//                opListener.unregister();
-//                
-//                
-//                // Verify that jobs are registered
-//                // Found issue in Streams 4.2 where the message said COMPLETED
-//                // but jobs were not truly registered
-//                LOGGER.trace("Verifing all jobs show isRegistered() true...");
-//                MBeanServerConnection mbsc = null;
-//					      mbsc = jmxContext.getBeanSourceProvider().getBeanSource().getMBeanServerConnection();
-//                for (BigInteger jobno : jobs) {
-//                    LOGGER.trace("Verifying job #{}...",jobno);
-//                    ObjectName tJobNameObj = ObjectNameBuilder.job(domainName,
-//                            instanceName, jobno);   
-//                    while (! mbsc.isRegistered(tJobNameObj)) {
-//                        LOGGER.trace("...NOT registered, trying again...");
-//                    }
-//                    LOGGER.trace("...Registered!");             
-//                }
-//                
-//                
-//
-//                if (LOGGER.isDebugEnabled()) {
-//                    stopwatch.stop();
-//                    timers.put("registerJobs", stopwatch.getTime());
-//                    stopwatch.reset();
-//                    stopwatch.start();
-//                }
-//
-//                // Populate the map of jobs and create jobInfo objects with
-//                // jobMXBeans
-//                // Create the jobname index
-//                jobMap.clear();
-//
-//                LOGGER.trace("Create hashmap of JobMXBeans...");
-//                for (BigInteger jobno : jobs) {
-//                    ObjectName tJobNameObj = ObjectNameBuilder.job(domainName,
-//                            instanceName, jobno);
-//                    JobMXBean jobBean = JMX.newMXBeanProxy(jmxContext
-//                            .getBeanSourceProvider().getBeanSource()
-//                            .getMBeanServerConnection(), tJobNameObj,
-//                            JobMXBean.class, true);
-//                    jobMap.addJobToMap(jobno, new JobDetails(this, jobno, jobBean));
-//                }
-//
-//                // IMPORTANT: Set jobsAvailable to true
-//                jobsAvailable = true;
-//
-//            } catch (IOException e) {
-//                // An IOException at this point means the jmx connection is
-//                // probably lost. Reset Monitor and continue to wait for it to
-//                // reconnect
-//                LOGGER.warn("Job Map Initialization received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
-//                        + e.getLocalizedMessage());
-//                resetTracker();
-//            }
-//
-//            if (LOGGER.isDebugEnabled()) {
-//                stopwatch.stop();
-//                timers.put("create JobMXBeans", stopwatch.getTime());
-//                LOGGER.debug("Profiling for Inializing job map");
-//                for (Map.Entry<String, Long> entry : timers.entrySet()) {
-//                    LOGGER.debug("Timing for " + entry.getKey() + ": "
-//                            + entry.getValue());
-//                }
-//            }
-//        }
-//
-//    }
-
-    // ** Add Job to job map
-//    private synchronized void addJobToMap(BigInteger jobid) {
-//        InstanceMXBean instance = null;
-//        LOGGER.debug("AddJobToMap({})...", jobid);
-//        StopWatch sw = new StopWatch();
-//        sw.start();
-//
-//        try {
-//            instance = this.jmxContext
-//                    .getBeanSourceProvider()
-//                    .getBeanSource()
-//                    .getInstanceBean(domainName,
-//                            this.instanceInfo.getInstanceName());
-//
-//            ObjectName tJobNameObj = instance.registerJob(jobid);
-//
-//            JobMXBean jobBean = JMX.newMXBeanProxy(jmxContext
-//                    .getBeanSourceProvider().getBeanSource()
-//                    .getMBeanServerConnection(), tJobNameObj, JobMXBean.class,
-//                    true);
-//            jobMap.addJobToMap(jobid, new JobDetails(this, jobid, jobBean));
-//
-//        } catch (IOException e) {
-//            LOGGER.warn("New Job Initialization received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
-//                    + e.getLocalizedMessage());
-//            resetTracker();
-//        }
-//
-//        sw.stop();
-//        LOGGER.debug("** addJobToMap (jobid: " + jobid + ") time: "
-//                + sw.getTime());
-//        
-//		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(jobMap.size());
-//
-//    }
-//
-//    private synchronized void removeJobFromMap(BigInteger jobid) {
-//        LOGGER.debug("removeJobFromMap({})...", jobid);
-//        StopWatch sw = new StopWatch();
-//        sw.start();
-//
-//        // Do we need to do anything to the MXBean we created for the job?
-//        instanceMap.removeJobFromMap(jobid);
-//
-//        sw.stop();
-//        LOGGER.debug("** removeJobFromMap (jobid: " + jobid + ") time: "
-//                + sw.getTime());
-//        
-//		metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(jobMap.size());
-//
-//    }   
-//    
-//    /*
-//     * updateAllJobMetrics Need to use this to determine when JMX has been reset
-//     * so we invalidate the job beans
-//     */
-//    private synchronized void updateAllJobMetrics(boolean refreshFromServer)
-//            throws StreamsTrackerException {
-//        LOGGER.trace("***** Entered updateAllJobMetrics, refreshFromServer {}, jobsAvailable {}",
-//                refreshFromServer, jobsAvailable);
-//        
-//        if (jobsAvailable) {
-//            LOGGER.debug("** updateAllJobMetrics Start timer...");
-//            StopWatch sw = new StopWatch();
-//            sw.reset();
-//            sw.start();
-//            
-//            // Refresh Metrics if requested
-//            if (refreshFromServer) {
-//                try {
-//                    this.allJobMetrics.refresh();
-//                } catch (IOException e) {
-//                    LOGGER.error("Updating all metrics received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
-//                            + e.getLocalizedMessage());
-//                    resetTracker();
-//                }
-//                sw.split();
-//                LOGGER.debug("** updateAllJobMetrics refresh from server split time: " + sw.getSplitTime());
-//                sw.unsplit();
-//            }
-//
-//            if (allJobMetrics.isLastMetricsRefreshFailed()) {
-//                // If retrieving metrics fails, we need to loop through the jobs
-//                // and set the attributes to reflect that
-//            	jobMap.setJobMetricsFailed(allJobMetrics.getLastMetricsFailure());
-//
-//            } else {
-//                // We retrieved them successfully
-//                String allMetrics = this.allJobMetrics.getAllMetrics();
-//
-//                // Parse and update each jobInfo
-//                if (allMetrics != null) {
-//
-//                    try {
-//                        JSONParser parser = new JSONParser();
-//                        JSONObject metricsObject = (JSONObject) parser
-//                                .parse(allMetrics);
-//                        JSONArray jobArray = (JSONArray) metricsObject
-//                                .get("jobs");
-//
-//                        for (int j = 0; j < jobArray.size(); j++) {
-//                            JSONObject jobObject = (JSONObject) jobArray.get(j);
-//                            BigInteger jobId = new BigInteger(
-//                                    (String) jobObject.get("id"));
-//                            JobDetails jd = jobMap.getJob(Integer.parseInt((String)jobObject.get("id")));
-//                            if (jd != null) {
-//                                jd.setJobMetrics(jobObject.toString());
-//                                // Update the job details that we refreshed
-//                                // metrics
-//                                jd.setLastMetricsRefresh(allJobMetrics
-//                                        .getLastMetricsRefresh());
-//                                jd.setLastMetricsFailure(allJobMetrics
-//                                        .getLastMetricsFailure());
-//                                jd.setLastMetricsRefreshFailed(false);
-//                            } else {
-//                                LOGGER.warn(
-//                                        "Received Metrics for jobId({}) that is not found in the current jobArray, missed notification of new job is likely cause",
-//                                        jobId);
-//                            }
-//                        }
-//                    } catch (Exception e) {
-//                        LOGGER.error("Exception Parsing Metrics JSON...exiting");
-//                        LOGGER.error(e.toString());
-//                        e.printStackTrace();
-//                        System.exit(1);
-//                    }
-//                }
-//            }
-//            sw.stop();
-//            LOGGER.debug("** updateAllJobMetrics time total (includes parsing) (milliseconds): " + sw.getTime());
-//        }
-//
-//
-//        LOGGER.trace("Exited");
-//
-//    }
-//    
-//    
-//    
-//    /*
-//     * updateAllJobSnapshots Need to use this to determine when JMX has been reset
-//     * so we invalidate the job beans
-//     */
-//    private synchronized void updateAllJobSnapshots(boolean refreshFromServer)
-//            throws StreamsTrackerException {
-//        LOGGER.trace("***** Entered updateAllJobSnapshots, refreshFromServer {}, jobsAvailable {}",
-//                refreshFromServer, jobsAvailable);
-//        
-//        if (jobsAvailable) {
-//            LOGGER.debug("** updateAllJobSnapshots Start timer...");
-//            StopWatch sw = new StopWatch();
-//            sw.reset();
-//            sw.start();
-//            
-//            // Refresh Snapshots if requested
-//            if (refreshFromServer) {
-//                try {
-//                    this.allJobSnapshots.refresh();
-//                } catch (IOException e) {
-//                    LOGGER.error("Updating all snapshots received IO Exception from JMX Connection Pool.  Resetting monitor.  Exception Message: "
-//                            + e.getLocalizedMessage());
-//                    resetTracker();
-//                }
-//                sw.split();
-//                LOGGER.debug("** updateAllJobSnapshots refresh from server split time: " + sw.getSplitTime());
-//                sw.unsplit();
-//            }
-//
-//            if (allJobSnapshots.isLastSnapshotRefreshFailed()) {
-//                // If retrieving snapshots fails, we need to loop through the jobs
-//                // and set the attributes to reflect that
-//            	jobMap.setJobSnapshotFailed(allJobSnapshots.getLastSnapshotFailure());
-//
-//            } else {
-//                // We retrieved them successfully
-//                String allSnapshots = this.allJobSnapshots.getAllSnapshots();
-//
-//                // Parse and update each jobInfo
-//                if (allSnapshots != null) {
-//
-//                    try {
-//                        JSONParser parser = new JSONParser();
-//                        JSONObject snapshotsObject = (JSONObject) parser
-//                                .parse(allSnapshots);
-//                        JSONArray jobArray = (JSONArray) snapshotsObject
-//                                .get("jobs");
-//
-//                        for (int j = 0; j < jobArray.size(); j++) {
-//                            JSONObject jobObject = (JSONObject) jobArray.get(j);
-//                            BigInteger jobId = new BigInteger(
-//                                    (String) jobObject.get("id"));
-//                            JobDetails jd = jobMap.getJob(Integer.parseInt((String)jobObject.get("id")));
-//                            if (jd != null) {
-//                                jd.setJobSnapshot(jobObject.toString());
-//                                // Update the job details that we refreshed
-//                                // metrics
-//                                jd.setLastSnapshotRefresh(allJobSnapshots
-//                                        .getLastSnaphostRefresh());
-//                                jd.setLastSnapshotFailure(allJobSnapshots
-//                                        .getLastSnapshotFailure());
-//                                jd.setLastSnapshotRefreshFailed(false);
-//                            } else {
-//                                LOGGER.warn(
-//                                        "Received Snapsbhots for jobId({}) that is not found in the current jobArray, missed notification of new job is likely cause",
-//                                        jobId);
-//                            }
-//                        }
-//                    } catch (Exception e) {
-//                        LOGGER.error("Exception Parsing Snapsnots JSON...exiting");
-//                        LOGGER.error(e.toString());
-//                        e.printStackTrace();
-//                        System.exit(1);
-//                    }
-//                }
-//            }
-//            sw.stop();
-//            LOGGER.debug("** updateAllJobSnapshots time total (includes parsing) (milliseconds): " + sw.getTime());
-//        }
-//
-//
-//        LOGGER.trace("Exited");
-//
-//    }    
-//    
-//    
-//
-//    @Override
-//    public String toString() {
-//        StringBuilder result = new StringBuilder();
-//        String newline = System.getProperty("line.separator");
-//
-//        result.append("Domain: " + domainName);
-//        result.append(newline);
-//        result.append("Instance: " + this.instanceInfo.getInstanceName()
-//                + ", status: " + this.instanceInfo.getInstanceStatus()
-//                + ", instanceStartTime: "
-//                + convertTime(this.instanceInfo.getInstanceStartTime()));
-//        result.append(newline);
-//        result.append("instanceAvailable:"
-//                + this.instanceInfo.isInstanceAvailable());
-//        result.append(newline);
-//        result.append("jobMapAvailable:" + jobsAvailable);
-//        result.append(newline);
-//        result.append("jobMetricsAvailable:" + metricsAvailable);
-//        result.append(newline);
-//        result.append("jobSnapshotsAvailable:" + snapshotsAvailable);
-//        result.append(newline);        
-//        result.append("instanceResourceMetricsLastUpdated:" + convertTime(instanceResourceMetricsLastUpdated));
-//        result.append(newline);
-//        if (jobsAvailable) {
-//        	result.append(jobMap.toString());
-//        }
-//        return result.toString();
-//    }
-//
-//    private String convertTime(Long time) {
-//        if (time != null) {
-//            Date date = new Date(time);
-//            Format format = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
-//            return format.format(date);
-//        } else {
-//            return "null";
-//        }
-//    }
-
-//    public void printJob(BigInteger jobid) {
-//    	
-//        System.out.println("Job Status: " + jobMap.getJob(jobid).getStatus());
-//        System.out.println("Job Metrics: " + jobMap.getJob(jobid).getJobMetrics());
-//    }
 
 
     /*********************************

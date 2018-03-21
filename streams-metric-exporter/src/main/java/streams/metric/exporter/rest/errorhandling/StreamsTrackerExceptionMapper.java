@@ -16,10 +16,6 @@
 
 package streams.metric.exporter.rest.errorhandling;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
-
-import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;

@@ -222,7 +222,8 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
     private class PooledJmxConnection {
         private JMXConnector mConnector = null;
         private String mConnectionId = null;;
-        private ConnectorKey mConnectorKey = null;
+        @SuppressWarnings("unused")
+		private ConnectorKey mConnectorKey = null;
         private MBeanServerConnection mBeanServerConnection = null;
         private MXBeanSource mStreamsBeanSource = null;
         private ConnectionNotificationListener mConnectionNotificationListener = null;
@@ -395,7 +396,8 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             return true;
         }
 
-        public MBeanServerConnection getMBeanServerConnection() {
+        @SuppressWarnings("unused")
+		public MBeanServerConnection getMBeanServerConnection() {
             return mBeanServerConnection;
         }
 

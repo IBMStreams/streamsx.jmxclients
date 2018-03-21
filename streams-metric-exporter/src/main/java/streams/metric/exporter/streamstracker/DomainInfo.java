@@ -19,7 +19,6 @@ package streams.metric.exporter.streamstracker;
 import com.ibm.streams.management.domain.DomainMXBean;
 
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.jmx.JmxServiceContext;
 
 import java.text.Format;
 import java.text.SimpleDateFormat;
@@ -28,9 +27,7 @@ import java.util.Date;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 /* 
  * DomainInfo

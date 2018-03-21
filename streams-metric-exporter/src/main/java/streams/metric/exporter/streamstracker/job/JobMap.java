@@ -40,6 +40,7 @@ import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 public class JobMap {
 	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 
+	@SuppressWarnings("unused")
 	private String streamsInstanceName = null;
 	/*****************************************
 	 * JOB MAP and INDEXES

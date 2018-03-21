@@ -421,7 +421,7 @@ public class JobDetails implements NotificationListener {
 	}
 
 	public void updateStatus() throws IOException {
-		LOGGER.debug("** In updateStatus for job " + this.getJobid());
+		LOGGER.trace("** In updateStatus for job " + this.getJobid());
 		// Be careful with timing and just in case the notification of job
 		// removal is delayed, catch exception if job is gone before we
 		// process notification
@@ -560,13 +560,13 @@ public class JobDetails implements NotificationListener {
 	public void handleNotification(Notification notification, Object handback) {
 		try {
 			String notificationType = notification.getType();
-			LOGGER.trace("** Job Notification: " + notification);
+			LOGGER.trace("* Job Notification: " + notification);
 	
 			switch (notificationType) {
 	
 			case AttributeChangeNotification.ATTRIBUTE_CHANGE:
 				AttributeChangeNotification acn = (AttributeChangeNotification) notification;
-				LOGGER.debug("** Job Notification: attribute changed: " + acn);
+				LOGGER.debug("* INSTANCE ({}) Job ({}) Notification: attribute ({}) changed from: {} to: {}", this.instance, this.getJobid(), acn.getAttributeName(), acn.getOldValue(), acn.getNewValue());
 				// Need to be specific, but for now, if any attribute changes,
 				// updateStatus() will update them all
 				try {
@@ -746,7 +746,7 @@ public class JobDetails implements NotificationListener {
 	private void removeExportedMetrics() {
 		// When this job is removed, remove all metrics for this job
 		// (really its the specific instance of the metric for the streams objects of this job)
-		LOGGER.debug("removeExportedMetrics()");
+		LOGGER.trace("removeExportedMetrics()");
 		metricsExporter.removeAllChildStreamsMetrics(this.domain, this.streamsInstanceName,name);
 	}
 	private void updateExportedMetrics() {

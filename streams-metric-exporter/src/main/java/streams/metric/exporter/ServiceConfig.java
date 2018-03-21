@@ -16,17 +16,15 @@
 
 package streams.metric.exporter;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.StringTokenizer;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.internal.Console;
 import com.beust.jcommander.internal.DefaultConsole;
-
 import streams.metric.exporter.cli.ServerProtocolValidator;
 import streams.metric.exporter.cli.InstanceListConverter;
 import streams.metric.exporter.rest.Protocol;
@@ -36,6 +34,8 @@ import streams.metric.exporter.cli.ServerProtocolConverter;
 
 public class ServiceConfig {
 	
+    private static final Logger LOGGER = LoggerFactory.getLogger("root");
+
 	// Command line arguments with defaults from environment variables
 
     @Parameter(names = "--help", description = Constants.DESC_HELP, help = true)
@@ -341,9 +341,14 @@ public class ServiceConfig {
         result.append(newline);
         result.append("hasNoConsole: " + this.isHasNoConsole());
         result.append(newline);
-        if (user != null && !user.isEmpty()) {
-            result.append("password: " + this.readPassword());
-            result.append(newline);
+        if (LOGGER.isTraceEnabled()) {
+        		if (user != null && !user.isEmpty()) {
+        			result.append("password: " + this.readPassword());
+        			result.append(newline);
+        		}
+        } else {
+        		result.append("password: <hidden>");
+        		result.append(newline);
         }
         result.append("x509cert: " + this.getX509Cert());
         result.append(newline);

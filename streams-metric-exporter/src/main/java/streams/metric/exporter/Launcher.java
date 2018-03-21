@@ -18,11 +18,6 @@ package streams.metric.exporter;
 
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.io.IOException;
 
 import javax.net.ssl.TrustManager;
@@ -32,6 +27,7 @@ import org.apache.commons.lang.time.StopWatch;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -44,7 +40,6 @@ import streams.metric.exporter.jmx.JmxServiceContext;
 import streams.metric.exporter.jmx.JmxTrustManager;
 import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.jmx.MXBeanSourceProvider;
-import streams.metric.exporter.rest.Protocol;
 import streams.metric.exporter.rest.RestServer;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
@@ -64,7 +59,8 @@ public class Launcher {
     private JmxServiceContext jmxContext = null;
 
     private ServiceConfig config = null;
-    static private StreamsDomainTracker domainTracker = null;
+    @SuppressWarnings("unused")
+	static private StreamsDomainTracker domainTracker = null;
     static private RestServer restServer = null;
 
     public Launcher(ServiceConfig config) {
@@ -134,14 +130,14 @@ public class Launcher {
     }
 
     private boolean startRestServer() {
-    	LOGGER.info("Creating and starting HTTP Server...");
+    	LOGGER.debug("Creating and starting HTTP Server...");
         try {
             restServer = new RestServer(config.getHost(), config.getPort(), config.getWebPath(), config.getServerProtocol(), config.getServerKeystore(), config.getServerKeystorePwd());
         } catch (Exception e) {
-            LOGGER.error("HTTP Server failed to start !!", e);
+            LOGGER.error("Error starting REST Server: HTTP Server failed to start", e);
             return false;
         }
-        LOGGER.info("... HTTP Server Started");
+        LOGGER.debug("... HTTP Server Started");
         return true;
     }
     
@@ -151,10 +147,11 @@ public class Launcher {
     // fixed.
     public boolean checkValidJMXConnection() {
     	boolean success = true;
-        LOGGER.info("Connecting to JMX Server {}...", new Object[] { config.getJmxUrl() });
+        LOGGER.debug("Connecting to JMX Server {}...", new Object[] { config.getJmxUrl() });
         try {
-            MXBeanSource streamsBeanSource = connectionPool.getBeanSource();
-            LOGGER.info("...Connected");
+            @SuppressWarnings("unused")
+			MXBeanSource streamsBeanSource = connectionPool.getBeanSource();
+            LOGGER.debug("...Connected");
         } catch (IOException e) {
             LOGGER.error("Inital JMX Connection Failed: ", e);
             success = false;
@@ -162,8 +159,8 @@ public class Launcher {
         return success;
     }
 
-    private boolean startStreamsMonitor() {
-    	LOGGER.info("Creating and starting Streams Tracker...");
+    private boolean startStreamsDomainTracker() {
+    	LOGGER.debug("Creating and starting Streams Domain Tracker...");
         StopWatch sw = null;
         if (LOGGER.isDebugEnabled()) {
             sw = new StopWatch();
@@ -176,7 +173,7 @@ public class Launcher {
                     jmxContext, config.getDomainName(), config.getInstanceNameSet(),
                     config.getRefreshRateSeconds(), config.getSslOption());
         } catch (StreamsTrackerException e) {
-            LOGGER.error("Could not construct the StreamsInstanceJobMonitor, Exit!", e);
+            LOGGER.error("Error starting StreamsDomainTracker: Could not construct the StreamsInstanceJobMonitor, Exit!", e);
             return false;
         }
 
@@ -185,12 +182,27 @@ public class Launcher {
             LOGGER.debug("Timing for initial startup of StreamsDomainTracker (milliseconds): " + sw.getTime()) ;
         }
         
-        LOGGER.info("...Streams Domain Tracker started.");
+        LOGGER.debug("...Streams Domain Tracker started.");
         return true;
     }
 
 
     public static void main(String[] args) {
+    	
+    		// Turn off built in grizzly logging that uses JUL, and route to our SLF4J via log4j implementation
+    		SLF4JBridgeHandler.removeHandlersForRootLogger();
+    		SLF4JBridgeHandler.install();
+
+    		//java.util.logging.Logger julLogger = java.util.logging.Logger.getLogger("org.glassfish.grizzly");
+
+    		//julLogger.setLevel(Level.FINER);
+    		//julLogger.setUseParentHandlers(false);
+    		//java.util.logging.ConsoleHandler ch = new java.util.logging.ConsoleHandler();
+    		//ch.setLevel(Level.FINEST);
+    		//julLogger.addHandler(ch);
+
+    		
+    		LOGGER.info("Streams Metric Exporter STARTING ...");
         // Parse command line arguments
         ServiceConfig config = new ServiceConfig();
         JCommander jc = null;
@@ -220,20 +232,22 @@ public class Launcher {
         	System.exit(1);
         }
 
-        LOGGER.trace("*** Settings ***\n" + config);
+        LOGGER.debug("*** Configuration ***\n" + config);
         
         Launcher launcher = new Launcher(config);
         if (launcher.checkValidJMXConnection()) {
         	if (launcher.startRestServer()) {
-        		if (launcher.startStreamsMonitor()) {
-        			LOGGER.info("Streams Metric Exporter running.");
+        		if (launcher.startStreamsDomainTracker()) {
+        			LOGGER.info("Streams Metric Exporter RUNNING.");
         		} else {
-        			LOGGER.error("Startup of Streams Tracker failed, Exiting Program.");
+        			LOGGER.error("Startup of Streams Metric Exporter FAILED, Exiting Program.");
+        			System.out.println("Startup of Streams Metric Exporter FAILED, Exiting Program.");
         			restServer.stopServer();
         			System.exit(1);
         		}
         	} else {
-        		LOGGER.error("Startup of HTTP Server failed, Exiting Program.");
+        		LOGGER.error("Startup of HTTP Server FAILED, Exiting Program.");
+        		System.out.println("Startup of HTTP Server FAILED, Exiting Program.");
         		System.exit(1);
         	}
         } else {
