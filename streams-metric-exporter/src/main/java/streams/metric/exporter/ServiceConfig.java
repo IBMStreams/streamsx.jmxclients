@@ -40,6 +40,9 @@ public class ServiceConfig {
 
     @Parameter(names = "--help", description = Constants.DESC_HELP, help = true)
     private boolean help;
+    
+    @Parameter(names = {"-v", "--version" }, description = Constants.DESC_VERSION, required = false)
+    private boolean version;
 
     @Parameter(names = { "-h", "--host" }, description = Constants.DESC_HOST, required = false)
     private String host = getEnvDefault(Constants.ENV_HOST,"localhost");
@@ -260,7 +263,15 @@ public class ServiceConfig {
         this.help = help;
     }
     
-    public String getSslOption() {
+    public boolean isVersion() {
+		return version;
+	}
+
+	public void setVersion(boolean version) {
+		this.version = version;
+	}
+
+	public String getSslOption() {
 		return sslOption;
 	}
 
@@ -305,7 +316,12 @@ public class ServiceConfig {
 		if (!RefreshRateValidator.isValid(refreshRateSeconds)) {
 			throw new ParameterException(String.format(Constants.INVALID_REFRESHRATE, refreshRateSeconds));
 		}
-	}
+        if ((user == null || password == null) && this.getX509Cert() == null) {
+            throw new ParameterException(
+                    "Missing or incomplete credentials. Please select an authentication parameter (-u or -X509cert) or set environment variables: " +
+                    		Constants.ENV_USERNAME + " or " + Constants.ENV_X509CERT);
+        }
+    }
 	
 	
 

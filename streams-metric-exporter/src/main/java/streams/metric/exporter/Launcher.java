@@ -185,6 +185,10 @@ public class Launcher {
         LOGGER.debug("...Streams Domain Tracker started.");
         return true;
     }
+    
+    private static void printVersion() {
+    		System.out.println(Version.getTitleAndVersionString());
+    }
 
 
     public static void main(String[] args) {
@@ -222,10 +226,15 @@ public class Launcher {
             System.exit(0); 
         }
         
+        if (config.isVersion()) {
+        		printVersion();
+        		System.exit(0);
+        }
+        
         // Add validate config because we now accept environment variables, and jcommander does not handle that
         // FUTURE: replace with a more comprehensive approach
         try {
-        	config.validateConfig();
+        		config.validateConfig();
         } catch (ParameterException e) {
         	System.out.println(e.getLocalizedMessage());
         	jc.usage();

@@ -1,4 +1,4 @@
-<!-- 
+<!--
 Licensed to the Apache Software Foundation (ASF) under one
 or more contributor license agreements.  See the NOTICE file
 distributed with this work for additional information
@@ -20,15 +20,14 @@ under the License.
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-
 	<groupId>streamsx.jmxclients</groupId>
 	<artifactId>streams-metric-exporter</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>streams-metric-exporter</name>
-	<url>http://maven.apache.org</url>
-
+	<url>https://github.com/IBMStreams/streamsx.jmxclients</url>
+  <description>IBM Streams Metric Exporter with REST and PROMETHEUS enpoints.</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jersey.version>2.26</jersey.version>
@@ -55,14 +54,14 @@ under the License.
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>test</groupId>
+			<groupId>ibmstreams</groupId>
 			<artifactId>com.ibm.streams.management.jmxmp.jar</artifactId>
 			<version>4.x</version>
 			<scope>system</scope>
 			<systemPath>${STREAMS_INSTALL}/lib/com.ibm.streams.management.jmxmp.jar</systemPath>
 		</dependency>
 		<dependency>
-			<groupId>test</groupId>
+			<groupId>ibmstreams</groupId>
 			<artifactId>com.ibm.streams.management.mx.jar</artifactId>
 			<version>4.x</version>
 			<scope>system</scope>
@@ -108,9 +107,9 @@ under the License.
 			<artifactId>jersey-container-grizzly2-servlet</artifactId>
 		</dependency>
 		<dependency>
-            <groupId>org.glassfish.jersey.inject</groupId>
-            <artifactId>jersey-hk2</artifactId>
-        </dependency>
+      <groupId>org.glassfish.jersey.inject</groupId>
+      <artifactId>jersey-hk2</artifactId>
+    </dependency>
 		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
@@ -143,15 +142,15 @@ under the License.
 		  <artifactId>simpleclient_pushgateway</artifactId>
 		  <version>0.0.26</version>
 		</dependency>
-		<!-- <dependency> <groupId>com.fasterxml.jackson.jaxrs</groupId> <artifactId>jackson-jaxrs-xml-provider</artifactId> 
+		<!-- <dependency> <groupId>com.fasterxml.jackson.jaxrs</groupId> <artifactId>jackson-jaxrs-xml-provider</artifactId>
 			<version>2.7.4</version> </dependency> -->
 
 		<!-- for SWAGGER -->
-		<!-- <dependency> <groupId>org.glassfish.jersey.containers</groupId> <artifactId>jersey-container-grizzly2-servlet</artifactId> 
+		<!-- <dependency> <groupId>org.glassfish.jersey.containers</groupId> <artifactId>jersey-container-grizzly2-servlet</artifactId>
 			</dependency> -->
-		<!-- <dependency> <groupId>com.wordnik</groupId> <artifactId>swagger-jersey2-jaxrs_2.10</artifactId> 
+		<!-- <dependency> <groupId>com.wordnik</groupId> <artifactId>swagger-jersey2-jaxrs_2.10</artifactId>
 			<version>1.3.4</version> </dependency> -->
-		<!-- <dependency> <groupId>io.swagger</groupId> <artifactId>swagger-jersey2-jaxrs</artifactId> 
+		<!-- <dependency> <groupId>io.swagger</groupId> <artifactId>swagger-jersey2-jaxrs</artifactId>
 			<version>1.5.0</version> </dependency> -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -160,8 +159,24 @@ under the License.
 		</dependency>
 	</dependencies>
 	<build>
+
+  	<!-- Pre-step: src/main/resoures/vesion: ${project.version} -->
+		<!-- Creates: target/classes/version -->
+		<!--
+  	<resources>
+  		<resource>
+  			<directory>src/main/resources</directory>
+  			<filtering>true</filtering>
+  			<includes>
+  				<include>**/version</include>
+  			</includes>
+  		</resource>
+  	</resources>
+	-->
 		<!-- <pluginManagement> -->
 		<plugins>
+
+			<!-- COMPILE Phase -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -172,6 +187,7 @@ under the License.
 				</configuration>
 			</plugin>
 
+			<!-- PACKAGE Phase -->
 			<!-- Install .jars and add them as dependencies for the project -->
 			<!-- Prevents using system scope dependencies -->
 			<!-- Still requires builder to have an installed Streams installation -->
@@ -251,8 +267,9 @@ under the License.
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
 										<Main-Class>streams.metric.exporter.Launcher</Main-Class>
+										<Implementation-Version>${project.version}</Implementation-Version>
+										<Implementation-Title>${project.artifactId}</Implementation-Title>
 									</manifestEntries>
-
 								</transformer>
 							</transformers>
 						</configuration>
@@ -260,8 +277,51 @@ under the License.
 				</executions>
 
 			</plugin>
+
+			<!-- INSTALL (Build Installation / Release) Phase -->
+			<plugin>
+  			<!--<groupId>org.apache.maven.plugins</groupId>-->
+  			<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.1.0</version>
+				<!-- Create .tar.gz with scripts and properties -->
+<!--
+				<executions>
+	  			<execution>
+-->
+
+<!--
+	 					<id>make-assembly</id>
+	 					<phase>package</phase>
+	 					<goals>
+	 						<goal>single</goal>
+	 					</goals>
+
+-->
+						<configuration>
+							<!--<attach>false</attach>-->
+							<descriptors>
+								<descriptor>assembly.xml</descriptor>
+							</descriptors>
+						</configuration>
+<!--
+ 					</execution>
+  			</executions>
+-->
+<executions>
+	<execution>
+		<id>make-assembly</id>
+		<phase>install</phase>
+		<goals>
+			<goal>single</goal>
+		</goals>
+	</execution>
+</executions>
+  		</plugin>
+
+
+
 		</plugins>
-		<!-- </pluginManagement> -->
+		<!-- </pluginManagement> Put in by ECLIPSE -->
 		<pluginManagement>
 			<plugins>
 				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->

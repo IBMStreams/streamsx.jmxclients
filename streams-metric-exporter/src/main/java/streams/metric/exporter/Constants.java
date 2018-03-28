@@ -64,6 +64,7 @@ public class Constants {
 	
 	public static final String
 		DESC_HELP = "Display command line arguments",
+		DESC_VERSION = "Display version information",
 		DESC_JMXCONNECT = "JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)\n      Environment Variable: " + ENV_JMXCONNECT,
 		DESC_DOMAIN_ID = "Streams domain name\n      Environment Variable: " + ENV_DOMAIN_ID,
 		DESC_INSTANCE_ID = "Streams instance name.  Only used if Instance List not provided.\n      Environment Variable: " + ENV_INSTANCE_ID,
