@@ -37,7 +37,9 @@ public class Constants {
 		ENV_JMX_SSLOPTION = "STREAMS_EXPORTER_JMX_SSLOPTION",
 		ENV_SERVER_PROTOCOL = "STREAMS_EXPORTER_SERVER_PROTOCOL",
 		ENV_SERVER_KEYSTORE = "STREAMS_EXPORTER_SERVER_KEYSTORE",
-		ENV_SERVER_KEYSTORE_PWD = "STREAMS_EXPORTER_SERVER_KEYSTORE_PWD"
+		ENV_SERVER_KEYSTORE_PWD = "STREAMS_EXPORTER_SERVER_KEYSTORE_PWD",
+		ENV_LOGLEVEL = "STREAMS_EXPORTER_LOGLEVEL",
+		ENV_LOGDIR = "STREAMS_EXPORTER_LOGDIR"
 	;
 	
 
@@ -57,7 +59,9 @@ public class Constants {
 		DEFAULT_JMX_SSLOPTION = "TLSv1",
 		DEFAULT_SERVER_PROTOCOL = "http",
 		DEFAULT_SERVER_KEYSTORE = null,
-		DEFAULT_SERVER_KEYSTORE_PWD = null
+		DEFAULT_SERVER_KEYSTORE_PWD = null,
+		DEFAULT_LOGLEVEL = "info",
+		DEFAULT_LOGDIR = ""
 	;
 	
 	public static final String indent = "       ";
@@ -81,12 +85,15 @@ public class Constants {
 		DESC_NOCONSOLE = "Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.",
 		DESC_SERVER_PROTOCOL = "http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)\n      Environment Variable: " + ENV_SERVER_PROTOCOL,
 		DESC_SERVER_KEYSTORE = "Java keystore containing server certificate and key to identify server side of this application\n      Environment Variable: " + ENV_SERVER_KEYSTORE,
-		DESC_SERVER_KEYSTORE_PWD = "Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match\n      Environment Variable: " + ENV_SERVER_KEYSTORE_PWD
+		DESC_SERVER_KEYSTORE_PWD = "Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match\n      Environment Variable: " + ENV_SERVER_KEYSTORE_PWD,
+		DESC_LOGLEVEL = "Logging level [ fatal | error | warn | info | debug | trace ]\n      Environment Variable: " + ENV_LOGLEVEL,
+		DESC_LOGDIR = "Logging direcotry.  If not set or empty log to stdout.\n     Environment Variable: " + ENV_LOGDIR
 	;
 	
 	public static final String
 	    INVALID_SERVER_PROTOCOL = "%s is not a valid protocol.  Valid values include [http|https]",
-	    INVALID_REFRESHRATE = "%s is not a valid refresh rate.  Must be positive integer or 0 for no automatic refresh"
+	    INVALID_REFRESHRATE = "%s is not a valid refresh rate.  Must be positive integer or 0 for no automatic refresh",
+	    INVALID_LOGLEVEL = "%s is not a valid loglevel.  Valid values include [ fatal | error | warn | info | debug | trace ]"
 	;
 	
 	public static final int NO_REFRESH = 0;

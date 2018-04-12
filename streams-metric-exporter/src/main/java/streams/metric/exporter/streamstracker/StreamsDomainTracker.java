@@ -295,12 +295,14 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             LOGGER.debug(
                     "DOMAIN Refresh StreamsMonitorException: {}.",
                     e);
+            resetDomainTracker();
         } catch (UndeclaredThrowableException e) {
 
             LOGGER.debug("DOMAIN Refresh UndeclaredThrowableException and unwrapping it");
             Throwable t = e.getUndeclaredThrowable();
             if (t instanceof IOException) {
                 LOGGER.debug("DOMAIN Refresh unwrapped IOException, we will ignore and let JMC Connecton Pool reconnect");
+                resetDomainTracker();
             } else {
                 LOGGER.debug("DOMAIN Refresh unwrapped "
                         + t.getClass()
@@ -311,6 +313,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             LOGGER.warn(
                     "DOMAIN Refresh Unexpected Exception: {}.  Report so it can be caught appropriately.",
                     e);
+            resetDomainTracker();
         }		
     }
 
@@ -346,7 +349,11 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             // Attempt to access the bean, only way to determine if it is a valid domain name
             LOGGER.info("Streams Domain '{}' found, Status: {}",
                     new Object[] { domainBean.getName(), domainBean.getStatus() });
-            
+            if (domainBean.getStatus() != DomainMXBean.Status.RUNNING) {
+            		resetDomainTracker();
+            		LOGGER.info("Waiting for domain status to be RUNNING");
+            		return;
+            }
             this.setDomainAvailable(true);
             domainInfo.updateInfo(this.domainBean);
 
@@ -377,7 +384,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 				LOGGER.error(
 						"Domain '{}' not found when initializing domain tracker.  Ensure the JMX URL specified is for the domain you are attempting to connect to.",
 						this.getDomainName());
-				resetDomainTracker();
 				throw new StreamsTrackerException(StreamsTrackerErrorCode.DOMAIN_NOT_FOUND,
 						"Domain name " + this.domainName + " does not match the domain of the JMX Server.", e);
 			} else {
@@ -390,12 +396,10 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             LOGGER.error(
                     "Domain '{}' not found when initializing domain tracker.  Ensure the JMX URL specified is for the domain you are attempting to connect to.",
                     this.getDomainName());
-            resetDomainTracker();
 			throw new StreamsTrackerException(StreamsTrackerErrorCode.DOMAIN_NOT_FOUND,
 					"Domain name " + this.domainName + " does not match the domain of the JMX Server.", infe);
 
         } catch (MalformedURLException me) {
-            resetDomainTracker();
             throw new StreamsTrackerException(
                     StreamsTrackerErrorCode.JMX_MALFORMED_URL,
                     "Malformed URL error while retrieving domain information, domain: "

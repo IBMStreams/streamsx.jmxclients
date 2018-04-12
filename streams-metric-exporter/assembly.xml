@@ -74,12 +74,12 @@ under the License.
 	    <fileMode>644</fileMode>
 	  </fileSet>
 	</fileSets>
-	<files>
+<!--	<files>
 	  <file>
 	    <source>${basedir}/target/classes/version</source>
 	    <outputDirectory>bin</outputDirectory>
 	    <destName>version</destName>
 	    <filtered>false</filtered>
 	  </file>
-	</files>
+	</files> -->
 </assembly>

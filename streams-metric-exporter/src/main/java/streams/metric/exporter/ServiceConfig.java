@@ -27,8 +27,10 @@ import com.beust.jcommander.internal.Console;
 import com.beust.jcommander.internal.DefaultConsole;
 import streams.metric.exporter.cli.ServerProtocolValidator;
 import streams.metric.exporter.cli.InstanceListConverter;
+import streams.metric.exporter.cli.LoglevelValidator;
 import streams.metric.exporter.rest.Protocol;
 import streams.metric.exporter.cli.FileExistsValidator;
+import streams.metric.exporter.cli.DirectoryExistsValidator;
 import streams.metric.exporter.cli.RefreshRateValidator;
 import streams.metric.exporter.cli.ServerProtocolConverter;
 
@@ -94,6 +96,13 @@ public class ServiceConfig {
     
     @Parameter(names = "--serverkeystorepwd", description = Constants.DESC_SERVER_KEYSTORE_PWD, required = false)
     private String serverKeystorePwd = getEnvDefault(Constants.ENV_SERVER_KEYSTORE_PWD,Constants.DEFAULT_SERVER_KEYSTORE_PWD);
+    
+    @Parameter(names = { "-l", "--loglevel" }, description = Constants.DESC_LOGLEVEL, required = false, validateWith = LoglevelValidator.class)
+    private String loglevel = getEnvDefault(Constants.ENV_LOGLEVEL, Constants.DEFAULT_LOGLEVEL);
+    
+    @Parameter(names = "--logdir", description = Constants.DESC_LOGDIR, required = false, validateWith = DirectoryExistsValidator.class)
+    private String logdir = getEnvDefault(Constants.ENV_LOGDIR, Constants.DEFAULT_LOGDIR);
+    
     
     public String getPassword(boolean hasConsole) {
         // Choose the appropriate JCommander console implementation to use
@@ -302,21 +311,47 @@ public class ServiceConfig {
 	public void setServerKeystorePwd(String serverKeystorePwd) {
 		this.serverKeystorePwd = serverKeystorePwd;
 	}
-	
 	 
+	public String getLoglevel() {
+		return loglevel;
+	}
+
+	public void setLoglevel(String loglevel) {
+		this.loglevel = loglevel;
+	}
+
+	public String getLogdir() {
+		return logdir;
+	}
+
+	public void setLogdir(String logdir) {
+		this.logdir = logdir;
+	}
+
 	// Validated values.  Cannot just use jcommander because we now accept environment variables
 	public Protocol getServerProtocol() throws ParameterException {
 		return ServerProtocolConverter.convertProtocol(serverProtocol);
 	}
 	
 	public void validateConfig() throws ParameterException {
+		if (getJmxUrl() == null) {
+			throw new ParameterException(
+					"JMX URL must be specified.  Please use parameter (-j or --jmxUrl) or environment variable: " + Constants.ENV_JMXCONNECT);
+		}
+		if (getDomainName() == null) {
+			throw new ParameterException(
+					"Streams domain name must be specified.  Please use parameter (-d or --domain) or environment variable: " + Constants.ENV_DOMAIN_ID);
+		}
 		if (!ServerProtocolValidator.isValid(serverProtocol)) {
             throw new ParameterException(String.format(Constants.INVALID_SERVER_PROTOCOL, serverProtocol));
 		}
 		if (!RefreshRateValidator.isValid(refreshRateSeconds)) {
 			throw new ParameterException(String.format(Constants.INVALID_REFRESHRATE, refreshRateSeconds));
 		}
-        if ((user == null || password == null) && this.getX509Cert() == null) {
+		if (!LoglevelValidator.isValid(loglevel)) {
+			throw new ParameterException(String.format(Constants.INVALID_LOGLEVEL, loglevel));
+		}		
+        if ((user == null || getPassword() == null) && this.getX509Cert() == null) {
             throw new ParameterException(
                     "Missing or incomplete credentials. Please select an authentication parameter (-u or -X509cert) or set environment variables: " +
                     		Constants.ENV_USERNAME + " or " + Constants.ENV_X509CERT);
@@ -379,6 +414,10 @@ public class ServiceConfig {
         result.append("serverkeystore: " + getServerKeystore());
         result.append(newline);
         result.append("serverkeystorepwd: " + getServerKeystorePwd());
+        result.append(newline);
+        result.append("loglevel: " + getLoglevel());
+        result.append(newline);
+        result.append("logdir: " + getLogdir());
         return result.toString();
     }
      
