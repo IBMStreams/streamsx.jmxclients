@@ -19,12 +19,16 @@ package streams.metric.exporter;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
 import org.apache.commons.lang.time.StopWatch;
-
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.PatternLayout;
+import org.apache.log4j.RollingFileAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
@@ -54,6 +58,7 @@ public class Launcher {
 	private WebClient webClient;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger("root");
+	private static boolean consoleLogging = true;
 
 	private final boolean retryInitialConnection = true;
 	private JmxServiceContext jmxContext = null;
@@ -182,32 +187,46 @@ public class Launcher {
 		return true;
 	}
 	
-	private static void setupLogging(String loglevel, String logdir) {
-		// Try setting log level
+	private static boolean setupLogging(String loglevel, String logdir) {
+		// Set the log level
 		org.apache.log4j.Logger logger = org.apache.log4j.Logger.getRootLogger();
 		logger.setLevel(org.apache.log4j.Level.toLevel(loglevel));
 		
-		org.apache.log4j.Appender console_appender = logger.getAppender("CONSOLE");
-		org.apache.log4j.Appender rollingfile_appender = logger.getAppender("ROLLINGFILE");
+		// Create our appender
+		PatternLayout layout = new PatternLayout(Constants.LOG_PATTERN_LAYOUT);
 		
-		((org.apache.log4j.AppenderSkeleton)console_appender).setThreshold(org.apache.log4j.Level.toLevel(loglevel));
-		((org.apache.log4j.AppenderSkeleton)rollingfile_appender).setThreshold(org.apache.log4j.Level.toLevel(loglevel));;		
-		
+		if (logdir != null && !logdir.isEmpty() ) {
+			// Rolling Log file
+			consoleLogging = false;
+			Path logfilePath = Paths.get(logdir,Constants.LOG_FILENAME);
+			Path finalPath = logfilePath.toAbsolutePath();
+			
+			System.out.println("Logging to rolling logfile: " + finalPath);
+			try {
+				RollingFileAppender rollingAppender = new RollingFileAppender(layout,finalPath.toString(),true);
+				rollingAppender.setName(Constants.LOG_APPENDER_NAME);
+				rollingAppender.setMaxFileSize(Constants.LOG_MAX_FILE_SIZE);
+				rollingAppender.setMaxBackupIndex(Constants.LOG_MAX_BACKUP_INDEX);
+				logger.addAppender(rollingAppender);
+				
+			} catch (IOException e) {
+				System.out.println("Error creating logfile: " + e.getLocalizedMessage());
+				return false;
+			}
+		} else {
+			// Console Logging
+			System.out.println("Logging to console...");
+			ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+			consoleAppender.setName(Constants.LOG_APPENDER_NAME);
+			logger.addAppender(consoleAppender);
+		}		
 		
 		// Turn off built in grizzly logging that uses JUL, and route to our SLF4J via
 		// log4j implementation
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
-
-		// java.util.logging.Logger julLogger =
-		// java.util.logging.Logger.getLogger("org.glassfish.grizzly");
-
-		// julLogger.setLevel(Level.FINER);
-		// julLogger.setUseParentHandlers(false);
-		// java.util.logging.ConsoleHandler ch = new java.util.logging.ConsoleHandler();
-		// ch.setLevel(Level.FINEST);
-		// julLogger.addHandler(ch);
-
+	
+		return true;
 	}
 
 	private static void printVersion() {
@@ -249,22 +268,27 @@ public class Launcher {
 			config.validateConfig();
 		} catch (ParameterException e) {
 			System.out.println(e.getLocalizedMessage());
-			System.out.println("Use -h to get command line usage");
+			System.out.println("Use --help to get command line usage");
 			System.exit(1);
 		}
 		
-		setupLogging(config.getLoglevel(), config.getLogdir());
-
 		System.out.println("Streams Metric Exporter STARTING...");
+
+		if (setupLogging(config.getLoglevel(), config.getLogdir()) == false) {
+			System.exit(1);
+		};
+		
+		if (!consoleLogging) {
+			LOGGER.info("Streams Metric Exporter STARTING...");
+		}
+
 
 		LOGGER.debug("*** Configuration ***\n" + config);
 
 		Launcher launcher = new Launcher(config);
 		if (launcher.checkValidJMXConnection()) {
 			if (launcher.startRestServer()) {
-				if (launcher.startStreamsDomainTracker()) {
-					LOGGER.info("Streams Metric Exporter RUNNING.");
-				} else {
+				if (! launcher.startStreamsDomainTracker()) {
 					LOGGER.error("Startup of Streams Metric Exporter FAILED, Exiting Program.");
 					System.out.println("Startup of Streams Metric Exporter FAILED, Exiting Program.");
 					restServer.stopServer();
@@ -283,5 +307,8 @@ public class Launcher {
 		}
 		
 		System.out.println("Streams Metric Exporter STARTED");
+		if (!consoleLogging) {
+			LOGGER.info("Streams Metric Exporter STARTED");
+		}
 	}
 }

@@ -97,6 +97,12 @@ public class Constants {
 	;
 	
 	public static final int NO_REFRESH = 0;
+	public static final String LOG_APPENDER_NAME = "STREAMSEXPORTER";
+	public static final String LOG_FILENAME = "StreamsMetricExporter.log";
+	public static final String LOG_PATTERN_LAYOUT = "%d{ISO8601} - %-5p [%t:%C{1}@%L] - %m%n";
+	public static final int LOG_MAX_BACKUP_INDEX = 5;
+	public static final String LOG_MAX_FILE_SIZE = "10MB";
+
 	
 
 }

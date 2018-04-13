@@ -1,7 +1,7 @@
 default: package
 package:
 	mvn package
-tar:
+tar: package
 	mvn assembly:single
 
 clean:

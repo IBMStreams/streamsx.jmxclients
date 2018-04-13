@@ -52,8 +52,14 @@ mvn compile
 ```
 mvn package
 ```
-
 Location will be: target/executable-streams-metric-exporter.jar
+
+## Create packaged binary and supporting files in .tar.gz
+```
+make tar
+```
+Location will be: target/streams-metric-exporter-x.x.x-release.tar.gz
+
 
 # Command line options
 `java -jar target/executable-streams-metric-exporter.jar --help`
@@ -64,6 +70,7 @@ Usage: streams-metric-exporter [options]
     -d, --domain
       Streams domain name
       Environment Variable: STREAMS_DOMAIN_ID
+      Default: StreamsDomain
     --help
       Display command line arguments
     -h, --host
@@ -74,14 +81,14 @@ Usage: streams-metric-exporter [options]
       Streams instance name.  Only used if Instance List not provided.
       Environment Variable: STREAMS_INSTANCE_ID
     --instancelist
-      Comma separated list of 1 or more Streams Instances to monitor ('ALL' for all instances). Default ALL if STREAMS_INSTANCE_ID 
+      Comma separated list of 1 or more Streams Instances to monitor ('ALL' for all instances). Default ALL if STREAMS_INSTANCE_ID
       is not set.
       Envrionment Variable: STREAMS_EXPORTER_INSTANCE_LIST
       Default: [UNSPECIFIED]
     --jmxssloption
       SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
-      Environment Variable: 
-      STREAMS_EXPORTER_JMX_SSLOPTION 
+      Environment Variable:
+      STREAMS_EXPORTER_JMX_SSLOPTION
       Default: TLSv1
     --jmxtruststore
       Java keystore of certificates/signers to trust from JMX Server
@@ -89,6 +96,15 @@ Usage: streams-metric-exporter [options]
     -j, --jmxurl
       JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)
       Environment Variable: STREAMS_EXPORTER_JMXCONNECT
+      Default: service:jmx:jmxmp://192.168.242.141:9975
+    --logdir
+      Logging direcotry.  If not set or empty log to stdout.
+     Environment Variable: STREAMS_EXPORTER_LOGDIR
+      Default: <empty string>
+    -l, --loglevel
+      Logging level [ fatal | error | warn | info | debug | trace ]
+      Environment Variable: STREAMS_EXPORTER_LOGLEVEL
+      Default: info
     --noconsole
       Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.
       Default: false
@@ -105,21 +121,24 @@ Usage: streams-metric-exporter [options]
       Default: 10
     --serverkeystore
       Java keystore containing server certificate and key to identify server side of this application
-      Environment Variable: 
-      STREAMS_EXPORTER_SERVER_KEYSTORE 
+      Environment Variable:
+      STREAMS_EXPORTER_SERVER_KEYSTORE
     --serverkeystorepwd
       Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
-      Environment Variable: 
-      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD 
+      Environment Variable:
+      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD
     --serverprotocol
       http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
-      Environment 
+      Environment
       Variable: STREAMS_EXPORTER_SERVER_PROTOCOL
       Default: http
     -u, --user
       Streams login username. Use this or X509CERT
       Environment Variable: STREAMS_EXPORTER_USERNAME
-    --webPath, 
+    -v, --version
+      Display version information
+      Default: false
+    --webPath,
       Base URI prefix (e.g. /someprefix)
       Environment Variable: STREAMS_EXPORTER_WEBPATH
       Default: /
@@ -136,15 +155,27 @@ service:jmx:jmxmp://localhost:9975 -d StreamsDomain  \
 
 password: <enter streamsadmin password>
 ```
-The ``--instanelist`` option allows the specification of 0 or more instances.  If none or chosen or it is set to the value ``ALL`` then all instances metrics will be exported.  In addition, instances are created and removed, the cooresponding metrics will be added and removed.  If, however, you specify a specific list of instances, then any addtional instances that exist in the domain or are created after the application is started WILL NOT be included in the exported set.
+The ``--instancelist`` option allows the specification of 0 or more instances.  If none or chosen or it is set to the value ``ALL`` then all instances metrics will be exported.  In addition, instances are created and removed, the cooresponding metrics will be added and removed.  If, however, you specify a specific list of instances, then any addtional instances that exist in the domain or are created after the application is started WILL NOT be included in the exported set.
 
-## Changing the default logging
-The default logging configuration (log4j.properties) is stored in the executable jar.  To override the defaults, create a log4j.properties file and point to it using the log4j.configuration java property.  For example:
+## Logging
+Logging is performed through the log4j 1.2 facility. There are two arguments to control logging.
+
+| argument | env | default | description |
+|:---------|:----|:--------|:------------|
+|--logdir|STREAM_EXPORTER_LOGDIR|undefined<br>(stdout)|If this argument is undefined log messages are sent to the **console** (stdout).<br>If this argument is present then a rolling logfile is created in the directory specified with the name of the logfile: **StreamsMetricExporter.log**|
+|--loglevel|STREAMS_EXPORTER_LOGLEVEL|info|fatal,error,warn,info,debug,trace<br>**note:** debug level contains timing messages
+
+
+### Adding to the default logging
+If you wish to configure your own logging (in addition to that which the application already does), create a log4j.properties file and point to it using the log4j.configuration java property.  For example:
 ```
 java -Dlog4j.configuration=file:${PWD}/log4j.properties -jar target/executable-streams-metric-exporter.jar -j \
 service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i \
 StreamsInstance -u streamsadmin
 ```
+This would be useful in situations when you want to log to both the console and a file.
+**Note:** The log level will still be set by the command line argument or environment variable, NOT the rootlogger value in your log4j.properties.
+
 # Prometheus Integration
 
 ## Endpoint
