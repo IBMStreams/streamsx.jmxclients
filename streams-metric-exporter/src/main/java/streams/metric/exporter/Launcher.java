@@ -171,7 +171,7 @@ public class Launcher {
 
 		try {
 			domainTracker = StreamsDomainTracker.initDomainTracker(jmxContext, config.getDomainName(),
-					config.getInstanceNameSet(), config.getRefreshRateSeconds(), config.getSslOption());
+					config.getInstanceNameSet(), config.getRefreshRateSeconds(), config.getSslOption(), config);
 		} catch (StreamsTrackerException e) {
 			LOGGER.error(
 					"Error starting StreamsDomainTracker: Could not construct the StreamsDomainTracker, Exit!", e.getLocalizedMessage());

@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 import com.ibm.streams.management.ObjectNameBuilder;
 import com.ibm.streams.management.domain.DomainMXBean;
 import streams.metric.exporter.Constants;
+import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.jmx.JmxServiceContext;
@@ -88,6 +89,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     /*****************************************
      * CONFIGURATION
      *****************************************/
+    private ServiceConfig config = null;
     private int refreshRateSeconds; // How often to retrieve bulk metrics
     private boolean trackAllInstances = false;
     private Set<String> requestedInstances = new HashSet<String>(); // Instances user is interested in
@@ -120,7 +122,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      *************************************************************/
     public static StreamsDomainTracker initDomainTracker(
             JmxServiceContext jmxContext, String domainName,
-            Set<String> requestedInstances, int refreshRateSeconds, String protocol)
+            Set<String> requestedInstances, int refreshRateSeconds, String protocol, ServiceConfig config)
             throws StreamsTrackerException {
         if (domainTrackerSingleton != null) {
             LOGGER.warn("Re-Initializing StreamsDomainTracker");
@@ -130,7 +132,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 
         try {
             domainTrackerSingleton = new StreamsDomainTracker(jmxContext,
-                    domainName, requestedInstances, refreshRateSeconds, protocol);
+                    domainName, requestedInstances, refreshRateSeconds, protocol, config);
             StreamsDomainTracker.isInitialized = true;
         } catch (StreamsTrackerException e) {
             LOGGER.error("Initalization of StreamsDomainTracker instance FAILED!!");
@@ -175,9 +177,10 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      *******************************************************************/
     private StreamsDomainTracker(JmxServiceContext jmxContext,
             String domainName, Set<String> requestedInstances, int refreshRateSeconds,
-            String protocol) throws StreamsTrackerException {
+            String protocol, ServiceConfig config) throws StreamsTrackerException {
     	
         LOGGER.trace("Constructing StreamsDomainTracker");
+        this.config=config;
         this.jmxContext = jmxContext;
         this.domainName = domainName;
         this.refreshRateSeconds = refreshRateSeconds;
@@ -501,8 +504,14 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     		e.printStackTrace();
     	}
     }
+    
+    
 
-    public boolean isDomainAvailable() {
+    public ServiceConfig getConfig() {
+		return config;
+	}
+
+	public boolean isDomainAvailable() {
 		return domainAvailable;
 	}
 

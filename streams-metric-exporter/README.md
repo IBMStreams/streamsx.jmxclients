@@ -173,7 +173,7 @@ java -Dlog4j.configuration=file:${PWD}/log4j.properties -jar target/executable-s
 service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i \
 StreamsInstance -u streamsadmin
 ```
-This would be useful in situations when you want to log to both the console and a file.
+This would be useful in situations when you want to log to both the console and a file.<br>
 **Note:** The log level will still be set by the command line argument or environment variable, NOT the rootlogger value in your log4j.properties.
 
 # Prometheus Integration
@@ -475,16 +475,19 @@ Array of all jobs in the instance along with job information and the metrics for
 ## /instances/{instancename}/jobs/{jobid}
 Job information and metrics for a single job
 
-
-## /streamsexporter || /jobtracker
-The Provides a complete overview of the streams-metric-exporter server.  Not recommended for programatic interface, however, a good interface for status of this server
-
-
 ## /instances/{instancename}/metrics
 Retrieves all metrics for the selected instance
 
 ## /instances/{instancename}/snapshots
 Retrieves all snapshots for the selected instance
+
+## /streamsexporter || /streamsexporter
+The Provides a complete overview of the streams-metric-exporter server.  Not recommended for programatic interface, however, a good interface for status of this server
+
+## /config
+Displays JSON view of the configuration values the program is using.<br>
+**Note:** passwords are displayed as "(hidden)" if they were specified
+
 
 # Passthrough REST Endpoints
 These endpoints are not cached, rather, they are passed through directly to the Streams JMX Server API

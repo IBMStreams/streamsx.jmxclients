@@ -25,6 +25,9 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.internal.Console;
 import com.beust.jcommander.internal.DefaultConsole;
+import com.fasterxml.jackson.annotation.JsonGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import streams.metric.exporter.cli.ServerProtocolValidator;
 import streams.metric.exporter.cli.InstanceListConverter;
 import streams.metric.exporter.cli.LoglevelValidator;
@@ -71,7 +74,15 @@ public class ServiceConfig {
     private String user = getEnvDefault(Constants.ENV_USERNAME,Constants.DEFAULT_USERNAME);
     
     @Parameter(names = {"--password"}, description = Constants.DESC_PASSWORD, required = false)
+    @JsonIgnore
     private String password = getEnvDefault(Constants.ENV_PASSWORD,Constants.DEFAULT_PASSWORD);
+    @JsonGetter("password")
+    public String jsonPassword() { 
+    		if (getPassword() != null && !getPassword().isEmpty()) {
+    			return "(hidden)";
+    		}
+    		return "";
+    }
     
     @Parameter(names = { "-x", "--x509cert" }, description = Constants.DESC_X509CERT, required = false)
     private String x509Cert = getEnvDefault(Constants.ENV_X509CERT,Constants.DEFAULT_X509CERT);
@@ -95,7 +106,15 @@ public class ServiceConfig {
     private String serverKeystore = getEnvDefault(Constants.ENV_SERVER_KEYSTORE,Constants.DEFAULT_SERVER_KEYSTORE);
     
     @Parameter(names = "--serverkeystorepwd", description = Constants.DESC_SERVER_KEYSTORE_PWD, required = false)
+    @JsonIgnore
     private String serverKeystorePwd = getEnvDefault(Constants.ENV_SERVER_KEYSTORE_PWD,Constants.DEFAULT_SERVER_KEYSTORE_PWD);
+    @JsonGetter("serverKeystorePwd")
+    public String jsonserverKeystorePwd() { 
+    		if (getServerKeystorePwd() != null && !getServerKeystorePwd().isEmpty()) {
+    			return "(hidden)";
+    		}
+    		return "";
+    }
     
     @Parameter(names = { "-l", "--loglevel" }, description = Constants.DESC_LOGLEVEL, required = false, validateWith = LoglevelValidator.class)
     private String loglevel = getEnvDefault(Constants.ENV_LOGLEVEL, Constants.DEFAULT_LOGLEVEL);
@@ -118,6 +137,8 @@ public class ServiceConfig {
 
         return new String(console.readPassword(false));
     }
+    
+
 
     private String readPassword() {
         if (password == null) {
@@ -203,6 +224,7 @@ public class ServiceConfig {
     
     /* Derived based on precedence */
     /* Returns empty set if we want all instances */
+    @JsonIgnore
     public Set<String> getInstanceNameSet() {
     		HashSet<String> instanceNameSet = new HashSet<String>();
     		/* If a list is specified or ALL then use it */
@@ -398,7 +420,7 @@ public class ServiceConfig {
         			result.append(newline);
         		}
         } else {
-        		result.append("password: <hidden>");
+        		result.append("password: (hidden)");
         		result.append(newline);
         }
         result.append("x509cert: " + this.getX509Cert());

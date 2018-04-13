@@ -50,7 +50,7 @@ public class RootResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public Response getRoot() throws WebApplicationException {
-    	return Response.status(Response.Status.OK).entity("try using the /jobtracker or /prometheus url").build();
+    	return Response.status(Response.Status.OK).entity("try using the /streamsexporter or /prometheus url").build();
     }
 
     // if Domain does not exist, returns 404
@@ -75,6 +75,17 @@ public class RootResource {
     		
     }
 
+    @Path("config")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getConfiguration() throws StreamsTrackerException,
+            WebApplicationException {
+        StreamsDomainTracker domainTracker = StreamsDomainTracker
+                .getDomainTracker();
+
+        return Response.status(200).entity(domainTracker.getConfig())
+                .build();
+    }    
 
     // Internal debugging resource
     @Path("/{parameter: jobtracker|streamsexporter}")
