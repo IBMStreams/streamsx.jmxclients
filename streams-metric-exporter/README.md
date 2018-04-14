@@ -88,10 +88,10 @@ Usage: streams-metric-exporter [options]
       Default: [UNSPECIFIED]
     --jmxhttphost
       Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment
-      Variabler: STREAMS_EXPORTER_JMX_HTTP_HOST
+      Variable: STREAMS_EXPORTER_JMX_HTTP_HOST
     --jmxhttpport
       Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment
-      Variabler: STREAMS_EXPORTER_JMX_HTTP_PORT
+      Variable: STREAMS_EXPORTER_JMX_HTTP_PORT
     --jmxssloption
       SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
       Environment Variable:
