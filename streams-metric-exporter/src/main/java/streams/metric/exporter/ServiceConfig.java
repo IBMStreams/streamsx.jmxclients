@@ -399,6 +399,22 @@ public class ServiceConfig {
                     "Missing or incomplete credentials. Please select an authentication parameter (-u or -X509cert) or set environment variables: " +
                     		Constants.ENV_USERNAME + " or " + Constants.ENV_X509CERT);
         }
+        if ((port != null) && !(port.isEmpty())) {
+	        try {
+	        		Integer.parseInt(port);
+	        } catch (NumberFormatException e) {
+	        		throw new ParameterException(
+	        				"Invalid Port number(" + port + "). Must be an integer.");
+	        }
+        }
+        if ((jmxHttpPort != null) && !(jmxHttpPort.isEmpty())) {
+	        try {
+	        		Integer.parseInt(jmxHttpPort); 
+	        } catch (NumberFormatException e) {
+	        		throw new ParameterException(
+	        			"Invalid jmxHttpPort(" + jmxHttpPort + "). Must be an integer.");
+	        }
+        }
     }
 	
 	
