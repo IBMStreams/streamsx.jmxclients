@@ -41,6 +41,9 @@ public class AllJobMetrics {
     private String domainName;
     private String instanceName;
     private JmxServiceContext jmxContext;
+    // Avaiable to override default http host for large data retrievals
+    private String jmxHttpHost;
+    private String jmxHttpPort;
 
     //private InstanceMXBean instance;
     //private String protocol;
@@ -86,12 +89,14 @@ public class AllJobMetrics {
     }
 
     public AllJobMetrics(JmxServiceContext jmxContext, String domainName,
-            String instanceName) throws IOException,
+            String instanceName, String jmxHttpHost, String jmxHttpPort) throws IOException,
             StreamsTrackerException {
 
         this.domainName = domainName;
         this.instanceName = instanceName;
         this.jmxContext = jmxContext;
+        this.jmxHttpHost = jmxHttpHost;
+        this.jmxHttpPort = jmxHttpPort;
         //this.protocol = protocol;
 
         this.refresh();
@@ -177,7 +182,7 @@ public class AllJobMetrics {
         try {
             LOGGER.debug("Instance ({}) Metrics HTTP Retrieve from URI ({}) ...",this.instanceName,uri);
 
-            this.setAllMetrics(jmxContext.getWebClient().get(uri));
+            this.setAllMetrics(jmxContext.getWebClient().get(uri,this.jmxHttpHost,this.jmxHttpPort));
             this.setLastMetricsRefresh(new Date());
             this.setLastMetricsRefreshFailed(false);
 

@@ -94,6 +94,42 @@ public class WebClientImpl implements WebClient {
             throw new WebClientException(String.format("Failed GET request to uri %s", fromUri), e);
         }
     }
+    
+    public String get(String fromUri, String host, String port) throws WebClientException{
+    		String newUri = fromUri;
+    		// If either host or port need to be overridden
+    		boolean hostOverride = false;
+    		boolean portOverride = false;
+    		if ((host != null) && (!host.isEmpty())) {
+    			hostOverride = true;
+    		}
+    		if ((port != null) && (!port.isEmpty())) {
+    			portOverride = true;
+    		}
+    		if ((hostOverride) || (portOverride)) {
+    			LOG.debug("httpClient.get called to replace host and/or port of uri({}) with host: {}, port: {}",fromUri,host,port);
+	    		try {
+		        URL url = new URL(fromUri);
+		        String theHost = url.getHost();
+		        int thePort = url.getPort();
+		        
+		        if (hostOverride) {
+		        		theHost = host;
+		        }
+		        if (portOverride) {
+		        		thePort = Integer.parseInt(port);
+		        }
+		        
+		        URL newUrl = new URL(url.getProtocol(),theHost,thePort,url.getFile());
+		        newUri = newUrl.toString();
+		        LOG.debug("httpClient.get new uri: {}",newUri);
+	    		} catch (IOException e) {
+	            throw new WebClientException(String.format("Failed GET request to uri %s", fromUri), e);
+	    		}
+    		}
+    		return get(newUri);
+    }
+
 
     private static final String readFully(Reader r) throws IOException {
         StringBuilder sb = new StringBuilder();

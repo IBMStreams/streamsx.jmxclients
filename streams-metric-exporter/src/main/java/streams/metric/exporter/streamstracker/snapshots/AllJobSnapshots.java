@@ -41,6 +41,8 @@ public class AllJobSnapshots {
     private String domainName;
     private String instanceName;
     private JmxServiceContext jmxContext;
+    private String jmxHttpHost;
+    private String jmxHttpPort;
 
     //private InstanceMXBean instance;
     //private String protocol;
@@ -86,12 +88,14 @@ public class AllJobSnapshots {
     }
 
     public AllJobSnapshots(JmxServiceContext jmxContext, String domainName,
-            String instanceName) throws IOException,
+            String instanceName, String jmxHttpHost, String jmxHttpPort) throws IOException,
             StreamsTrackerException {
 
         this.domainName = domainName;
         this.instanceName = instanceName;
         this.jmxContext = jmxContext;
+        this.jmxHttpHost = jmxHttpHost;
+        this.jmxHttpPort = jmxHttpPort;
         //this.protocol = protocol;
 
         this.refresh();
@@ -177,7 +181,7 @@ public class AllJobSnapshots {
         try {
             LOGGER.debug("Instance ({}) Snapshots HTTP Retrieve from URI ({}) ...",this.instanceName,uri);
 
-            this.setAllSnapshots(jmxContext.getWebClient().get(uri));
+            this.setAllSnapshots(jmxContext.getWebClient().get(uri,this.jmxHttpHost,this.jmxHttpPort));
             this.setLastSnapshotRefresh(new Date());
             this.setLastSnapshotRefreshFailed(false);
 

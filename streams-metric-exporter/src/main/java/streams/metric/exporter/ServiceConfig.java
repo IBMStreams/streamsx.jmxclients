@@ -99,6 +99,12 @@ public class ServiceConfig {
     @Parameter(names = "--jmxssloption", description = Constants.DESC_JMX_SSLOPTION, required = false)
     private String sslOption = getEnvDefault(Constants.ENV_JMX_SSLOPTION,Constants.DEFAULT_JMX_SSLOPTION);
     
+    @Parameter(names = "--jmxhttphost", description = Constants.DESC_JMX_HTTP_HOST, required = false)
+    private String jmxHttpHost = getEnvDefault(Constants.ENV_JMX_HTTP_HOST,Constants.DEFAULT_JMX_HTTP_HOST);
+    
+    @Parameter(names = "--jmxhttpport", description = Constants.DESC_JMX_HTTP_PORT, required = false)
+    private String jmxHttpPort = getEnvDefault(Constants.ENV_JMX_HTTP_PORT,Constants.DEFAULT_JMX_HTTP_PORT);
+    
     @Parameter(names = "--serverprotocol", description = Constants.DESC_SERVER_PROTOCOL, required = false, validateWith = ServerProtocolValidator.class)
     private String serverProtocol = getEnvDefault(Constants.ENV_SERVER_PROTOCOL,Constants.DEFAULT_SERVER_PROTOCOL);
     
@@ -309,10 +315,25 @@ public class ServiceConfig {
 	public void setSslOption(String sslOption) {
 		this.sslOption = sslOption;
 	}
+	
 
-	//public String getServerProtocol() {
-	//	return serverProtocol;
-	//}
+	public String getJmxHttpHost() {
+		return jmxHttpHost;
+	}
+
+	public void setJmxHttpHost(String jmxHttpHost) {
+		this.jmxHttpHost = jmxHttpHost;
+	}
+
+	public String getJmxHttpPort() {
+		return jmxHttpPort;
+	}
+
+	public void setJmxHttpPort(String jmxHttpPort) {
+		this.jmxHttpPort = jmxHttpPort;
+	}
+
+
 
 	public void setServerProtocol(String serverProtocol) {
 		this.serverProtocol = serverProtocol;
@@ -378,6 +399,22 @@ public class ServiceConfig {
                     "Missing or incomplete credentials. Please select an authentication parameter (-u or -X509cert) or set environment variables: " +
                     		Constants.ENV_USERNAME + " or " + Constants.ENV_X509CERT);
         }
+        if ((port != null) && !(port.isEmpty())) {
+	        try {
+	        		Integer.parseInt(port);
+	        } catch (NumberFormatException e) {
+	        		throw new ParameterException(
+	        				"Invalid Port number(" + port + "). Must be an integer.");
+	        }
+        }
+        if ((jmxHttpPort != null) && !(jmxHttpPort.isEmpty())) {
+	        try {
+	        		Integer.parseInt(jmxHttpPort); 
+	        } catch (NumberFormatException e) {
+	        		throw new ParameterException(
+	        			"Invalid jmxHttpPort(" + jmxHttpPort + "). Must be an integer.");
+	        }
+        }
     }
 	
 	
@@ -430,6 +467,10 @@ public class ServiceConfig {
         result.append("jmxtruststore: " + getTruststore());
         result.append(newline);
         result.append("jmxssloption: " + getSslOption());
+        result.append(newline);
+        result.append("jmxhttphost: " + getJmxHttpHost());
+        result.append(newline);
+        result.append("jmxhttpport: " + getJmxHttpPort());
         result.append(newline);
         result.append("serverprotocol: " + getServerProtocol().toString());
         result.append(newline);
