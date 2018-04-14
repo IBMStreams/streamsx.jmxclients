@@ -26,11 +26,12 @@ bmwilli@us.ibm.com
 1. [Building streams-metric-exporter](#building-the-application)
 2. [Command line options](#command-line-options)
 3. [Running streams-metric-exporter](#running-the-application)
-4. [Prometheus Integration](#prometheus-integration)
-5. [Grafana Dashboard Example](#grafana-examples)
-6. [Running with Docker](#running-with-docker)
-7. [Cached REST endpoints](#cached-rest-endpoints)
-8. [Passthrough REST endpoints](#passthrough-rest-endpoints)
+4. [Logging](#logging)
+5. [Redirecting JMX HTTP URLs](#redirecting-jmx-http-urls)
+6. [Prometheus Integration](#prometheus-integration)
+7. [Running with Docker](#running-with-docker)
+8. [Cached REST endpoints](#cached-rest-endpoints)
+9. [Passthrough REST endpoints](#passthrough-rest-endpoints)
 
 # Building the application
 
@@ -85,6 +86,12 @@ Usage: streams-metric-exporter [options]
       is not set.
       Envrionment Variable: STREAMS_EXPORTER_INSTANCE_LIST
       Default: [UNSPECIFIED]
+    --jmxhttphost
+      Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment
+      Variabler: STREAMS_EXPORTER_JMX_HTTP_HOST
+    --jmxhttpport
+      Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment
+      Variabler: STREAMS_EXPORTER_JMX_HTTP_PORT
     --jmxssloption
       SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
       Environment Variable:
@@ -104,7 +111,7 @@ Usage: streams-metric-exporter [options]
     -l, --loglevel
       Logging level [ fatal | error | warn | info | debug | trace ]
       Environment Variable: STREAMS_EXPORTER_LOGLEVEL
-      Default: info
+      Default: trace
     --noconsole
       Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.
       Default: false
@@ -157,16 +164,16 @@ password: <enter streamsadmin password>
 ```
 The ``--instancelist`` option allows the specification of 0 or more instances.  If none or chosen or it is set to the value ``ALL`` then all instances metrics will be exported.  In addition, instances are created and removed, the cooresponding metrics will be added and removed.  If, however, you specify a specific list of instances, then any addtional instances that exist in the domain or are created after the application is started WILL NOT be included in the exported set.
 
-## Logging
+# Logging
 Logging is performed through the log4j 1.2 facility. There are two arguments to control logging.
 
 | argument | env | default | description |
 |:---------|:----|:--------|:------------|
 |--logdir|STREAM_EXPORTER_LOGDIR|undefined<br>(stdout)|If this argument is undefined log messages are sent to the **console** (stdout).<br>If this argument is present then a rolling logfile is created in the directory specified with the name of the logfile: **StreamsMetricExporter.log**|
-|--loglevel|STREAMS_EXPORTER_LOGLEVEL|info|fatal,error,warn,info,debug,trace<br>**note:** debug level contains timing messages
+|--loglevel|STREAMS_EXPORTER_LOGLEVEL|info|fatal,error,warn,info,debug,trace<br>**note:** debug level contains timing messages|
 
 
-### Adding to the default logging
+## Adding to the default logging
 If you wish to configure your own logging (in addition to that which the application already does), create a log4j.properties file and point to it using the log4j.configuration java property.  For example:
 ```
 java -Dlog4j.configuration=file:${PWD}/log4j.properties -jar target/executable-streams-metric-exporter.jar -j \
@@ -175,6 +182,35 @@ StreamsInstance -u streamsadmin
 ```
 This would be useful in situations when you want to log to both the console and a file.<br>
 **Note:** The log level will still be set by the command line argument or environment variable, NOT the rootlogger value in your log4j.properties.
+
+# Redirecting JMX HTTP URLs
+There are some configurations where you will need to override the URLs returned for large data sets to be pulled from IBM Streams over Http.
+<br>
+There are two arguments that can be used to overwrite the JMX Http URL that is used for large data objects.
+
+| argument | env | default | description |
+|:---------|:----|:--------|:------------|
+|--jmxhttphost|STREAM_EXPORTER_JMX_HTTP_HOST|undefined|Host name or IP Address<br>If this argument is specified the host field of the JMX Http URL will be replaced with this value|
+|--jmxhttpport|STREAMS_EXPORTER_JMX_HTTP_PORT|undefined|Port number<br>If this argument is specified the port field of the JMX Http URL will be replaced with this value|
+
+
+## JMX HTTP Host and Port redirection examples and Kubernetes
+IBM Streams JMX API has several calls that return urls that are to be used by an HTTP Get request to pull back large data items.  Examples used in this application include: `snapshotJobMetrics()` and `snapshotJobs()`.
+
+The default configuration of IBM Streams uses a random port for the JMX Http Server.  To override this and set a specific port set the following IBM Streams properties:
+
+| Streams Version | Property Type | Property |
+|:----------------|:--------------|:---------|
+| 4.2.1.3 & earlier | Instance | sam.jmxHttpPort |
+| 4.2.4 & later | Domain | jmx.httpPort |
+
+In cases where the Streams JMX Server is running inside of a container or environment with private IP addresses and a gateway, the URLs returned from these calls will use the host and port of the internal address of the JMX Http Port.  In addition, the default configuration of Streams will use a random port at startup for the JMX Http Server.
+
+Using the `--jmxhttphost` and `--jmxhttpport` arguments or environment variables an be used to override the URL before the HTTP Get request is performed.
+
+Logging at the `debug` level will provide messages showing thge URLs before and after the override.
+
+When the Streams domain is running inside of Kubernetes, and the Streams metric export is running outside of the Kubernetes cluster, Kubernetes Service Objects are used to map external facing hostnames and ports to internal pod hosts (ip address) and ports.  The JMX HTTP Host and Port override arguments can be used to get around this issue.  Provide the Kubernetes external cluster hostname and the NodePort of the service as the arguments for Streams Metric Exporter.
 
 # Prometheus Integration
 

@@ -48,6 +48,7 @@ import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
 import com.ibm.streams.management.job.OperatorOutputPortMXBean;
 
+import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.jmx.MXBeanSource;
@@ -62,6 +63,7 @@ public class JobDetails implements NotificationListener {
 	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 
 	private StreamsInstanceTracker monitor;
+	private ServiceConfig config = null;
 	private String streamsInstanceName;
 	private BigInteger jobid;
 	private JobMXBean jobBean;
@@ -102,6 +104,7 @@ public class JobDetails implements NotificationListener {
 	
 	public JobDetails(StreamsInstanceTracker monitor, BigInteger jobid, JobMXBean jobBean) {
 		this.monitor = monitor;
+		this.config = monitor.getConfig();
 
 		//try {
 			this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
@@ -532,7 +535,7 @@ public class JobDetails implements NotificationListener {
 			stopwatch.reset();
 			stopwatch.start();
 			// set up trust manager
-			newSnapshot.append(monitor.getContext().getWebClient().get(uri));
+			newSnapshot.append(monitor.getContext().getWebClient().get(uri,this.config.getJmxHttpHost(),this.config.getJmxHttpPort()));
 
 			stopwatch.stop();
 			timers.put("connect and retrieve snapshot", stopwatch.getTime());

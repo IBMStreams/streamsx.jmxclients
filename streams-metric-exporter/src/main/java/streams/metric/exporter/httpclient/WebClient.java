@@ -28,4 +28,13 @@ public interface WebClient {
      * @throws WebClientException if the HTTP operation fails
      */
     String get(String fromUri) throws WebClientException;
+    
+    /**
+     * Gets data via HTTP GET and overrides original fromUri host and/or port field
+     * @param fromUri
+     * @param host
+     * @return
+     * @throws WebClientException
+     */
+    String get(String fromUri, String host, String port) throws WebClientException;
 }

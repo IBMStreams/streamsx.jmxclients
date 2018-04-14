@@ -51,6 +51,8 @@ import com.ibm.streams.management.OperationListenerMXBean;
 import com.ibm.streams.management.OperationStatusMessage;
 import com.ibm.streams.management.instance.InstanceMXBean;
 import com.ibm.streams.management.job.JobMXBean;
+
+import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.jmx.JmxServiceContext;
@@ -85,6 +87,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + StreamsInstanceTracker.class.getName());
 
+    private ServiceConfig config = null;
     private JmxServiceContext jmxContext;
     private String protocol;
 
@@ -131,8 +134,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      ***************************************************************************/
     public StreamsInstanceTracker(JmxServiceContext jmxContext,
             String domainName, String instanceName,
-            String protocol) throws StreamsTrackerException {
+            String protocol, ServiceConfig config) throws StreamsTrackerException {
         LOGGER.debug("** Initializing StreamsInstanceTracker for: " + instanceName);
+        this.config = config;
         this.jmxContext = jmxContext;
         this.domainName = domainName;
         this.instanceInfo.setInstanceName(instanceName);
@@ -362,7 +366,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                 if (allJobSnapshots == null) {
                     allJobSnapshots = new AllJobSnapshots(this.jmxContext,
                             this.domainName,
-                            this.instanceInfo.getInstanceName());
+                            this.instanceInfo.getInstanceName(),
+                            this.config.getJmxHttpHost(),
+                            this.config.getJmxHttpPort());
                 } else {
                     allJobSnapshots.clear();
                 }
@@ -403,7 +409,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                 if (allJobMetrics == null) {
                     allJobMetrics = new AllJobMetrics(this.jmxContext,
                             this.domainName,
-                            this.instanceInfo.getInstanceName());
+                            this.instanceInfo.getInstanceName(),
+                            this.config.getJmxHttpHost(),
+                            this.config.getJmxHttpPort());
                 } else {
                     allJobMetrics.clear();
                 }
@@ -964,7 +972,17 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      
     
     
-    public MetricsExporter getMetricsExporter() {
+    public ServiceConfig getConfig() {
+		return config;
+	}
+
+
+	public void setConfig(ServiceConfig config) {
+		this.config = config;
+	}
+
+
+	public MetricsExporter getMetricsExporter() {
     	return metricsExporter;
     }
     

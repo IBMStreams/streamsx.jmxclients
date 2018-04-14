@@ -594,7 +594,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 					StreamsInstanceTracker newInstanceTracker = new StreamsInstanceTracker(this.jmxContext,
 							this.domainName,
 							instanceName,
-							this.protocol);
+							this.protocol,
+							this.config);
 					
 					this.instanceTrackerMap.addInstanceTrackerToMap(instanceName, newInstanceTracker);
 				} catch (StreamsTrackerException e) {
