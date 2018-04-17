@@ -30,7 +30,7 @@ under the License.
 	<fileSets>
 		<fileSet>
 			<directory>${basedir}/target</directory>
-			<outputDirectory>bin</outputDirectory>
+			<outputDirectory>target</outputDirectory>
 			<includes>
 				<include>executable-streams-metric-exporter.jar</include>
 			</includes>
@@ -61,6 +61,9 @@ under the License.
 			<includes>
 				<include>*</include>
 			</includes>
+			<excludes>
+				<exclude>.env</exclude>
+			</excludes>
 			<lineEnding>unix</lineEnding>
 			<fileMode>644</fileMode>
 		</fileSet>
@@ -73,6 +76,14 @@ under the License.
 	    <lineEnding>unix</lineEnding>
 	    <fileMode>644</fileMode>
 	  </fileSet>
+		<fileSet>
+			<directory>${basedir}</directory>
+			<includes>
+				<include>runsample.sh</include>
+			</includes>
+			<lineEnding>unix</lineEnding>
+			<fileMode>755</fileMode>
+		</fileSet>
 	</fileSets>
 <!--	<files>
 	  <file>
