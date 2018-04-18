@@ -37,7 +37,7 @@ under the License.
 			<lineEnding>keep</lineEnding>
 			<fileMode>644</fileMode>
 		</fileSet>
-	  <fileSet>
+	  <!--<fileSet>
 	    <directory>${basedir}/scripts</directory>
 	    <outputDirectory>scripts</outputDirectory>
 	    <includes>
@@ -45,7 +45,7 @@ under the License.
 	    </includes>
 	    <lineEnding>unix</lineEnding>
 	    <fileMode>744</fileMode>
-	  </fileSet>
+	  </fileSet> -->
 		<fileSet>
 			<directory>${basedir}/dashboards</directory>
 			<outputDirectory>dashboards</outputDirectory>
@@ -70,6 +70,15 @@ under the License.
 	  <fileSet>
 	    <directory>${basedir}/prometheus</directory>
 	    <outputDirectory>prometheus</outputDirectory>
+	    <includes>
+	      <include>*</include>
+	    </includes>
+	    <lineEnding>unix</lineEnding>
+	    <fileMode>644</fileMode>
+	  </fileSet>
+		<fileSet>
+	    <directory>${basedir}/grafana</directory>
+	    <outputDirectory>grafana</outputDirectory>
 	    <includes>
 	      <include>*</include>
 	    </includes>
