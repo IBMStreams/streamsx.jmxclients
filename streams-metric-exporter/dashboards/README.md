@@ -2,6 +2,8 @@
 
 These were created using Grafana version 4.6.2 Docker Image
 
+These dashboard files can also be pointed to by a Grafana 5 dashboard provisioning file.
+
 The dashboards included are just samples.  The Streams Metric Exporter solution captures all of the metrics in Prometheus, thus allowing dashboards to be created that focus on different aspects of IBM Streams and different users.  Possibilities include:
 
 * Domain summarization
@@ -12,11 +14,6 @@ The dashboards included are just samples.  The Streams Metric Exporter solution 
 * Domain Administrator view
 * Application Developer view
 
-This version of Grafana had two different formats for loading dashboards:
-
-1. `GUI Import`: This is the mechanism where you choose a file or copy/paste the json for the dashboard into the GUI dialog box
-
-2. `API Create`: This mechanism is the REST API, and uses a more explicit version of the format, which includes the data source pointer.
 
 ## IBM Streams Domain Dashboard
 
@@ -65,7 +62,5 @@ Metrics used include:
 
 | Filename | Description     |
 | :------------- | :------------- |
-| IBMStreamsDomainDashboard_apiCreate.json       | Use the REST API to load this dashboard into Grafana.<br>Requires datasource named: Prometheus       |
-| IBMStreamsDomainDashboard_guiImport.json | Use GUI Dashboard Import dialogue box.<br>Allows you to select the datasource name in the import dialogue
-| IBMStreamsInstanceDashboard_apiCreate.json       | Use the REST API to load this dashboard into Grafana.<br>Requires datasource named: Prometheus       |
-| IBMStreamsInstanceDashboard_guiImport.json | Use GUI Dashboard Import dialogue box.<br>Allows you to select the datasource name in the import dialogue
+| IBMStreamsDomainDashboard.json | Use GUI Dashboard Import dialogue box.<br>Allows you to select the datasource name in the import dialogue
+| IBMStreamsInstanceDashboard.json | Use GUI Dashboard Import dialogue box.<br>Allows you to select the datasource name in the import dialogue
