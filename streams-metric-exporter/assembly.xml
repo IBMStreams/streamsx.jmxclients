@@ -79,9 +79,9 @@ under the License.
 		<fileSet>
 	    <directory>${basedir}/grafana</directory>
 	    <outputDirectory>grafana</outputDirectory>
-	    <includes>
+	    <!--<includes>
 	      <include>*</include>
-	    </includes>
+	    </includes>-->
 	    <lineEnding>unix</lineEnding>
 	    <fileMode>644</fileMode>
 	  </fileSet>
