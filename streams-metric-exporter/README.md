@@ -310,6 +310,8 @@ The easiest way to try out the Streams Metric Exporter is to run it using Docker
 
 The versions of Prometheus and Grafana specified in the docker-compose.yml file are those that were used for testing.
 
+The current version uses Docker 5.0 and its new provisioning capabilities to create the initial datasource pointing to prometheus and initial general purpose dashboards for Streams domains and instances.
+
 ## Prerequisites
 
 * Compiled version of Streams Metric Exporter (executable-streams-metric-exporter.jar)
@@ -318,8 +320,8 @@ The versions of Prometheus and Grafana specified in the docker-compose.yml file 
 * Docker Compose (version 1.9.0-5 with .yml file format 2 used in development)
 * Access to Dockerhub or local repository with Images:
   * ibmjava:sfj-alpine (or any 1.8 version)
-  * prom/prometheus (2.0.0 used in development)
-  * grafana/grafana (4.6.1 used in development)
+  * prom/prometheus (2.1.0 used in development)
+  * grafana/grafana (5.0.4 used in development)
 
 ## Setup environment
 
@@ -346,39 +348,27 @@ export STREAMS_DOMAIN_ID=<domain id>
 docker-compose build
 docker-compose up
 ```
-6. Create Prometheus data source in grafana
-```bash
-../scripts/create_datasource.sh
-```
-7. Import sample dashboard into Grafana
-```
-../scripts/import_dashboard.sh ../dashboards/StreamsSampleDashboard_apiCreate.json
-```
-8. Open Grafana in browswer
+6. Open Grafana in browswer
 ```
 http://localhost:3000
 ```
-9. Login with default username/password
+7. Login with default username/password
 ```
 admin/admin
 ```
-10. Navigate to Home Dashboard
+8. Navigate to Home Dashboard
 ```
 IBM Streams Sample Dashboard
 ```
-11. View raw metrics output from /prometheus endpoint
+9. View raw metrics output from /prometheus endpoint
 ```
-http://localhost:25500
+http://localhost:25500/prometheus
 ```
-12. Query the prometheus ui
+10. Query the prometheus ui
 ```
 http://localhost:9090
 ```
-13. Attach to the streamsexporter instance and tail the more detailed logfile
-```
-docker exec -it docker_streamsexporter_1 /bin/ash
-# tail -f StreamsMetricExporter.log
-```
+
 
 # Cached REST endpoints
 The original version of streams-metric-exporter provided REST endpoints that returned json information.  The REST endpoints are still available in this version.  The reason to use these REST endpoints over those available directly from IBM Streams is that by default the auto-refresh is used, and these endpoints only retrieve from the metrics cached in the streams-metric-exporter.  Beware, however, if you turn auto-refresh off (--refresh 0) then each of these access points will cause the metrics to be pulled from the Streams JMX Server.
