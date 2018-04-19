@@ -293,15 +293,15 @@
           "type": "table"
         },
         {
-          "headings": true,
+          "headings": false,
           "id": 7,
           "limit": 10,
           "links": [],
-          "query": "",
+          "query": "IBM Streams",
           "recent": false,
-          "search": false,
+          "search": true,
           "span": 4,
-          "starred": true,
+          "starred": false,
           "tags": [],
           "title": "Dashboards",
           "type": "dashlist"
@@ -970,7 +970,7 @@
           }
         ],
         "query": "label_values(instancename)",
-        "refresh": 0,
+        "refresh": 2,
         "regex": "",
         "sort": 0,
         "tagValuesQuery": "",
