@@ -457,19 +457,17 @@ List of job names and ids along with links to details about the job
 
 ```json
 {
-
-    "total": 1,
-    "jobs": [
-        {
-            "name": "SimpleJob_0",
-            "id": 0,
-            "metrics": "http://localhost:25500/instances/StreamsInstance/jobs/0/metrics",
-            "jobInfo": "http://localhost:25500/instances/StreamsInstance/jobs/0",
-            "snapshot": "http://localhost:25500/instances/StreamsInstance/jobs/0/snapshot"
-            "snapshotnow": "http://localhost:25500/instances/StreamsInstance/jobs/0/snapshotnow"
-        }
-    ]
-
+  "total": 1,
+  "jobs": [
+    {
+      "snapshotnow": "http://localhost:25500/instances/StreamsInstance/jobs/0/snapshotnow",
+      "name": "MultiPEJob",
+      "id": 0,
+      "metrics": "http://localhost:25500/instances/StreamsInstance/jobs/0/metrics",
+      "jobInfo": "http://localhost:25500/instances/StreamsInstance/jobs/0",
+      "snapshot": "http://localhost:25500/instances/StreamsInstance/jobs/0/snapshot"
+    }
+  ]
 }
 ```
 
@@ -491,7 +489,8 @@ Health of a single job
 ## /instances/{instancename}/jobs/{jobid}/metrics
 Metrics of a single job
 
-
+## /instances/{instancename}/jobs/{jobid}/snapshots
+Snapshot of a single job
 
 ## /instances/{instancename}/jobs
 Array of all jobs in the instance along with job information and the metrics for each job
@@ -518,7 +517,7 @@ Displays JSON view of the configuration values the program is using.<br>
 # Passthrough REST Endpoints
 These endpoints are not cached, rather, they are passed through directly to the Streams JMX Server API
 
-## instances/{instancename}/jobs/{jobid}/snapshot
+## instances/{instancename}/jobs/{jobid}/snapshotnow
 
 Calls the snapshot() jmx method on the specified job
 
