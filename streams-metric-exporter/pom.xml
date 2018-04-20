@@ -222,6 +222,7 @@ under the License.
 								<!-- <include>jmxremote_optional.jar</include> -->
 								<!-- </includes> -->
 								<!-- </resource> -->
+<!--
 								<resource>
 									<directory>${STREAMS_INSTALL}/lib</directory>
 									<includes>
@@ -229,6 +230,7 @@ under the License.
 										<include>com.ibm.streams.management.mx.jar</include>
 									</includes>
 								</resource>
+-->
 <!--
 								<resource>
 									<directory>${STREAMS_INSTALL}/ext/lib</directory>
