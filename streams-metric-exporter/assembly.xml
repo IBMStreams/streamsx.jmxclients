@@ -89,6 +89,9 @@ under the License.
 			<directory>${basedir}</directory>
 			<includes>
 				<include>runsample.sh</include>
+				<include>LICENSE</include>
+				<include>REDIST.IBM</include>
+				<include>README.md</include>
 			</includes>
 			<lineEnding>unix</lineEnding>
 			<fileMode>755</fileMode>
