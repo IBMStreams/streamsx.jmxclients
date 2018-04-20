@@ -8,9 +8,11 @@ This version provides 2 HTTP/HTTPS interfaces:
 
 IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pulls) that is capable of providing status of the Streams instance, deployed streaming application (jobs), and cluster resources.  In addition, metrics are available via the Streams JMX Server.
 
-The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.
-It is meant to be used as a Streams Application Metrics exporter.  It is not meant to monitor the internal system services of IBM Streams.
-This application improves performance over per-job metric scraping by periodically (optionally on-demand) pulling all job metrics (via the JMX Server HTTP callbacks) and caching them.  Users can use the REST endpoints (including Prometheus endpoint) to get metrics and status of specific jobs.
+The service supports user-defined custom metrics that are found with Streams jobs.  These custom metrics do not have to be predefined within the Streams Metric Exporter.  They are automatically discovered and made available as Prometheus metrics and in the REST JSON.
+
+The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.<br>
+The original use case for this application was as a Streams Application Metrics exporter.  It is not meant to monitor the internal system services of IBM Streams.  It does, however, provide metrics and status of domains, instances, and resources which do give a operations view of the health of your system.<br>
+This application is **optimized** for better performance over per-job metric scraping approaches.  The metrics and status are pulled from IBM Streams for all job metrics and status (via the JMX Server HTTP callbacks). The pulls from IBM STreams can be performed whenever a rest endpoint is hit (on-demand) or scheduled to be pulled and cached with a configurable interval.  Users can use the REST endpoints (including Prometheus endpoint) to get metrics and status of specific jobs, thus providing granular access to the information without sacrificing performance and impacting the services of IBM Streams.
 
 The service can be configured with periodic refresh (refresh rate > 0) or on-demand refresh (refresh rate == 0) when the HTTP/HTTPS endpoints are accessed.
 
@@ -36,7 +38,7 @@ bmwilli@us.ibm.com
 # Building the application
 
 ## Install Dependencies
-This application does NOT need to be compiled on a system with IBM Streams installed.  The lib folder contains to redistributable .jar files from IBM Streams that must be installed into your local maven repository.
+This application does NOT need to be compiled on a system with IBM Streams installed.  The lib folder contains two redistributable .jar files from IBM Streams that must be installed into your local maven repository.
 
 There is a Makefile included that will do this installation.
 
@@ -246,6 +248,7 @@ Examples
 ```
 streams_operator_ip_nTuplesProcessed
 streams_job_max_congestionFactor
+streams_operator_myCustomMetric
 ```
 
 | Metric Name Prefix | Description |
@@ -258,7 +261,7 @@ streams_job_max_congestionFactor
 | **streams_pe_ip_**|streams pe input port metrics|
 | **streams_pe_op_**|streams pe output port metrics|
 | **streams_pe_op_connection_**|streams pe output port connection metrics|
-| **streams_operator_**|streams operator metrics|
+| **streams_operator_**|streams operator metrics<br>**Includes custom metrics**|
 | **streams_operator_ip_**|streams operator input port metrics|
 | **streams_operator_op_**|streams operatore output port metrics|
 
