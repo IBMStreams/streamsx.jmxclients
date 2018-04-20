@@ -53,20 +53,32 @@ under the License.
 			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
+<!--
 		<dependency>
 			<groupId>ibmstreams</groupId>
 			<artifactId>com.ibm.streams.management.jmxmp.jar</artifactId>
 			<version>4.x</version>
 			<scope>system</scope>
-			<systemPath>${STREAMS_INSTALL}/lib/com.ibm.streams.management.jmxmp.jar</systemPath>
+			<systemPath>${basedir}/lib/com.ibm.streams.management.jmxmp.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>ibmstreams</groupId>
 			<artifactId>com.ibm.streams.management.mx.jar</artifactId>
 			<version>4.x</version>
 			<scope>system</scope>
-			<systemPath>${STREAMS_INSTALL}/lib/com.ibm.streams.management.mx.jar</systemPath>
+			<systemPath>${basedir}/lib/com.ibm.streams.management.mx.jar</systemPath>
 		</dependency>
+-->
+<dependency>
+	<groupId>com.ibm.streams.management</groupId>
+	<artifactId>jmxmp</artifactId>
+	<version>4</version>
+</dependency>
+<dependency>
+	<groupId>com.ibm.streams.management</groupId>
+	<artifactId>mx</artifactId>
+	<version>4</version>
+</dependency>
 <!--
 		<dependency>
 			<groupId>test</groupId>

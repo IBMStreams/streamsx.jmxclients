@@ -35,14 +35,14 @@ bmwilli@us.ibm.com
 
 # Building the application
 
-## Dependencies
-The build location must be a linux node with IBM Streams installed.
+## Install Dependencies
+This application does NOT need to be compiled on a system with IBM Streams installed.  The lib folder contains to redistributable .jar files from IBM Streams that must be installed into your local maven repository.
 
-The environment variable (STREAMS_INSTALL) must be set.
+There is a Makefile included that will do this installation.
 
-The pom.xml file references the IBM Streams JMX API classes in the product directory.
-
-Another option is to copy the necessary files to the local machine and modify the pom.xml files
+```
+make setup
+```
 
 ## Compiling the application
 ```
@@ -52,6 +52,10 @@ mvn compile
 ## Create executable .jar with dependencies included
 ```
 mvn package
+```
+or
+```
+make package
 ```
 Location will be: target/executable-streams-metric-exporter.jar
 
