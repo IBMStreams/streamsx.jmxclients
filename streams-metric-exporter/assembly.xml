@@ -90,11 +90,17 @@ under the License.
 			<includes>
 				<include>runsample.sh</include>
 				<include>LICENSE</include>
-				<include>REDIST.IBM</include>
 				<include>README.md</include>
 			</includes>
 			<lineEnding>unix</lineEnding>
 			<fileMode>755</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>${basedir}/lib</directory>
+			<outputDirectory>.</outputDirectory>
+			<includes>
+				<include>REDIST.IBM</include>
+			</includes>
 		</fileSet>
 	</fileSets>
 <!--	<files>
