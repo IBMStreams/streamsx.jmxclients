@@ -1,9 +1,11 @@
-# Use when Streams Domain is not on the same Docker Host
-# For example:
-#   Streams on bare-metal
-#   Streams on a VM
-#   Streams in Docker on another host
-#   Streams on Kubernetes (Kubernetes networking is different than Docker)
+# Use when connecting to Docker Streams Quick Start Edition 4.2.4+
+# on the same host
+# Docker Networking is constantly evolving but at the time of writing
+# version 17.0.x-ce required using the bridge network with 
+# Docker Streams Quick Start Edition.
+#
+# streamsexporter .env file should point to the Streams containername:
+#   streamsdocker4240 (or current name)
 
 version: '2'
 volumes:
@@ -20,6 +22,9 @@ services:
      - 25500:25500
     environment:
       - STREAMS_DOMAIN_ID
+    network_mode: "bridge"
+    external_links:
+     - streamsdocker4240
   prometheus:
     image: "prom/prometheus:v2.1.0"
     ports:
@@ -27,6 +32,9 @@ services:
     volumes:
      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
      - prometheus_data:/prometheus
+    network_mode: "bridge"
+    links:
+     - streamsexporter
   grafana:
     image: "grafana/grafana:5.0.4"
     ports:
@@ -35,3 +43,6 @@ services:
      - ../grafana:/etc/grafana
      - ../dashboards:/streams/sample/dashboards:ro
      - grafana_data:/var/lib/grafana
+    network_mode: "bridge"
+    links:
+     - prometheus
