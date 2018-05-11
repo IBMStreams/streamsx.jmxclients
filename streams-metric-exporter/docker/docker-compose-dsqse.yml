@@ -24,7 +24,7 @@ services:
       - STREAMS_DOMAIN_ID
     network_mode: "bridge"
     external_links:
-     - streamsdocker4240
+     - streamsdocker4240:streamsqse
   prometheus:
     image: "prom/prometheus:v2.1.0"
     ports:
