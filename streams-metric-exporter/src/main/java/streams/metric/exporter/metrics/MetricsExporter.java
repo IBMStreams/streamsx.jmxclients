@@ -61,13 +61,13 @@ public abstract class MetricsExporter {
 		INSTANCE("streams_instance_", new String[] { "domainname","instancename" }),
 		RESOURCE("streams_resource_", new String[] { "domainname","instancename", "resource"}),
 		JOB("streams_job_",new String[] { "domainname","instancename", "jobname" }),
-		PE("streams_pe_",new String[] { "domainname", "instancename", "jobname", "peid"}),
-		PE_INPUTPORT("streams_pe_ip_",new String[] {"domainname","instancename", "jobname","peid","index"}),
-		PE_OUTPUTPORT("streams_pe_op_",new String[] {"domainname","instancename","jobname","peid","index"}),
-		PE_OUTPUTPORT_CONNECTION("streams_pe_op_connection_",new String[] {"domainname","instancename","jobname","peid","index","connectionid"}),
-		OPERATOR("streams_operator_",new String[] { "domainname","instancename", "jobname", "peid", "operatorname" }), 
-		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "domainname","instancename", "jobname", "peid", "operatorname", "inputportname" }), 
-		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "domainname","instancename", "jobname", "peid", "operatorname","outputportname" });
+		PE("streams_pe_",new String[] { "domainname", "instancename", "jobname", "resource", "peid"}),
+		PE_INPUTPORT("streams_pe_ip_",new String[] {"domainname","instancename", "jobname", "resource", "peid","index"}),
+		PE_OUTPUTPORT("streams_pe_op_",new String[] {"domainname","instancename","jobname", "resource", "peid","index"}),
+		PE_OUTPUTPORT_CONNECTION("streams_pe_op_connection_",new String[] {"domainname","instancename","jobname","resource","peid","index","connectionid"}),
+		OPERATOR("streams_operator_",new String[] { "domainname","instancename", "jobname", "resource", "peid", "operatorname" }), 
+		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "domainname","instancename", "jobname", "resource", "peid", "operatorname", "inputportname" }), 
+		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "domainname","instancename", "jobname", "resource", "peid", "operatorname","outputportname" });
 
 		private final String metric_prefix;
 		private final String[] labels;

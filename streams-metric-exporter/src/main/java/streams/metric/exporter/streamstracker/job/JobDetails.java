@@ -47,6 +47,7 @@ import com.ibm.streams.management.job.JobMXBean;
 import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
 import com.ibm.streams.management.job.OperatorOutputPortMXBean;
+import com.ibm.streams.management.job.PeMXBean;
 
 import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
@@ -97,6 +98,7 @@ public class JobDetails implements NotificationListener {
 	// Control over complete refresh of job required before next refresh
 	private boolean jobTopologyRefreshRequired = false;
 
+	private final Map<BigInteger, String> peResourceMap = new HashMap<BigInteger, String>();
 	private final Map<String, Map<Integer, String>> operatorInputPortNames = new HashMap<String, Map<Integer, String>>();
 	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
 
@@ -168,9 +170,10 @@ public class JobDetails implements NotificationListener {
 		}
 
 		try {
+			mapResources(beanSource);
 			mapPortNames(beanSource);
 		} catch (Exception e) {
-			String message = "Unable to create port name map";
+			String message = "Unable to create resource or operator port names";
 			LOGGER.error(message, e);
 
 			throw new IllegalStateException(e);
@@ -178,6 +181,9 @@ public class JobDetails implements NotificationListener {
 	}
 	
 
+	// Topology Refreshes could occur because of:
+	//   Dynamic UDP update (New PE's)
+	//   PE Relocation (need to update resourceMap)
 	private void handleTopologyRefresh() {
 		if (this.jobTopologyRefreshRequired) {
 			LOGGER.debug("Topology refresh required on job");
@@ -194,9 +200,12 @@ public class JobDetails implements NotificationListener {
 
 			// Reset the port mappings as this will change when a topology change occurs
 			try {
+				MXBeanSource beanSource = monitor.getContext().getBeanSourceProvider().getBeanSource();
+				this.mapResources(beanSource);
+
 				operatorInputPortNames.clear();
 				operatorOutputPortNames.clear();
-				this.mapPortNames(monitor.getContext().getBeanSourceProvider().getBeanSource());
+				this.mapPortNames(beanSource);
 			} catch (IOException e) {
 				// Assuming this means that JMX connection was lost, mark
 				// everything as unavailable
@@ -236,8 +245,8 @@ public class JobDetails implements NotificationListener {
 		// If topology has changed we need to reset a few things
 		handleTopologyRefresh();
 
-		// Resolve portnames and store locally
-		this.jobMetrics = resolvePortNames(jobMetrics);
+		// Resolve resources and portnames and update stored json
+		this.jobMetrics = resolveMappings(jobMetrics);
 		updateExportedMetrics();
 	}
 	
@@ -638,6 +647,19 @@ public class JobDetails implements NotificationListener {
     	}
 	}
 
+	// Create mapping of peid to resource name it is running on
+	private void mapResources(MXBeanSource beanSource) {
+		Set<BigInteger> pes = getJobBean().getPes();
+
+		// Clear old map
+		peResourceMap.clear();
+
+		for (BigInteger peid : pes) {
+			PeMXBean peBean = beanSource.getPeBean(getDomain(), getInstance(), peid);
+			peResourceMap.put(peid,peBean.getResource());
+		}
+	}
+
 	private void mapPortNames(MXBeanSource beanSource) {
 		Set<String> operators = getJobBean().getOperators();
 
@@ -683,7 +705,7 @@ public class JobDetails implements NotificationListener {
 		}
 	}
 
-	private String resolvePortNames(String metricsSnapshot) {
+	private String resolveMappings(String metricsSnapshot) {
 		if (metricsSnapshot != null) {
 
 			JSONParser parser = new JSONParser();
@@ -695,8 +717,8 @@ public class JobDetails implements NotificationListener {
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 
-					// resolvePeInputPortNames(pe);
-					// resolvePeOutputPortNames(pe);
+					// Add resource name
+					resolveResource(pe);
 
 					JSONArray operatorArray = (JSONArray) pe.get("operators");
 
@@ -715,6 +737,15 @@ public class JobDetails implements NotificationListener {
 		}
 
 		return metricsSnapshot;
+	}
+
+	// For the given pe JsonObject, lookup its id in the resource map and set a new resource attribute to be used in export metric labels
+	@SuppressWarnings("unchecked")
+	private void resolveResource(JSONObject pe) {
+		BigInteger peid = new BigInteger(pe.get("id").toString());
+		String resource = peResourceMap.get(peid);
+		LOGGER.trace("Resolving PE ({}) to Resource ({}) mapping in job ({}) metrics",peid.toString(),resource,getJobid().toString());
+		pe.put("resource",resource);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -829,6 +860,7 @@ public class JobDetails implements NotificationListener {
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 					String peid = (String)pe.get("id");
+					String resource = (String)pe.get("resource");
 
 
 					JSONArray peMetricsArray = (JSONArray) pe.get("metrics");
@@ -852,6 +884,7 @@ public class JobDetails implements NotificationListener {
 								this.domain,
 								this.streamsInstanceName,
 								name,
+								resource,
 								peid).set((long)metric.get("value"));
 					}
 					
@@ -870,6 +903,7 @@ public class JobDetails implements NotificationListener {
 									this.domain,
 									this.streamsInstanceName,
 									name,
+									resource,
 									peid,
 									indexWithinPE).set((long)metric.get("value"));
 						}	// End PE Input Ports Metrics Loop		
@@ -891,6 +925,7 @@ public class JobDetails implements NotificationListener {
 									this.domain,
 									this.streamsInstanceName,
 									name,
+									resource,
 									peid,
 									indexWithinPE).set((long)metric.get("value"));
 						}	// End PE Output Ports Metrics Loop		
@@ -918,6 +953,7 @@ public class JobDetails implements NotificationListener {
 										this.domain,
 										this.streamsInstanceName,
 										name,
+										resource,
 										peid,
 										indexWithinPE,
 										connectionId).set((long)metric.get("value"));								
@@ -950,6 +986,7 @@ public class JobDetails implements NotificationListener {
 										this.domain,
 										this.streamsInstanceName,
 										name,
+										resource,
 										peid,
 										operatorName).set((long)metric.get("value"));
 								break;
@@ -974,6 +1011,7 @@ public class JobDetails implements NotificationListener {
 											this.domain,
 											this.streamsInstanceName,
 											name,
+											resource,
 											peid,
 											operatorName,
 											inputPortName).set((long)metric.get("value"));
@@ -1000,6 +1038,7 @@ public class JobDetails implements NotificationListener {
 											this.domain,
 											this.streamsInstanceName,
 											name,
+											resource,
 											peid,
 											operatorName,
 											outputPortName).set((long)metric.get("value"));
@@ -1048,6 +1087,7 @@ public class JobDetails implements NotificationListener {
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 					String peid = (String)pe.get("id");
+					String resource = (String)pe.get("resource");
 					
 					launchCount = (long)pe.get("launchCount");
 					
@@ -1056,6 +1096,7 @@ public class JobDetails implements NotificationListener {
 							this.domain,
 							this.streamsInstanceName,
 							name,
+							resource,
 							peid).set(launchCount);	
 				} // End pe loop
 			} catch (ParseException e) {
