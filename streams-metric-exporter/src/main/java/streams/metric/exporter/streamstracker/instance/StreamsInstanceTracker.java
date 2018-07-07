@@ -90,6 +90,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     private ServiceConfig config = null;
     private JmxServiceContext jmxContext;
     private String protocol;
+    private boolean autoRefresh;
 
     /* Domain info */
     private String domainName = null;
@@ -133,13 +134,14 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      * confused with streams instance
      ***************************************************************************/
     public StreamsInstanceTracker(JmxServiceContext jmxContext,
-            String domainName, String instanceName,
+            String domainName, String instanceName, boolean autoRefresh,
             String protocol, ServiceConfig config) throws StreamsTrackerException {
         LOGGER.debug("** Initializing StreamsInstanceTracker for: " + instanceName);
         this.config = config;
         this.jmxContext = jmxContext;
         this.domainName = domainName;
         this.instanceInfo.setInstanceName(instanceName);
+        this.autoRefresh = autoRefresh;
         this.protocol = protocol;
         this.jmxContext.getBeanSourceProvider().addBeanSourceProviderListener(this);
         jobMap = new JobMap(instanceName);
@@ -1004,6 +1006,10 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     
     public synchronized boolean snapshotsAvailable() {
     	return snapshotsAvailable;
+    }
+
+    public synchronized boolean isAutoRefresh() {
+        return autoRefresh;
     }
 
     public synchronized Long getInstanceResourceMetricsLastUpdated() {

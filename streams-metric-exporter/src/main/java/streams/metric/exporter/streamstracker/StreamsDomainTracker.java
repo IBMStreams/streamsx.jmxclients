@@ -16,6 +16,7 @@
 
 package streams.metric.exporter.streamstracker;
 
+import java.net.InterfaceAddress;
 import java.net.MalformedURLException;
 import java.util.TimerTask;
 import java.util.Arrays;
@@ -91,6 +92,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      *****************************************/
     private ServiceConfig config = null;
     private int refreshRateSeconds; // How often to retrieve bulk metrics
+    private boolean autoRefresh=false;
     private boolean trackAllInstances = false;
     private Set<String> requestedInstances = new HashSet<String>(); // Instances user is interested in
     private String protocol;
@@ -196,11 +198,15 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         		this.trackAllInstances = false;
         }
 
+        if (this.refreshRateSeconds == Constants.NO_REFRESH) {
+            this.autoRefresh = true;
+        }
+
         // Get Domain
         domainInfo = new DomainInfo(this.domainName);
         initStreamsDomain(true);
 
-        if (this.refreshRateSeconds != Constants.NO_REFRESH) {
+        if (this.autoRefresh != true) {
         	LOGGER.debug("Refresh rate set to {}, setting up timer process",this.refreshRateSeconds);
         	// Create timer to automatically refresh the status and metrics
         	Timer timer = new Timer("Refresher");
@@ -530,6 +536,10 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     public String getDomainName() {
         return domainName;
     }
+
+    public boolean isAutoRefresh() {
+        return autoRefresh;
+    }
     
     public synchronized Map<String, StreamsInstanceTracker> getInstanceTrackerMap() {
     		return instanceTrackerMap.getMap();
@@ -593,7 +603,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 				try {
 					StreamsInstanceTracker newInstanceTracker = new StreamsInstanceTracker(this.jmxContext,
 							this.domainName,
-							instanceName,
+                            instanceName,
+                            this.isAutoRefresh(),
 							this.protocol,
 							this.config);
 					

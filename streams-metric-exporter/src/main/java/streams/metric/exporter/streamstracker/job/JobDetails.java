@@ -94,6 +94,9 @@ public class JobDetails implements NotificationListener {
 	private String startedByUser = null;
 	private long submitTime = 0;
 
+	// Control over complete refresh of job required before next refresh
+	private boolean jobTopologyRefreshRequired = false;
+
 	private final Map<String, Map<Integer, String>> operatorInputPortNames = new HashMap<String, Map<Integer, String>>();
 	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
 
@@ -174,6 +177,36 @@ public class JobDetails implements NotificationListener {
 		}
 	}
 	
+
+	private void handleTopologyRefresh() {
+		if (this.jobTopologyRefreshRequired) {
+			LOGGER.debug("Topology refresh required on job");
+
+			// We must remove old exported metrics because they could be based on
+			// previous topology (e.g. PE's)  
+			// Danger here is if someone is using auto-refresh then the exported metrics
+			// could be empty until next refresh
+			// Not going to worry about this, because it is NOT recommended to use the 
+			// export interface with auto-refresh
+			this.removeExportedMetrics();
+			// Create the aggregate exported metrics
+			this.createExportedMetrics();
+
+			// Reset the port mappings as this will change when a topology change occurs
+			try {
+				operatorInputPortNames.clear();
+				operatorOutputPortNames.clear();
+				this.mapPortNames(monitor.getContext().getBeanSourceProvider().getBeanSource());
+			} catch (IOException e) {
+				// Assuming this means that JMX connection was lost, mark
+				// everything as unavailable
+				monitor.resetTracker();
+			}
+			this.jobTopologyRefreshRequired = false;
+		}
+	}
+
+
 	/* Stop/unregister anything you need to */
 	public void close() {
 		removeExportedMetrics();
@@ -200,6 +233,9 @@ public class JobDetails implements NotificationListener {
 	}
 
 	public void setJobMetrics(String jobMetrics) {
+		// If topology has changed we need to reset a few things
+		handleTopologyRefresh();
+
 		// Resolve portnames and store locally
 		this.jobMetrics = resolvePortNames(jobMetrics);
 		updateExportedMetrics();
@@ -210,8 +246,11 @@ public class JobDetails implements NotificationListener {
 	}
 
 	public void setJobSnapshot(String jobSnapshot) {
+		// If topology has changed we need to reset a few things
+		handleTopologyRefresh();
+
 		this.jobSnapshot = jobSnapshot;
-		updateExportedMetrics();
+		updateExportedSnapshotMetrics();
 	}
 
 	public JobMXBean.Status getStatus() {
@@ -570,10 +609,21 @@ public class JobDetails implements NotificationListener {
 			case AttributeChangeNotification.ATTRIBUTE_CHANGE:
 				AttributeChangeNotification acn = (AttributeChangeNotification) notification;
 				LOGGER.debug("* INSTANCE ({}) Job ({}) Notification: attribute ({}) changed from: {} to: {}", this.instance, this.getJobid(), acn.getAttributeName(), acn.getOldValue(), acn.getNewValue());
-				// Need to be specific, but for now, if any attribute changes,
-				// updateStatus() will update them all
+				// Support for Streams 4.3 which introduced topology changes (dynamic UDP)
+				// When the topology changes, we need to update our port mappings
+				// If any other attribute changes, updateStatus()
 				try {
+					switch (acn.getAttributeName()) {
+						case "GenerationId":
+							LOGGER.debug("Job GenerationId changed, setting flag so next snapshot or metrics update topology and port mappings reset");
+
+							this.jobTopologyRefreshRequired = true;
+
+							break;
+						default: 
 					this.updateStatus();
+							break;
+					}
 				} catch (IOException e) {
 					// Assuming this means that JMX connection was lost, mark
 					// everything as unavailable
@@ -728,6 +778,7 @@ public class JobDetails implements NotificationListener {
 	}
 	
 	private void createExportedMetrics() {
+		LOGGER.trace("createExportedMetrics");
 		// Create our own metrics that will be aggregates of Streams metrics
 	    // PE, PE InputPort, PE OutputPort, PE Output Port Connection,
 		// Operator, Operator InputPort, and Operator OutputPort metrics
@@ -975,6 +1026,10 @@ public class JobDetails implements NotificationListener {
 				throw new IllegalStateException(e);
 			}
 		} // end if metrics != null
+	}
+	
+	// Update Exported metrics that are derived from information in the job snapshot (e.g. PE Launch Count)
+	private void updateExportedSnapshotMetrics() {
 		
 		// Pull metrics from snapshot
 
