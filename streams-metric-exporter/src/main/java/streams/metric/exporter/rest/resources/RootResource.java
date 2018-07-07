@@ -25,9 +25,13 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 import javax.ws.rs.WebApplicationException;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
+import streams.metric.exporter.Version;
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.rest.serializers.StreamsInstanceDomainTrackerSerializer;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
@@ -86,6 +90,22 @@ public class RootResource {
         return Response.status(200).entity(domainTracker.getConfig())
                 .build();
     }    
+
+    @Path("version")
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getVersion() throws StreamsTrackerException,
+            WebApplicationException, JsonProcessingException {
+
+        ObjectMapper om = new ObjectMapper();
+        Map<String,String> versionMap = new HashMap<String,String>();
+        versionMap.put("title",Version.getImplementationTitle());
+        versionMap.put("version",Version.getImplementationVersion());
+
+        return Response.status(200).entity(om.writeValueAsString(versionMap))
+                .build();
+    }    
+
 
     // Internal debugging resource
     @Path("/{parameter: jobtracker|streamsexporter}")
