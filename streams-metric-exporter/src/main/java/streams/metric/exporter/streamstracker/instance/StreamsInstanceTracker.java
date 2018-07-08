@@ -644,9 +644,15 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         instanceResourceMetrics.clear();
         removeExportedInstanceMetrics();
         createExportedInstanceMetrics();
-        this.allJobMetrics.clear();
-        this.allJobSnapshots.clear();
-        this.jobMap.clear();
+        if (this.allJobMetrics != null) {
+            this.allJobMetrics.clear();
+        }
+        if (this.allJobSnapshots != null) {
+            this.allJobSnapshots.clear();
+        }
+        if (this.jobMap != null) {
+            this.jobMap.clear();
+        }
     }
     
     /*****************************************************************************
@@ -1284,7 +1290,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     }
     
     // Should do whatever necessary to shutdown and close this object
-    public void close() {}
+    public void close() {
+        this.removeExportedInstanceMetrics();
+    }
 
     @Override
     public void beanSourceInterrupted(MXBeanSource bs) {

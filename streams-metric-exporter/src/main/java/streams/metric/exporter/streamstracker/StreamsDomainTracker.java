@@ -484,27 +484,30 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 	    			domainInfo.updateInfo(this.domainBean);
     			
 	    			break;
-	        case Notifications.INSTANCE_CREATED:
-	            LOGGER.debug("Streams Instance created in domain, If tracking it or all instances, we need to add it to the instanceMap");
-    				domainInfo.updateInfo(this.domainBean);
+                case Notifications.INSTANCE_CREATED:
+                    LOGGER.debug("Streams Instance created in domain, If tracking it or all instances, we need to add it to the instanceMap");
+                        domainInfo.updateInfo(this.domainBean);
 
-    				createUpdateStreamsInstanceTrackers();
-	            //this.instanceInfo.setInstanceExists(false);
-	            //resetTracker();
-	            //clearTracker();
-	            break;
+                        createUpdateStreamsInstanceTrackers();
+                    //this.instanceInfo.setInstanceExists(false);
+                    //resetTracker();
+                    //clearTracker();
+                    break;
 
-	        case Notifications.INSTANCE_DELETED:
-	            LOGGER.debug("Instance deleted from domain, If tracking it or all instances, we need to update its status");
-    				domainInfo.updateInfo(this.domainBean);
-    				
-    				createUpdateStreamsInstanceTrackers();
+                case Notifications.INSTANCE_DELETED:
+                    LOGGER.debug("Instance deleted from domain, If tracking it or all instances, we need to update its status");
+                        domainInfo.updateInfo(this.domainBean);
+                        
+                        createUpdateStreamsInstanceTrackers();
 
-	            //this.instanceInfo.setInstanceExists(false);
-	            //resetTracker();
-	            //clearTracker();
-	            break;
-	        }
+                    //this.instanceInfo.setInstanceExists(false);
+                    //resetTracker();
+                    //clearTracker();
+                    break;
+            }
+            
+            updateExportedDomainMetrics();
+            
     	} catch (Exception e) {
     		LOGGER.error("Streams Domain Notification Handler caught exception: {}",e.toString());
     		e.printStackTrace();
@@ -658,6 +661,11 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     
     private void removeExportedDomainMetrics() {
 		metricsExporter.removeAllChildStreamsMetrics(this.domainName);
+    }
+
+    private void updateExportedDomainMetrics() {
+        metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
+        metricsExporter.getStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getInstances().size());
     }
     
     private double getDomainStatusAsMetric() {
