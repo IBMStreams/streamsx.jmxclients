@@ -299,11 +299,11 @@ streams_job_pecount{domainname="StreamsDomain",instancename="StreamsInstance",jo
 
 # HELP streams_operator_ip_nTuplesProcessed Streams operator input port metric: nTuplesProcessed
 # TYPE streams_operator_ip_nTuplesProcessed gauge
-streams_operator_ip_nTuplesProcessed{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",peid="1",operatorname="FilterStream",inputportname="BeaconStream",} 675632.0
+streams_operator_ip_nTuplesProcessed{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",resource="streamsqse",peid="1",operatorname="FilterStream",inputportname="BeaconStream",} 675632.0
 
 # HELP streams_pe_op_connection_congestionFactor Streams pe output port connection metric: congestionFactor
 # TYPE streams_pe_op_connection_congestionFactor gauge
-streams_pe_op_connection_congestionFactor{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",peid="1",index="0",connectionid="o0p1i0p0",} 0.0
+streams_pe_op_connection_congestionFactor{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",resource="streamsqse",peid="1",index="0",connectionid="o0p1i0p0",} 0.0
 ```
 
 # Grafana Examples
