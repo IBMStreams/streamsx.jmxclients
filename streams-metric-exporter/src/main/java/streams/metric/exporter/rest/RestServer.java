@@ -16,6 +16,8 @@
 
 package streams.metric.exporter.rest;
 
+import java.util.Arrays;
+
 import java.io.IOException;
 import java.net.URI;
 
@@ -36,6 +38,7 @@ public class RestServer {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + RestServer.class.getName());
 
+    private String webPath = null;
     private String baseUri = null;
     private HttpServer server = null;
     
@@ -45,18 +48,24 @@ public class RestServer {
     
     
     public RestServer(String host, String webPort, String webPath, Protocol serverProtocol, String serverKeystore, String serverKeystorePwd) throws IOException {
-    	String webPathString = (webPath == null?"":webPath);
-        //this.baseUri = serverProtocol.toString() + "://" + host + ":" + webPort + ((webPath.length() > 0) && !webPath.startsWith("/")?"/":"") + webPath + (webPath.endsWith("/")?"":"/");
-        this.baseUri = serverProtocol.toString() + "://" + host + ":" + webPort + ((webPathString.length() > 0) && !webPathString.startsWith("/")?"/":"") + webPathString + (webPathString.endsWith("/")?"":"/");
+        this.webPath = (webPath == null?"":webPath);
+        // Ensure webpath starts with a slash and does not end with a slash
+        if (this.webPath.length() > 0) {
+            this.webPath = (!this.webPath.startsWith("/")?"/":"") + (this.webPath.endsWith("/")?this.webPath.substring(0,this.webPath.length()-1):this.webPath);
+        }
+        LOGGER.debug("RestServer this.webPath set to " + this.webPath);
 
+        this.baseUri = serverProtocol.toString() + "://" + host + ":" + webPort;
+        LOGGER.debug("RestServer this.baseUri set to " + this.baseUri);
+        
         this.serverProtocol = serverProtocol;
         this.serverKeystore = serverKeystore;
         this.serverKeystorePwd = serverKeystorePwd;
         
         server = startServer();
 
-        LOGGER.info("HTTP Server Listening on: {}",
-                new Object[] { this.baseUri });
+        LOGGER.info("HTTP Server Rest Endpoints Listening on: {}",
+                new Object[] { this.baseUri + this.webPath });
     }
 
 
@@ -71,13 +80,13 @@ public class RestServer {
         // Enable JSON media conversions
         //rc.register(JacksonFeature.class);
         
-        WebappContext context = new WebappContext("WebappContext","");
+        WebappContext context = new WebappContext("WebappContext",this.webPath);
+
         ServletRegistration registration = context.addServlet("ServletContainer", ServletContainer.class);
         registration.setInitParameter("jersey.config.server.provider.packages",
         		"streams.metric.exporter.rest.resources;streams.metric.exporter.rest.errorhandling;streams.metric.exporter.rest.serializers");
         registration.addMapping("/*");
         
-       //if (this.serverProtocol.equalsIgnoreCase("https")) {
         if (this.serverProtocol == Protocol.HTTPS) {
 
         	LOGGER.debug("Using https protocol");
@@ -100,7 +109,7 @@ public class RestServer {
     
     private HttpServer createHttpServer() {
     	// Create server but do not start it
-    	return GrizzlyHttpServerFactory.createHttpServer(URI.create(this.baseUri),false);
+        return GrizzlyHttpServerFactory.createHttpServer(URI.create(this.baseUri),false);
     }
     
     private HttpServer createHttpsServer() {
