@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import io.prometheus.client.Gauge;
 import streams.metric.exporter.metrics.MetricsExporter;
@@ -44,9 +45,26 @@ public class PrometheusMetricsExporter extends MetricsExporter {
 	}
 
 	final Map<String, Gauge> gaugeMap = new HashMap<String, Gauge>();	
+
+  // Prometheus has some rules for valid metric names
+  // We will pre-sanitize metric names before using Promethus version
+  // so that we can do the following:
+  //  - Replace all series of 1 or more white-space with underscore
+  //  - Remove all special characters except for underscore
+  // Streams 4.3 had a metric name "nItemsQueued (Port 2)" that failed.
+  private static final Pattern SPACES_PATTERN = Pattern.compile("\\s+");
+  private static final Pattern NON_SPECIAL_OR_UNDERSCORE = Pattern.compile("(\\W|^_)*");
+
+  private String sanitizeMetricName(String metricName) {
+    return Gauge.sanitizeMetricName(
+      NON_SPECIAL_OR_UNDERSCORE.matcher(
+        SPACES_PATTERN.matcher(metricName).replaceAll("_")
+      ).replaceAll(""));
+  }
 	
 	public void createStreamsMetric(String metricName, StreamsObjectType type, String description) {
-		String metricFullName = getStreamsMetricFullName(metricName, type);
+    String sanitizedName = sanitizeMetricName(metricName);
+		String metricFullName = getStreamsMetricFullName(sanitizedName, type);
 		if (!gaugeMap.containsKey(metricFullName)) {
 			gaugeMap.put(metricFullName,
 					Gauge.build().name(metricFullName).help(description).labelNames(type.metricLabelNames()).register());
@@ -54,7 +72,8 @@ public class PrometheusMetricsExporter extends MetricsExporter {
 	}
 
 	public Metric getStreamsMetric(String metricName, StreamsObjectType type, String... labelValues) {
-		String metricFullName = getStreamsMetricFullName(metricName, type);
+    String sanitizedName = sanitizeMetricName(metricName);
+		String metricFullName = getStreamsMetricFullName(sanitizedName, type);
 		if (!gaugeMap.containsKey(metricFullName)) {
 			// Create with default help text
 			createStreamsMetric(metricName, type, type.metricDescriptionPrefix() + ": " + metricName);
@@ -80,7 +99,8 @@ public class PrometheusMetricsExporter extends MetricsExporter {
 	}
 
 	public void removeStreamsMetric(String metricName, StreamsObjectType type, String... labelValues) {
-		String metricFullName = getStreamsMetricFullName(metricName, type);
+    String sanitizedName = sanitizeMetricName(metricName);
+		String metricFullName = getStreamsMetricFullName(sanitizedName, type);
 		if (gaugeMap.containsKey(metricFullName)) {
 			Gauge g = gaugeMap.get(metricFullName);
 			g.remove(labelValues);

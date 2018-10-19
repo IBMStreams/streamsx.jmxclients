@@ -265,6 +265,14 @@ streams_operator_myCustomMetric
 | **streams_operator_ip_**|streams operator input port metrics|
 | **streams_operator_op_**|streams operatore output port metrics|
 
+### Sanitization
+Metric names are sanitized (fixed) to meet Prometheus naming conventions.  This is usually not required for 99% of IBM Streams metrics, however, since IBM Streams allows special characters and white space in metric names the following conversion rules are implemented:
+
+* Replace series of one or more whitespaces with underscore (_)
+* Remove any special characters
+
+An example would be the metric "streams_operator_nItemsQueued (port 2)" would become "streams_operator_nItemsQueued_port_2"
+
 ## Metric Labels
 The prometheus metric names are not specific to streams objects (e.g. a specific job), rather, they are for an object type (e.g. operator input port).  The labels are used to identify the individual instances (e.g. job: job_1, operator: myBeacon, input port: StockTickersIn).
 Note: the streams-metric-exporter resolves operator input and output ports to names rather than indexes.  This is easier for use in queries.
