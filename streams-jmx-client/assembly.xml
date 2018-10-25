@@ -1,0 +1,114 @@
+<!--
+Licensed to the Apache Software Foundation (ASF) under one
+or more contributor license agreements.  See the NOTICE file
+distributed with this work for additional information
+regarding copyright ownership.  The ASF licenses this file
+to you under the Apache License, Version 2.0 (the
+"License"); you may not use this file except in compliance
+with the License.  You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing,
+software distributed under the License is distributed on an
+"AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+KIND, either express or implied.  See the License for the
+specific language governing permissions and limitations
+under the License.
+-->
+<assembly
+	xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.2 http://maven.apache.org/xsd/assembly-1.1.2.xsd">
+
+	<id>release</id>
+	<baseDirectory>streams-metric-exporter</baseDirectory>
+	<formats>
+	  <format>tar.gz</format>
+	</formats>
+
+	<fileSets>
+		<fileSet>
+			<directory>${basedir}/target</directory>
+			<outputDirectory>target</outputDirectory>
+			<includes>
+				<include>executable-streams-metric-exporter.jar</include>
+			</includes>
+			<lineEnding>keep</lineEnding>
+			<fileMode>644</fileMode>
+		</fileSet>
+	  <!--<fileSet>
+	    <directory>${basedir}/scripts</directory>
+	    <outputDirectory>scripts</outputDirectory>
+	    <includes>
+	      <include>*</include>
+	    </includes>
+	    <lineEnding>unix</lineEnding>
+	    <fileMode>744</fileMode>
+	  </fileSet> -->
+		<fileSet>
+			<directory>${basedir}/dashboards</directory>
+			<outputDirectory>dashboards</outputDirectory>
+			<includes>
+				<include>*</include>
+			</includes>
+			<lineEnding>unix</lineEnding>
+			<fileMode>644</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>${basedir}/docker</directory>
+			<outputDirectory>docker</outputDirectory>
+			<includes>
+				<include>*</include>
+			</includes>
+			<excludes>
+				<exclude>.env</exclude>
+			</excludes>
+			<lineEnding>unix</lineEnding>
+			<fileMode>644</fileMode>
+		</fileSet>
+	  <fileSet>
+	    <directory>${basedir}/prometheus</directory>
+	    <outputDirectory>prometheus</outputDirectory>
+	    <includes>
+	      <include>*</include>
+	    </includes>
+	    <lineEnding>unix</lineEnding>
+	    <fileMode>644</fileMode>
+	  </fileSet>
+		<fileSet>
+	    <directory>${basedir}/grafana</directory>
+	    <outputDirectory>grafana</outputDirectory>
+	    <!--<includes>
+	      <include>*</include>
+	    </includes>-->
+	    <lineEnding>unix</lineEnding>
+	    <fileMode>644</fileMode>
+	  </fileSet>
+		<fileSet>
+			<directory>${basedir}</directory>
+			<includes>
+				<include>runsample.sh</include>
+				<include>LICENSE</include>
+				<include>README.md</include>
+			</includes>
+			<lineEnding>unix</lineEnding>
+			<fileMode>755</fileMode>
+		</fileSet>
+		<fileSet>
+			<directory>${basedir}/lib</directory>
+			<outputDirectory>.</outputDirectory>
+			<includes>
+				<include>REDIST.IBM</include>
+			</includes>
+		</fileSet>
+	</fileSets>
+<!--	<files>
+	  <file>
+	    <source>${basedir}/target/classes/version</source>
+	    <outputDirectory>bin</outputDirectory>
+	    <destName>version</destName>
+	    <filtered>false</filtered>
+	  </file>
+	</files> -->
+</assembly>
