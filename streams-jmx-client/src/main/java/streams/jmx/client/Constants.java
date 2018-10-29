@@ -94,7 +94,7 @@ public class Constants {
 		DEFAULT_SERVER_PROTOCOL = "http",
 		DEFAULT_SERVER_KEYSTORE = null,
 		DEFAULT_SERVER_KEYSTORE_PWD = null,
-		DEFAULT_LOGLEVEL = "fatal", // Supress logging unless user really wants it.
+		DEFAULT_LOGLEVEL = "warn", // Supress logging unless user really wants it.
 		DEFAULT_LOGDIR = ""
 	;
 	
