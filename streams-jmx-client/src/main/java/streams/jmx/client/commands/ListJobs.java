@@ -21,9 +21,12 @@ import streams.jmx.client.ServiceConfig;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
 
+import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -43,7 +46,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Parameters(commandDescription = Constants.DESC_LISTJOBS)
-public class ListJobs extends AbstractInstanceCommand {
+public class ListJobs extends AbstractJobListCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + ListJobs.class.getName());
 
@@ -69,17 +72,55 @@ public class ListJobs extends AbstractInstanceCommand {
 
             InstanceMXBean instance = getInstanceMXBean();
 
+
+            // Process Job Lists
+
+            // Mutual Exclusivity Test
+            LOGGER.debug("mutual Exlusive total (should be < 2:" + ( 
+                ((getJobIdOptionList() != null && getJobIdOptionList().size() >1)?1:0) + 
+                ((getJobNameOptionList() != null && getJobNameOptionList().size() > 1)?1:0)));
+            if ((((getJobIdOptionList() != null && getJobIdOptionList().size() >1)?1:0) + 
+                 ((getJobNameOptionList() != null && getJobNameOptionList().size() > 1)?1:0))>1) {
+                throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [--jobnames <job-names>,...]}");
+            }
+
+            List<BigInteger> jobsToList = new ArrayList<BigInteger>();
+
+            if (getJobIdOptionList() != null && getJobIdOptionList().size() > 0) {
+                LOGGER.debug("Size of jobIds: " + getJobIdOptionList().size());
+                LOGGER.debug("jobIds: " + Arrays.toString(getJobIdOptionList().toArray())); 
+
+                // reference copy
+                jobsToList = getJobIdOptionList();
+            }
+
+
+            if (getJobNameOptionList() != null && getJobNameOptionList().size() > 0) {
+                LOGGER.debug("Size of jobNames: " + getJobNameOptionList().size());
+                LOGGER.debug("jobNames: " + Arrays.toString(getJobNameOptionList().toArray()));
+
+                // reference copy
+                jobsToList = getResolvedJobNameOptionList();
+            }
+
             // Populate the result object
             jsonOut.put("instance",instance.getName());
     
             ArrayNode jobArray = mapper.createArrayNode();
+            int listCount = 0;
 
             for (BigInteger jobId : instance.getJobs()) {
+                // Check if we want this one
+                if (jobsToList.size() > 0) {
+                    if (!jobsToList.contains(jobId))
+                        continue;  // skip it
+                }
                 LOGGER.trace("Lookup up job bean for jobid: {} of instance: {}", jobId, instance.getName());
 
                 ObjectName jobObjectName = instance.registerJob(jobId);
                 JobMXBean job = getBeanSource().getJobBean(getDomainName(),getInstanceName(),jobId);
                 
+                listCount++;
                 ObjectNode jobObject = mapper.createObjectNode();
                 jobObject.put("id",jobId.longValue());
                 jobObject.put("status",job.getStatus().toString());
@@ -91,6 +132,7 @@ public class ListJobs extends AbstractInstanceCommand {
 
                 jobArray.add(jobObject);
             }
+            jsonOut.put("count",listCount);
             jsonOut.set("jobs",jobArray);
             //System.out.println(sb.toString());
             return new CommandResult(jsonOut.toString());

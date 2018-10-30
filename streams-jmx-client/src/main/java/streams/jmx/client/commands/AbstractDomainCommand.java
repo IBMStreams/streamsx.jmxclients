@@ -82,6 +82,12 @@ public abstract class AbstractDomainCommand extends AbstractJmxCommand {
                     this.getDomainName());
 			throw new StreamsClientException(StreamsClientErrorCode.DOMAIN_NOT_FOUND,
 					"Domain name " + this.domainName + " does not match the domain of the JMX Server.", infe);
+        } catch (Exception e) {
+            LOGGER.debug("Caught unexpected exception: {}",e);
+            if (LOGGER.isDebugEnabled()) {
+                e.printStackTrace();
+            }
+            throw e;
         }
         LOGGER.trace("About to call prepareJmxDomainExecution()");
         prepareJmxDomainExecution();

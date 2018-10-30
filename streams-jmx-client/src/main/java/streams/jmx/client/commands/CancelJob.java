@@ -94,7 +94,6 @@ public class CancelJob extends AbstractInstanceCommand {
         try {
 
             // Mutual Exclusivity Test
-            //if (((jobIdArgumentString != null?1:0) + (jobId != null?1:0) + (jobNames.size() > 1?1:0))>1) {
             LOGGER.debug("mutual Exlusive total (should be < 2:" + (((jobIdArgumentStrings != null && jobIdArgumentStrings.size() > 1)?1:0) + 
             ((jobIds != null && jobIds.size() >1)?1:0) + 
             ((jobNames != null && jobNames.size() > 1)?1:0)));
@@ -104,7 +103,7 @@ public class CancelJob extends AbstractInstanceCommand {
                 throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [<jobIdArgument>] | [--jobnames <job-names>,...]}");
             }
 
-            //if ((jobIdArgument == null) && (jobId == null) && (jobNames.size() == 0)) {
+            // Job name or id required
             if ((jobIdArgumentStrings != null && jobIdArgumentStrings.size() == 0) && 
                 (jobIds != null && jobIds.size() == 0) && 
                 (jobNames != null && jobNames.size() == 0)) {
@@ -171,11 +170,15 @@ public class CancelJob extends AbstractInstanceCommand {
             
             //StringBuilder sb = new StringBuilder();
             for (BigInteger jobid : jobsToCancel) {
+                try {
                 instance.cancelJob(jobid, forceCancel);
                 cancelCount++;
                 ObjectNode jobObject = mapper.createObjectNode();
                 jobObject.put("jobId", jobid.longValue());
                 jobArray.add(jobObject);
+                } catch (IllegalStateException e) {
+                    LOGGER.warn(e.getLocalizedMessage());
+                }
             }
             jsonOut.put("count",cancelCount);
             jsonOut.set("jobs",jobArray);

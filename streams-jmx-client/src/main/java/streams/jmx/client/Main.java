@@ -290,6 +290,16 @@ public class Main {
 			while (!timeToQuit) {
 				// Create new jcommander each time.  Without this we received
 				// odd issues.
+				initCommandMap();
+				LOGGER.trace("Initializing commands ...");
+				for (Map.Entry<String, Command> entry : commandMap.entrySet()) {
+					Command c = entry.getValue();
+					if (c instanceof AbstractJmxCommand) {
+						((AbstractJmxCommand) c).initialize(config, jmxContext);
+					}
+				}
+
+				
 				jc = JCommander.newBuilder()
 					.programName(Constants.PROGRAM_NAME)
 					.columnSize(132)
