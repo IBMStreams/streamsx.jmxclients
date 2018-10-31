@@ -1,0 +1,15 @@
+# Use when Streams Domain is not on the same Docker Host
+# For example:
+#   Streams on bare-metal
+#   Streams on a VM
+#   Streams in Docker on another host
+#   Streams on Kubernetes (Kubernetes networking is different than Docker)
+
+version: '2'
+services:
+  streamsclient:
+    env_file:
+      - .env
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile

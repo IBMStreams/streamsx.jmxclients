@@ -1,0 +1,22 @@
+# Use when connecting to Docker Streams Quick Start Edition 4.2.4+
+# on the same host
+# Docker Networking is constantly evolving but at the time of writing
+# version 17.0.x-ce required using the bridge network with 
+# Docker Streams Quick Start Edition.
+#
+# streamsexporter .env file should point to the Streams containername:
+#   streamsdocker4240 (or current name)
+
+version: '2'
+services:
+  streamsclient:
+    #stdin_open: true
+    #tty: true
+    env_file:
+      - .env
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    network_mode: "bridge"
+    external_links:
+     - streamsdocker4300:streamsqse

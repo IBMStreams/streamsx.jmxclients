@@ -21,30 +21,18 @@ under the License.
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>streamsx.jmxclients</groupId>
-	<artifactId>streams-metric-exporter</artifactId>
-	<version>1.2.0</version>
+	<artifactId>streams-jmx-client</artifactId>
+	<version>0.1.0</version>
 	<packaging>jar</packaging>
 
-	<name>streams-metric-exporter</name>
+	<name>streams-jmx-client</name>
 	<url>https://github.com/IBMStreams/streamsx.jmxclients</url>
-  <description>IBM Streams Metric Exporter with REST and PROMETHEUS enpoints.</description>
+  <description>IBM Streams JMX Client Application.</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jersey.version>2.26</jersey.version>
+		<jackson.version>2.9.7</jackson.version>
 		<streams.version>4.x</streams.version>
 	</properties>
-
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>org.glassfish.jersey</groupId>
-				<artifactId>jersey-bom</artifactId>
-				<version>${jersey.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
@@ -53,22 +41,6 @@ under the License.
 			<version>3.8.1</version>
 			<scope>test</scope>
 		</dependency>
-<!--
-		<dependency>
-			<groupId>ibmstreams</groupId>
-			<artifactId>com.ibm.streams.management.jmxmp.jar</artifactId>
-			<version>4.x</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/com.ibm.streams.management.jmxmp.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>ibmstreams</groupId>
-			<artifactId>com.ibm.streams.management.mx.jar</artifactId>
-			<version>4.x</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/com.ibm.streams.management.mx.jar</systemPath>
-		</dependency>
--->
 <dependency>
 	<groupId>com.ibm.streams.management</groupId>
 	<artifactId>jmxmp</artifactId>
@@ -79,26 +51,32 @@ under the License.
 	<artifactId>mx</artifactId>
 	<version>4</version>
 </dependency>
-<!--
+    <dependency>
+      <groupId>org.glassfish.external</groupId>
+      <artifactId>opendmk_jmxremote_optional_jar</artifactId>
+      <version>1.0-b01-ea</version>
+    </dependency>
 		<dependency>
-			<groupId>test</groupId>
-			<artifactId>jmxremote_optional.jar</artifactId>
-			<version>4.x</version>
-			<scope>system</scope>
-			<systemPath>${STREAMS_INSTALL}/ext/lib/jmxremote_optional.jar</systemPath>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.5.6</version>
 		</dependency>
--->
-
-		<dependency>
-			<groupId>org.glassfish.external</groupId>
-			<artifactId>opendmk_jmxremote_optional_jar</artifactId>
-			<version>1.0-b01-ea</version>
-		</dependency>
-
+		<!--
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
-			<version>1.1</version>
+			<version>1.1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.github.cliftonlabs</groupId>
+			<artifactId>json-simple</artifactId>
+			<version>2.3.1</version>
+		</dependency>
+		-->
+		 <dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
@@ -110,49 +88,17 @@ under the License.
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.7.21</version>
 		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.containers</groupId>
-			<artifactId>jersey-container-grizzly2-http</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.containers</groupId>
-			<artifactId>jersey-container-grizzly2-servlet</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.inject</groupId>
-			<artifactId>jersey-hk2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.glassfish.jersey.media</groupId>
-			<artifactId>jersey-media-json-jackson</artifactId>
-		</dependency>
+		<!-- Requires 1.74 to handle main argument converter in submitjob command -->
 		<dependency>
 			<groupId>com.beust</groupId>
 			<artifactId>jcommander</artifactId>
-			<version>[1.58,)</version>
+			<version>[1.72,)</version> 
+			<!--<version>1.74</version>-->
 		</dependency>
 		<dependency>
-		  <groupId>io.prometheus</groupId>
-		  <artifactId>simpleclient</artifactId>
-		  <version>0.0.26</version>
-		</dependency>
-		<!-- Hotspot JVM metrics-->
-		<dependency>
-		  <groupId>io.prometheus</groupId>
-		  <artifactId>simpleclient_hotspot</artifactId>
-		  <version>0.0.26</version>
-		</dependency>
-		<!-- Exposition servlet-->
-		<dependency>
-		  <groupId>io.prometheus</groupId>
-		  <artifactId>simpleclient_servlet</artifactId>
-		  <version>0.0.26</version>
-		</dependency>
-		<!-- Pushgateway exposition-->
-		<dependency>
-		  <groupId>io.prometheus</groupId>
-		  <artifactId>simpleclient_pushgateway</artifactId>
-		  <version>0.0.26</version>
+			<groupId>jline</groupId>
+			<artifactId>jline</artifactId>
+			<version>2.14.2</version>
 		</dependency>
 		<!-- <dependency> <groupId>com.fasterxml.jackson.jaxrs</groupId> <artifactId>jackson-jaxrs-xml-provider</artifactId>
 			<version>2.7.4</version> </dependency> -->
@@ -280,7 +226,7 @@ under the License.
 								<transformer
 									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
 									<manifestEntries>
-										<Main-Class>streams.metric.exporter.Launcher</Main-Class>
+										<Main-Class>streams.jmx.client.Main</Main-Class>
 										<Class-Path>.</Class-Path>
 										<Implementation-Version>${project.version}</Implementation-Version>
 										<Implementation-Title>${project.artifactId}</Implementation-Title>

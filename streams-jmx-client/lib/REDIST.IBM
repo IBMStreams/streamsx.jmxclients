@@ -1,0 +1,13 @@
+IBM InfoSphere Streams Redistributables:
+
+The following list includes files that are provided to You pursuant to the Redistributables section
+of the IBM International Program License Agreements License Information that applies to this Program:
+
+All source files in one the following list of directories (or subdirectories of these directories)
+may be redistributed:
+  - <installation dir>/samples
+  - <installation dir>/toolkits/*/samples
+
+The following files may be redistributed:
+  - <installation dir>/lib/com.ibm.streams.management.jmxmp.jar
+  - <installation dir>/lib/com.ibm.streams.management.mx.jar
