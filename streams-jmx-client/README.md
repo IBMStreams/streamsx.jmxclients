@@ -145,13 +145,14 @@ Usage: streams-jmx-client [options] [command] [command options]
             Environment Variable: STREAMS_DOMAIN_ID
             Default: awskube43
 
+
     canceljob      Cancel Streams application
       Usage: canceljob [options] Job IDs to cancel
         Options:
           -d, --domain-id
             Streams domain name
-            Environment Variable: STREAMS_DOMAIN_ID
-            Default: awskube43
+      Environment Variable: STREAMS_DOMAIN_ID
+            Default: StreamsDomain
           --force
             Forces quick cancellation of job
             Default: false
@@ -159,8 +160,11 @@ Usage: streams-jmx-client [options] [command] [command options]
             Streams instance name.  Only used if Instance List not provided.
             Environment Variable: STREAMS_INSTANCE_ID
             Default: StreamsInstance
+          --jobnames
+            Specifies a list of job names, which are delimited by commas.
           -j, --jobs
             A list of job ids delimited by commas
+
 
     lsjobs      Get a list of the jobs running in an instance
       Usage: lsjobs [options]
