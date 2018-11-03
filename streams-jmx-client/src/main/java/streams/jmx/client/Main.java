@@ -37,7 +37,6 @@ import javax.net.ssl.TrustManagerFactory;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.Parameters;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.log4j.ConsoleAppender;
@@ -52,8 +51,10 @@ import streams.jmx.client.commands.AbstractJmxCommand;
 import streams.jmx.client.commands.CancelJob;
 import streams.jmx.client.commands.Command;
 import streams.jmx.client.commands.CommandResult;
+import streams.jmx.client.commands.GetDomainProperty;
 import streams.jmx.client.commands.GetDomainState;
 import streams.jmx.client.commands.GetInstanceState;
+import streams.jmx.client.commands.GetProperty;
 import streams.jmx.client.commands.SubmitJob;
 import streams.jmx.client.commands.Help;
 import streams.jmx.client.commands.ListJobs;
@@ -103,6 +104,8 @@ public class Main {
 		// cm.put(Constants.CMD_VERSION, new Version());
 		cm.put(Constants.CMD_GETDOMAINSTATE, new GetDomainState());
 		cm.put(Constants.CMD_GETINSTANCESTATE, new GetInstanceState());
+		cm.put(Constants.CMD_GETDOMAINPROPERTY, new GetDomainProperty());
+		cm.put(Constants.CMD_GETPROPERTY, new GetProperty());
 		cm.put(Constants.CMD_LISTJOBS, new ListJobs());
 		cm.put(Constants.CMD_SUBMITJOB, new SubmitJob());
 		cm.put(Constants.CMD_CANCELJOB, new CancelJob());
@@ -513,6 +516,7 @@ public class Main {
 		return args.toArray(new String[] {});
 	}
 
+	@SuppressWarnings("unused")
 	private void close() {
 		try {
 			connectionPool.close();
@@ -558,7 +562,9 @@ public class Main {
 		// Turning down apache httpclient logging
 		// Default is DEBUG logging for wire is too verbose
 		if (!logger.isTraceEnabled()) {
-			logger.getLogger("org.apache.http.wire").setLevel(org.apache.log4j.Level.toLevel("INFO"));
+			org.apache.log4j.Logger theLogger = org.apache.log4j.Logger.getLogger("org.apache.httpwire");
+			theLogger.setLevel(org.apache.log4j.Level.toLevel("INFO"));
+			//logger.getLogger("org.apache.http.wire").setLevel(org.apache.log4j.Level.toLevel("INFO"));
 		}
 		//logger.getLogger("org.apache.http.http").setLevel(org.apache.log4j.Level.toLevel(loglevel));
 

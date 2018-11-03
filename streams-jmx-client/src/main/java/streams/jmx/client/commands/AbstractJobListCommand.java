@@ -16,22 +16,15 @@
 
 package streams.jmx.client.commands;
 
-import streams.jmx.client.Constants;
-import streams.jmx.client.ServiceConfig;
 import streams.jmx.client.cli.BigIntegerConverter;
-import streams.jmx.client.error.StreamsClientErrorCode;
-import streams.jmx.client.error.StreamsClientException;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.lang.reflect.UndeclaredThrowableException;
 
-import javax.management.InstanceNotFoundException;
 
 import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
 import com.ibm.streams.management.instance.InstanceMXBean;
 
 import org.slf4j.Logger;

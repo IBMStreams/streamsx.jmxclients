@@ -16,8 +16,6 @@
 
 package streams.jmx.client.commands;
 
-import streams.jmx.client.jmx.JmxServiceContext;
-import streams.jmx.client.ServiceConfig;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
 
@@ -28,15 +26,10 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import javax.management.ObjectName;
-import com.ibm.streams.management.ObjectNameBuilder;
-import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.instance.InstanceServiceMXBean;
 import com.ibm.streams.management.job.JobMXBean;
-import com.ibm.streams.management.resource.ResourceMXBean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +56,6 @@ public class ListJobs extends AbstractJobListCommand {
         return (Constants.DESC_LISTJOBS);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected CommandResult doExecute() {
         try {
@@ -77,10 +69,10 @@ public class ListJobs extends AbstractJobListCommand {
 
             // Mutual Exclusivity Test
             LOGGER.debug("mutual Exlusive total (should be < 2:" + ( 
-                ((getJobIdOptionList() != null && getJobIdOptionList().size() >1)?1:0) + 
-                ((getJobNameOptionList() != null && getJobNameOptionList().size() > 1)?1:0)));
-            if ((((getJobIdOptionList() != null && getJobIdOptionList().size() >1)?1:0) + 
-                 ((getJobNameOptionList() != null && getJobNameOptionList().size() > 1)?1:0))>1) {
+                ((getJobIdOptionList() != null && getJobIdOptionList().size() >0)?1:0) + 
+                ((getJobNameOptionList() != null && getJobNameOptionList().size() > 0)?1:0)));
+            if ((((getJobIdOptionList() != null && getJobIdOptionList().size() >0)?1:0) + 
+                 ((getJobNameOptionList() != null && getJobNameOptionList().size() > 0)?1:0))>1) {
                 throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [--jobnames <job-names>,...]}");
             }
 
@@ -117,6 +109,7 @@ public class ListJobs extends AbstractJobListCommand {
                 }
                 LOGGER.trace("Lookup up job bean for jobid: {} of instance: {}", jobId, instance.getName());
 
+                @SuppressWarnings("unused")
                 ObjectName jobObjectName = instance.registerJob(jobId);
                 JobMXBean job = getBeanSource().getJobBean(getDomainName(),getInstanceName(),jobId);
                 

@@ -16,8 +16,6 @@
 
 package streams.jmx.client.commands;
 
-import streams.jmx.client.jmx.JmxServiceContext;
-import streams.jmx.client.ServiceConfig;
 import streams.jmx.client.cli.FileExistsValidator;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
@@ -30,23 +28,15 @@ import com.beust.jcommander.converters.FileConverter;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import javax.management.ObjectName;
-import com.ibm.streams.management.ObjectNameBuilder;
-import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.instance.InstanceServiceMXBean;
 import com.ibm.streams.management.job.DeployInformation;
-import com.ibm.streams.management.resource.ResourceMXBean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 @Parameters(commandDescription = Constants.DESC_SUBMITJOB)
@@ -100,7 +90,6 @@ public class SubmitJob extends AbstractInstanceCommand {
         return (Constants.DESC_SUBMITJOB);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected CommandResult doExecute() {
         try {
