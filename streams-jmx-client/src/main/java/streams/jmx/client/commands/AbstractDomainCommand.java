@@ -17,7 +17,6 @@
 package streams.jmx.client.commands;
 
 import streams.jmx.client.Constants;
-import streams.jmx.client.jmx.JmxServiceContext;
 import streams.jmx.client.ServiceConfig;
 import streams.jmx.client.error.StreamsClientErrorCode;
 import streams.jmx.client.error.StreamsClientException;

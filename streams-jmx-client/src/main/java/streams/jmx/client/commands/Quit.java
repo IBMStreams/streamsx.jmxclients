@@ -17,7 +17,6 @@ package streams.jmx.client.commands;
 
 import streams.jmx.client.Constants;
 import com.beust.jcommander.Parameters;
-import com.beust.jcommander.Parameter;
 
 @Parameters(commandDescription = Constants.DESC_QUIT)
 public class Quit implements Command {

@@ -16,36 +16,28 @@
 
 package streams.jmx.client.commands;
 
-import streams.jmx.client.jmx.JmxServiceContext;
-import streams.jmx.client.ServiceConfig;
-import streams.jmx.client.cli.FileExistsValidator;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
 
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
-import com.beust.jcommander.converters.FileConverter;
 
-import java.io.File;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-import javax.management.ObjectName;
-import com.ibm.streams.management.ObjectNameBuilder;
-import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.instance.InstanceServiceMXBean;
-import com.ibm.streams.management.job.DeployInformation;
-import com.ibm.streams.management.resource.ResourceMXBean;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Parameters(commandDescription = Constants.DESC_SUBMITJOB)
-public class SnapshotJobs extends AbstractInstanceCommand {
-
-    @Parameter(names = {"-j","--jobs"}, description = "A list of job ids delimited by commas", required = true)
-    private String jobIdString;
+public class SnapshotJobs extends AbstractJobListCommand {
+    private static final Logger LOGGER = LoggerFactory.getLogger("root."
+            + SnapshotJobs.class.getName());
 
     @Parameter(names = "--maxdepth", description = "Maximum depth of operators to traverse (default 1)", required = false)
     private int maxDepth = 1;
@@ -67,19 +59,51 @@ public class SnapshotJobs extends AbstractInstanceCommand {
         return (Constants.DESC_SNAPSHOTJOBS);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected CommandResult doExecute() {
         try {
+
+            InstanceMXBean instance = getInstanceMXBean();
+
+            // Mutual Exclusivity Test
+            LOGGER.debug("mutual Exlusive total (should be < 2:" + ( 
+                ((getJobIdOptionList() != null && getJobIdOptionList().size() >0)?1:0) + 
+                ((getJobNameOptionList() != null && getJobNameOptionList().size() > 0)?1:0)));
+            if ((((getJobIdOptionList() != null && getJobIdOptionList().size() >0)?1:0) + 
+                 ((getJobNameOptionList() != null && getJobNameOptionList().size() > 0)?1:0))>1) {
+                throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [--jobnames <job-names>,...]}");
+            }
+
+            Set<BigInteger> jobsToSnapshot = null;
+
+            if (getJobIdOptionList() != null && getJobIdOptionList().size() > 0) {
+                LOGGER.debug("Size of jobIds: " + getJobIdOptionList().size());
+                LOGGER.debug("jobIds: " + Arrays.toString(getJobIdOptionList().toArray())); 
+
+                // reference copy
+                jobsToSnapshot = new HashSet<BigInteger>(getJobIdOptionList());
+            }
+
+
+            if (getJobNameOptionList() != null && getJobNameOptionList().size() > 0) {
+                LOGGER.debug("Size of jobNames: " + getJobNameOptionList().size());
+                LOGGER.debug("jobNames: " + Arrays.toString(getJobNameOptionList().toArray()));
+
+                // reference copy
+                jobsToSnapshot = new HashSet<BigInteger>(getResolvedJobNameOptionList());
+            }
+
+            // Check if they wanted them all
+            if (jobsToSnapshot == null) {
+                jobsToSnapshot = instance.getJobs();
+            }
+
             //JSONObject jsonOut = new JSONObject();
             //StringBuilder sb = new StringBuilder();
-            InstanceMXBean instance = getInstanceMXBean();
     
             String uri = null;
 
-            BigInteger jobId = new BigInteger(jobIdString);
-
-            uri = instance.snapshotJobs(new HashSet<BigInteger>(Arrays.asList(jobId)),maxDepth,includeStatic);
+            uri = instance.snapshotJobs(jobsToSnapshot,maxDepth,includeStatic);
 
             String snapshotOutput = getJmxServiceContext().getWebClient().get(uri, getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort());
 

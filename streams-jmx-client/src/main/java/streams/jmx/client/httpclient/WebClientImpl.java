@@ -52,13 +52,13 @@ public class WebClientImpl implements WebClient {
     private static final Logger LOG = LoggerFactory.getLogger(WebClientImpl.class);
 
     private String sslProtocol;
-    private TrustManager[] trustManagers;
+    //private TrustManager[] trustManagers;
     private KeyStore ks;
 
     public WebClientImpl(String sslProtocol, TrustManager[] tms, KeyStore ks) {
         this.sslProtocol = sslProtocol;
-        trustManagers = tms;
-        ks = ks;
+        //trustManagers = tms;
+        this.ks = ks;
     }
 
     public String get(String fromUri) throws WebClientException {

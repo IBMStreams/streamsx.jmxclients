@@ -16,15 +16,11 @@
 
 package streams.jmx.client.commands;
 
-import streams.jmx.client.jmx.JmxServiceContext;
-import streams.jmx.client.ServiceConfig;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
 
 import com.beust.jcommander.Parameters;
 
-import javax.management.ObjectName;
-import com.ibm.streams.management.ObjectNameBuilder;
 import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.resource.ResourceMXBean;
 
@@ -48,7 +44,6 @@ public class GetDomainState extends AbstractDomainCommand {
         return (Constants.DESC_GETDOMAINSTATE);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     protected CommandResult doExecute() {
         try {
@@ -75,7 +70,7 @@ public class GetDomainState extends AbstractDomainCommand {
             resourceObject.put("status",resourceBean.getStatus().toString());
             resourceArray.add(resourceObject);
             }
-            jsonOut.put("resources",resourceArray);
+            jsonOut.set("resources",resourceArray);
 
             return new CommandResult(jsonOut.toString());
         } catch (Exception e) {
