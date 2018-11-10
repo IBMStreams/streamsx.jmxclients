@@ -143,11 +143,11 @@ public class CancelJob extends AbstractJobListCommand {
             //StringBuilder sb = new StringBuilder();
             for (BigInteger jobid : jobsToCancel) {
                 try {
-                instance.cancelJob(jobid, forceCancel);
-                cancelCount++;
-                ObjectNode jobObject = mapper.createObjectNode();
-                jobObject.put("jobId", jobid.longValue());
-                jobArray.add(jobObject);
+                    instance.cancelJob(jobid, forceCancel);
+                    cancelCount++;
+                    ObjectNode jobObject = mapper.createObjectNode();
+                    jobObject.put("jobId", jobid.longValue());
+                    jobArray.add(jobObject);
                 } catch (IllegalStateException e) {
                     LOGGER.warn(e.getLocalizedMessage());
                 }
@@ -157,8 +157,10 @@ public class CancelJob extends AbstractJobListCommand {
 
             return new CommandResult(jsonOut.toString());
         } catch (Exception e) {
-            LOGGER.debug("CancelJob caught Exception: " + e.toString());
-            e.printStackTrace();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("CancelJob caught Exception: " + e.toString());
+                e.printStackTrace();
+            }
             return new CommandResult(ExitStatus.FAILED_COMMAND, null, e.getLocalizedMessage());
         }
     }

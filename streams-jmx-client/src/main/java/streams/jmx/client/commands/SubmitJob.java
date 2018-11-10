@@ -30,6 +30,11 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.management.JMX;
+import javax.management.ObjectName;
+
+import com.ibm.streams.management.OperationListenerMXBean;
+import com.ibm.streams.management.OperationStatusMessage;
 import com.ibm.streams.management.instance.InstanceMXBean;
 import com.ibm.streams.management.job.DeployInformation;
 
@@ -136,6 +141,14 @@ public class SubmitJob extends AbstractInstanceCommand {
             getJmxServiceContext().getWebClient().putFile(deployInformation.getUri(),
                 "application/x-jar", (sabFile != null ? sabFile : sabFileArgument), getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort());
 
+            // Test using operationListener
+            ObjectName opListenerName = instance.createOperationListener();
+            //OperationListenerMXBean opListener = 
+            OperationListenerMXBean opListener = JMX.newMXBeanProxy(
+                getBeanSource().getMBeanServerConnection(), opListenerName,
+                OperationListenerMXBean.class, true);
+
+
             // Submit the job    
             jsonOut.put("jobId", instance.submitJob(
                 deployInformation.getApplicationId(),
@@ -144,9 +157,12 @@ public class SubmitJob extends AbstractInstanceCommand {
                 override,
                 jobGroup,
                 jobName,
-                null // listenerId
+                opListener.getId() // listenerId
                 ).longValue());
 
+            for (OperationStatusMessage osm : opListener.getMessages()) {
+                System.out.println(osm.getMessage());
+            }
             return new CommandResult(jsonOut.toString());
         } catch (Exception e) {
             LOGGER.debug("GetInstanceState caught Exception: " + e.toString());
