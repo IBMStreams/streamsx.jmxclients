@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
 @Parameters(commandDescription = Constants.DESC_GETRESOURCETAG)
 public class GetResourceTag extends AbstractDomainCommand {
@@ -78,7 +79,18 @@ public class GetResourceTag extends AbstractDomainCommand {
                 jsonOut.put("domain", domain.getName());
                 jsonOut.put("tag", tagName);
                 jsonOut.put("description", theResourceTag.getDescription());
-                jsonOut.put("properties", theResourceTag.getDefinitionAsCustomFormat());
+                if (theResourceTag.isDefinitionFormatProperties()) {
+                  ArrayNode propertyArray = mapper.createArrayNode();
+                  for (Map.Entry<String,String> entry : theResourceTag.getDefinitionAsProperties().entrySet()) {
+                    ObjectNode propertyObject = mapper.createObjectNode();
+                    propertyObject.put("property",entry.getKey().toString());
+                    propertyObject.put("value",entry.getValue());
+                    propertyArray.add(propertyObject);
+                  }
+                  jsonOut.set("properties",propertyArray);
+                } else {
+                  jsonOut.put("properties", theResourceTag.getDefinitionAsCustomFormat());
+                }
             } else {
                 throw new Exception("The following tag is not defined in the " + domain.getName() + "domain: " + tagName);
             }
