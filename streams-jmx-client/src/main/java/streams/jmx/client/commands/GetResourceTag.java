@@ -19,12 +19,12 @@ package streams.jmx.client.commands;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
 
+import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.resource.ResourceTag;
@@ -33,31 +33,28 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@Parameters(commandDescription = Constants.DESC_REMOVERESOURCETAG)
-public class RemoveResourceTag extends AbstractDomainCommand {
+@Parameters(commandDescription = Constants.DESC_GETRESOURCETAG)
+public class GetResourceTag extends AbstractDomainCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
-            + MakeResourceTag.class.getName());
+            + GetResourceTag.class.getName());
 
-    @Parameter(description = "Specifies the name of the tag to remove", required=true)
-    private List<String> tagNames = null;
+    @Parameter(description = "Specifies the name of the tag", required=true)
+    private String tagName = null;
 
-    @Parameter(names = {"--noprompt"}, description = "Supress confirmation prompts", required = false)
-    private boolean noPrompt=false;
 
-    public RemoveResourceTag() {
+    public GetResourceTag() {
     } 
 
     @Override
     public String getName() {
-        return (Constants.CMD_REMOVERESOURCETAG);
+        return (Constants.CMD_GETRESOURCETAG);
     }
 
     @Override
     public String getHelp() {
-        return (Constants.DESC_REMOVERESOURCETAG);
+        return (Constants.DESC_GETRESOURCETAG);
     }
 
     @Override
@@ -66,40 +63,30 @@ public class RemoveResourceTag extends AbstractDomainCommand {
 
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jsonOut = mapper.createObjectNode();
-            ArrayNode tagArray = mapper.createArrayNode();
-
+            
             DomainMXBean domain = getDomainMXBean();
     
-            int removeCount = 0;
-            jsonOut.put("domain",domain.getName());
-
-            Set<String> allTagNames = new HashSet<String>();
+            ResourceTag theResourceTag = null;
             for (ResourceTag resourceTag : domain.getResourceTags()) {
-                allTagNames.add(resourceTag.getName());
-            }
-
-            for (String tagName : tagNames) {
-                if (allTagNames.contains(tagName)) {
-                    try {
-                        domain.removeResourceTag(tagName, null);
-                        removeCount++;
-                        ObjectNode tagObject = mapper.createObjectNode();
-                        tagObject.put("tag", tagName);
-                        tagArray.add(tagObject);
-                    } catch (IllegalStateException e) {
-                        LOGGER.warn(e.getLocalizedMessage());
-                    }
-                } else {
-                    LOGGER.warn("The following tag is not defined in the {} domain: {}", domain.getName(), tagName);
+                if (resourceTag.getName().equals(tagName)) {
+                    theResourceTag = resourceTag;
+                    break;
                 }
             }
-            jsonOut.put("count",removeCount);
-            jsonOut.set("tags",tagArray);
 
+            if (theResourceTag != null) {
+                jsonOut.put("domain", domain.getName());
+                jsonOut.put("tag", tagName);
+                jsonOut.put("description", theResourceTag.getDescription());
+                jsonOut.put("properties", theResourceTag.getDefinitionAsCustomFormat());
+            } else {
+                throw new Exception("The following tag is not defined in the " + domain.getName() + "domain: " + tagName);
+            }
             return new CommandResult(jsonOut.toString());
+    
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("RemoveResourceTag caught Exception: " + e.toString());
+                LOGGER.debug("GetResourceTag caught Exception: " + e.toString());
                 e.printStackTrace();
             }
             return new CommandResult(ExitStatus.FAILED_COMMAND, null, e.getLocalizedMessage());

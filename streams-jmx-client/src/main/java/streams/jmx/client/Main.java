@@ -55,6 +55,7 @@ import streams.jmx.client.commands.GetDomainProperty;
 import streams.jmx.client.commands.GetDomainState;
 import streams.jmx.client.commands.GetInstanceState;
 import streams.jmx.client.commands.GetProperty;
+import streams.jmx.client.commands.GetResourceTag;
 import streams.jmx.client.commands.SubmitJob;
 import streams.jmx.client.commands.Help;
 import streams.jmx.client.commands.ListJobs;
@@ -112,6 +113,7 @@ public class Main {
 		cm.put(Constants.CMD_GETDOMAINPROPERTY, new GetDomainProperty());
 		cm.put(Constants.CMD_SETDOMAINPROPERTY, new SetDomainProperty());
 		cm.put(Constants.CMD_GETPROPERTY, new GetProperty());
+		cm.put(Constants.CMD_GETRESOURCETAG, new GetResourceTag());
 		cm.put(Constants.CMD_SETPROPERTY, new SetProperty());
 		cm.put(Constants.CMD_LISTJOBS, new ListJobs());
 		cm.put(Constants.CMD_LISTRESOURCETAGS, new ListResourceTags());
