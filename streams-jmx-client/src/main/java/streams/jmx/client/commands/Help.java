@@ -16,9 +16,11 @@
 package streams.jmx.client.commands;
 
 import streams.jmx.client.Constants;
+import streams.jmx.client.ServiceConfig;
 
 import com.beust.jcommander.Parameters;
 
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -50,6 +52,21 @@ public class Help implements Command {
         } else if (helpCommand != null && !helpCommand.equals("")) {
             allCommands.usage(helpCommand,sb);
         } else {
+            List<Object> objectList = this.allCommands.getObjects();
+            // If this was on the primary command line
+            if (objectList.size() > 0) {
+                JCommander baseArguments = JCommander.newBuilder()
+                    //.addObject(objectList.get(0))
+                    .addObject(new ServiceConfig())
+
+                    .addObject(new usageHelp())
+                    .programName(Constants.PROGRAM_NAME)
+                    .columnSize(132)
+                    .build();
+                baseArguments.usage(sb);
+            }
+            sb.append("\nClient Commands:\n\n");
+
             // Sort the commands
             TreeMap<String,JCommander> sortedCommandList = new TreeMap<String,JCommander>(allCommands.getCommands());
 
@@ -75,6 +92,11 @@ public class Help implements Command {
 
     public void setAllCommands(JCommander allCommands) {
         this.allCommands = allCommands;
+    }
+
+    private class usageHelp {
+        @Parameter(description = "Command", required=false)
+        private String command = null;
     }
 
 }

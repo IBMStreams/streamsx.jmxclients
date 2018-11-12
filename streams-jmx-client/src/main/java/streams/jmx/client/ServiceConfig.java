@@ -43,25 +43,22 @@ public class ServiceConfig {
 
 	// Command line arguments with defaults from environment variables
 
-    @Parameter(names = {"-h", "--help" }, description = Constants.DESC_HELP, help = true)
+    @Parameter(names = {"-h", "--help" }, description = Constants.DESC_HELP, help = true, order = 1)
     private boolean help;
     
-    @Parameter(names = {"-v", "--version" }, description = Constants.DESC_VERSION, required = false)
+    @Parameter(names = {"-v", "--version" }, description = Constants.DESC_VERSION, required = false, order = 2)
     private boolean version;
 
-    @Parameter(names = {"-j", "--jmxurl"}, description = Constants.DESC_JMXCONNECT, required = false)
+    @Parameter(names = {"-j", "--jmxurl"}, description = Constants.DESC_JMXCONNECT, required = false, order = 3)
     private String jmxUrl = getEnvDefault(Constants.ENV_JMXCONNECT,Constants.DEFAULT_JMXCONNECT);
 
-    // @Parameter(names = { "-d", "--domain" }, description = Constants.DESC_DOMAIN_ID, required = false)
-    // private String domainName = getEnvDefault(Constants.ENV_DOMAIN_ID,Constants.DEFAULT_DOMAIN_ID);
-
-    // @Parameter(names = { "-i", "--instance" }, description = Constants.DESC_INSTANCE_ID, required = false)
-    // private String instanceName = getEnvDefault(Constants.ENV_INSTANCE_ID,Constants.DEFAULT_INSTANCE_ID);
+    @Parameter(names = "--jmxssloption", description = Constants.DESC_JMX_SSLOPTION, required = false, order = 4)
+    private String sslOption = getEnvDefault(Constants.ENV_JMX_SSLOPTION,Constants.DEFAULT_JMX_SSLOPTION);
        
-    @Parameter(names = { "-u", "--user" }, description = Constants.DESC_USERNAME, required = false)
+    @Parameter(names = { "-u", "--user" }, description = Constants.DESC_USERNAME, required = false, order = 5)
     private String user = getEnvDefault(Constants.ENV_USERNAME,Constants.DEFAULT_USERNAME);
     
-    @Parameter(names = {"--password"}, description = Constants.DESC_PASSWORD, required = false)
+    @Parameter(names = {"--password"}, description = Constants.DESC_PASSWORD, required = false, order = 6)
     //@JsonIgnore
     private String password = getEnvDefault(Constants.ENV_PASSWORD,Constants.DEFAULT_PASSWORD);
     //@JsonGetter("password")
@@ -72,31 +69,29 @@ public class ServiceConfig {
     		return "";
     }
     
-    @Parameter(names = { "-x", "--x509cert" }, description = Constants.DESC_X509CERT, required = false)
+    @Parameter(names = { "-x", "--x509cert" }, description = Constants.DESC_X509CERT, required = false, order = 7)
     private String x509Cert = getEnvDefault(Constants.ENV_X509CERT,Constants.DEFAULT_X509CERT);
 
-    @Parameter(names = "--noconsole", description = Constants.DESC_NOCONSOLE)
-    private boolean hasNoConsole = false;
 
-    @Parameter(names = "--jmxtruststore", description = Constants.DESC_JMX_TRUSTSTORE, required = false, validateWith = FileExistsValidator.class)
+    @Parameter(names = "--jmxtruststore", description = Constants.DESC_JMX_TRUSTSTORE, required = false, validateWith = FileExistsValidator.class, order = 8)
     private String truststore = getEnvDefault(Constants.ENV_JMX_TRUSTSTORE,Constants.DEFAULT_JMX_TRUSTSTORE);
 
-    @Parameter(names = "--jmxssloption", description = Constants.DESC_JMX_SSLOPTION, required = false)
-    private String sslOption = getEnvDefault(Constants.ENV_JMX_SSLOPTION,Constants.DEFAULT_JMX_SSLOPTION);
     
-    @Parameter(names = "--jmxhttphost", description = Constants.DESC_JMX_HTTP_HOST, required = false)
+    @Parameter(names = "--jmxhttphost", description = Constants.DESC_JMX_HTTP_HOST, required = false, order = 9)
     private String jmxHttpHost = getEnvDefault(Constants.ENV_JMX_HTTP_HOST,Constants.DEFAULT_JMX_HTTP_HOST);
     
-    @Parameter(names = "--jmxhttpport", description = Constants.DESC_JMX_HTTP_PORT, required = false)
+    @Parameter(names = "--jmxhttpport", description = Constants.DESC_JMX_HTTP_PORT, required = false, order = 10)
     private String jmxHttpPort = getEnvDefault(Constants.ENV_JMX_HTTP_PORT,Constants.DEFAULT_JMX_HTTP_PORT);
     
-    @Parameter(names = { "-l", "--loglevel" }, description = Constants.DESC_LOGLEVEL, required = false, validateWith = LoglevelValidator.class)
+    @Parameter(names = { "-l", "--loglevel" }, description = Constants.DESC_LOGLEVEL, required = false, validateWith = LoglevelValidator.class, order = 11)
     private String loglevel = getEnvDefault(Constants.ENV_LOGLEVEL, Constants.DEFAULT_LOGLEVEL);
     
-    @Parameter(names = "--logdir", description = Constants.DESC_LOGDIR, required = false, validateWith = DirectoryExistsValidator.class)
+    @Parameter(names = "--logdir", description = Constants.DESC_LOGDIR, required = false, validateWith = DirectoryExistsValidator.class, order = 12)
     private String logdir = getEnvDefault(Constants.ENV_LOGDIR, Constants.DEFAULT_LOGDIR);
     
-    
+    @Parameter(names = "--noconsole", description = Constants.DESC_NOCONSOLE, order = 13)
+    private boolean hasNoConsole = false;
+
     public String getPassword(boolean hasConsole) {
         // Choose the appropriate JCommander console implementation to use
         Console console = null;
