@@ -16,24 +16,53 @@
 package streams.jmx.client.commands;
 
 import streams.jmx.client.Constants;
+
 import com.beust.jcommander.Parameters;
+
+import java.util.Map;
+import java.util.TreeMap;
+
+import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 
 @Parameters(commandDescription = Constants.DESC_HELP)
 public class Help implements Command {
+
     @Parameter(description = "Command to get help information for", required=false)
     private String helpCommand = "";
+
+    private JCommander allCommands = null;
 
     public String getName() {
         return Constants.CMD_HELP;
     }
 
     public String getHelp() {
-            return Constants.DESC_HELP;
+        return Constants.DESC_HELP;
     }
 
     public CommandResult execute() {
-            return new CommandResult("This should have been handled before execution");
+
+        StringBuilder sb = new StringBuilder();
+        
+        if (allCommands == null) {
+            sb.append("Help command has not been initialized with all commands");
+        } else if (helpCommand != null && !helpCommand.equals("")) {
+            allCommands.usage(helpCommand,sb);
+        } else {
+            // Sort the commands
+            TreeMap<String,JCommander> sortedCommandList = new TreeMap<String,JCommander>(allCommands.getCommands());
+
+
+            sb.append(String.format("%-20s  %s\n","Command","Description"));
+            sb.append(String.format("%-20s  %s\n","--------------------","-----------"));
+            //for (Map.Entry<String, JCommander> entry :  jc.getCommands().entrySet()) {
+            for (Map.Entry<String, JCommander> entry :  sortedCommandList.entrySet()) {
+                Command commandObject = (Command)entry.getValue().getObjects().get(0);
+                sb.append(String.format("%-20s  %s\n",entry.getKey(),commandObject.getHelp()));
+            }
+        }
+        return new CommandResult(sb.toString());
     }
 
     public String getHelpCommand() {
@@ -42,6 +71,10 @@ public class Help implements Command {
 
     public void clearHelpCommand() {
         this.helpCommand = null;
+    }
+
+    public void setAllCommands(JCommander allCommands) {
+        this.allCommands = allCommands;
     }
 
 }

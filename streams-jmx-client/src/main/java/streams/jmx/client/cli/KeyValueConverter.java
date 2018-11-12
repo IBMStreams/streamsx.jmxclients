@@ -17,8 +17,6 @@
 package streams.jmx.client.cli;
 
 import java.util.AbstractMap;
-import java.util.HashSet;
-import java.util.Set;
 
 import com.beust.jcommander.IStringConverter;
 import com.beust.jcommander.ParameterException;

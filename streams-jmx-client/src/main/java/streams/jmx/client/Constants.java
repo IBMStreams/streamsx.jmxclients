@@ -63,7 +63,7 @@ public class Constants {
 		DESC_REMOVERESOURCETAG = "Remove a resource tag from a domain",
 		DESC_SUBMITJOB = "Submit Streams application to run in a Streams instance",
 		DESC_CANCELJOB = "Cancel Streams application",
-		DESC_SNAPSHOTJOBS = "Capture a snapshot of all jobs in the Streams instance",
+		DESC_SNAPSHOTJOBS = "Capture a snapshot of jobs running in an instance",
 		DESC_QUIT = "Exit interactive client application"
 	;
 

@@ -134,26 +134,23 @@ public class Main {
 		config = new ServiceConfig();
 		JCommander jc = null;
 		String parsedCommand = null;
-		
+		Help helpCommand = new Help();
+
 		try {
-			// jc = new JCommander(config);
-			// jc.setProgramName(Constants.PROGRAM_NAME);
-			// jc.setColumnSize(132);
-			// jc.addCommand(Constants.CMD_HELP, new Help());
-			// jc.addCommand(Constants.CMD_VERSION, new Version());
-			// jc.addCommand(Constants.CMD_GETDOMAINSTATE, new GetDomainState());
-		
+
 			jc = JCommander.newBuilder()
 				.programName(Constants.PROGRAM_NAME)
 				.columnSize(132)
 				.addObject(config)
-				.addCommand(Constants.CMD_HELP, new Help())
+				.addCommand(Constants.CMD_HELP, helpCommand)
 				.addCommand(Constants.CMD_VERSION, new Version())
 				.build();
 			
 			for (Map.Entry<String, Command> entry : commandMap.entrySet()) {
 				jc.addCommand(entry.getKey(),entry.getValue());
 			}
+
+			helpCommand.setAllCommands(jc);
 
 			jc.parse(args);
 			parsedCommand = jc.getParsedCommand();
@@ -171,7 +168,8 @@ public class Main {
 
 		// Order so that main options (-v -h take precedence over commands: version and help)
 		if (config.isHelp()) {
-			jc.usage();
+			//jc.usage();
+			System.out.println(helpCommand.execute().getOutput());
 			System.exit(0);
 		}
 		if (config.isVersion()) {
@@ -179,7 +177,8 @@ public class Main {
 			System.exit(0);
 		}
 		if (parsedCommand.equals(Constants.CMD_HELP)) {
-			jc.usage();
+			//jc.usage();
+			System.out.println(helpCommand.execute().getOutput());
 			System.exit(0);
 		}
 		if (parsedCommand.equals(Constants.CMD_VERSION)) {
@@ -216,18 +215,6 @@ public class Main {
 
 		if (checkValidJMXConnection()) {
 			LOGGER.debug("Initial JMX Connection Succeeded, commands can be processed.");
-			// if (main.startRestServer()) {
-			// 	if (! main.startStreamsDomainTracker()) {
-			// 		LOGGER.error("Startup of Streams Metric Exporter FAILED, Exiting Program.");
-			// 		System.out.println("Startup of Streams Metric Exporter FAILED, Exiting Program.");
-			// 		restServer.stopServer();
-			// 		System.exit(1);
-			// 	}
-			// } else {
-			// 	LOGGER.error("Startup of HTTP Server FAILED, Exiting Program.");
-			// 	System.out.println("Startup of HTTP Server FAILED, Exiting Program.");
-			// 	System.exit(1);
-			// }
 		} else {
 			LOGGER.error("Initial JMX Connection failed.  Exiting Program.");
 			System.out.println("Initial JMX Connection failed.  See log for details.");
@@ -283,19 +270,6 @@ public class Main {
 
 			Help helpCommand = new Help();
 
-			// jc = JCommander.newBuilder()
-			// 	.programName(Constants.PROGRAM_NAME)
-			// 	.columnSize(132)
-			// 	.addCommand(Constants.CMD_HELP, helpCommand)
-			// 	.addCommand(Constants.CMD_VERSION, new Version())
-			// 	.addCommand(Constants.CMD_QUIT, new Quit())
-			// 	.allowParameterOverwriting(true)
-			// 	.build();
-			
-			// for (Map.Entry<String, Command> entry : commandMap.entrySet()) {
-			// 	jc.addCommand(entry.getKey(),entry.getValue());
-			// }
-
 			String command_prompt = Constants.INTERACTIVE_PREFIX + Constants.INTERACTIVE_SUFFIX;
 
 			// Jline stuff
@@ -329,6 +303,8 @@ public class Main {
 				for (Map.Entry<String, Command> entry : commandMap.entrySet()) {
 					jc.addCommand(entry.getKey(),entry.getValue());
 				}
+
+				helpCommand.setAllCommands(jc);
 				
 				parsedCommand = null;
 				line = null;
@@ -362,18 +338,8 @@ public class Main {
 
 
 					if (parsedCommand.equals(Constants.CMD_HELP)) {
-						String commandHelp = helpCommand.getHelpCommand();
+						System.out.println(helpCommand.execute().getOutput());
 						helpCommand.clearHelpCommand();
-						if (commandHelp != null && !commandHelp.equals("")) {
-							jc.usage(commandHelp);
-						} else {
-							System.out.println(String.format("%-20s  %s","Command","Description"));
-							System.out.println(String.format("%-20s  %s\n","--------------------","-----------"));
-							for (Map.Entry<String, JCommander> entry :  jc.getCommands().entrySet()) {
-								Command commandObject = (Command)entry.getValue().getObjects().get(0);
-								System.out.println(String.format("%-20s  %s\n",entry.getKey(),commandObject.getHelp()));
-							}
-						}
 					} else if (parsedCommand.equals(Constants.CMD_VERSION)) {
 						printVersion();
 					} else if (parsedCommand.equals(Constants.CMD_QUIT)) {
