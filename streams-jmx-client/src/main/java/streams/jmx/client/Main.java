@@ -59,6 +59,7 @@ import streams.jmx.client.commands.GetResourceTag;
 import streams.jmx.client.commands.SubmitJob;
 import streams.jmx.client.commands.Help;
 import streams.jmx.client.commands.ListJobs;
+import streams.jmx.client.commands.ListPes;
 import streams.jmx.client.commands.ListResourceTags;
 import streams.jmx.client.commands.MakeResourceTag;
 import streams.jmx.client.commands.Quit;
@@ -116,6 +117,7 @@ public class Main {
 		cm.put(Constants.CMD_GETRESOURCETAG, new GetResourceTag());
 		cm.put(Constants.CMD_SETPROPERTY, new SetProperty());
 		cm.put(Constants.CMD_LISTJOBS, new ListJobs());
+		cm.put(Constants.CMD_LISTPES, new ListPes());
 		cm.put(Constants.CMD_LISTRESOURCETAGS, new ListResourceTags());
 		cm.put(Constants.CMD_MAKERESOURCETAG, new MakeResourceTag());
 		cm.put(Constants.CMD_REMOVERESOURCETAG, new RemoveResourceTag());

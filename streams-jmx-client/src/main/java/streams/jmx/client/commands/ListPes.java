@@ -18,7 +18,9 @@ package streams.jmx.client.commands;
 
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
+import streams.jmx.client.cli.BigIntegerConverter;
 
+import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
@@ -30,6 +32,8 @@ import java.util.List;
 import javax.management.ObjectName;
 import com.ibm.streams.management.instance.InstanceMXBean;
 import com.ibm.streams.management.job.JobMXBean;
+import com.ibm.streams.management.job.PeMXBean;
+import com.ibm.streams.management.resource.ResourceMXBean;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,22 +42,26 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@Parameters(commandDescription = Constants.DESC_LISTJOBS)
-public class ListJobs extends AbstractJobListCommand {
+@Parameters(commandDescription = Constants.DESC_LISTPES)
+public class ListPes extends AbstractJobListCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
-            + ListJobs.class.getName());
+            + ListPes.class.getName());
 
-    public ListJobs() {
+    @Parameter(names = {"--pes"}, description = "A list of processing elements (PDs)", required = false,
+    converter = BigIntegerConverter.class)
+    private List<BigInteger> peIds;
+
+    public ListPes() {
     }
 
     @Override
     public String getName() {
-        return (Constants.CMD_LISTJOBS);
+        return (Constants.CMD_LISTPES);
     }
 
     @Override
     public String getHelp() {
-        return (Constants.DESC_LISTJOBS);
+        return (Constants.DESC_LISTPES);
     }
 
     @Override
@@ -98,7 +106,7 @@ public class ListJobs extends AbstractJobListCommand {
             // Populate the result object
             jsonOut.put("instance",instance.getName());
     
-            ArrayNode jobArray = mapper.createArrayNode();
+            ArrayNode peArray = mapper.createArrayNode();
             int listCount = 0;
 
             for (BigInteger jobId : instance.getJobs()) {
@@ -113,25 +121,46 @@ public class ListJobs extends AbstractJobListCommand {
                 ObjectName jobObjectName = instance.registerJob(jobId);
                 JobMXBean job = getBeanSource().getJobBean(getDomainName(),getInstanceName(),jobId);
                 
-                listCount++;
-                ObjectNode jobObject = mapper.createObjectNode();
-                jobObject.put("id",jobId.longValue());
-                jobObject.put("status",job.getStatus().toString());
-                jobObject.put("health",job.getHealth().toString());
-                jobObject.put("startedbyuser",job.getStartedByUser());
-                jobObject.put("submittime",job.getSubmitTime());
-                jobObject.put("name",job.getName());
-                jobObject.put("group",job.getJobGroup());
+                for (BigInteger peId : job.getPes()) {
+                    // Check if we want this one
+                    if ((peIds != null) && (peIds.size() > 0)) {
+                        if (!peIds.contains(peId))
+                            continue;  // skip it
+                    }
 
-                jobArray.add(jobObject);
+
+                    PeMXBean pe = getBeanSource().getPeBean(getDomainMXBean().getName(), instance.getName(), peId);
+                    ResourceMXBean resource = getBeanSource().getResourceBean(instance.getDomain(), pe.getResource());
+
+                    listCount++;
+
+                    ObjectNode peObject = mapper.createObjectNode();
+                    peObject.put("id",peId.longValue());
+                    peObject.put("status",pe.getStatus().toString());
+                    peObject.put("statusreason",pe.getStatusReason().toString());
+                    peObject.put("health",pe.getHealth().toString());
+                    peObject.put("resource",pe.getResource());
+                    peObject.put("ip",resource.getIpAddress());
+                    peObject.put("pid",pe.getPid());
+                    peObject.put("launchcount",pe.getLaunchCount());
+                    peObject.put("jobid",jobId.longValue());
+                    peObject.put("jobname",job.getName());
+
+                    ArrayNode operatorArray = mapper.valueToTree(pe.getOperators());
+                    peObject.set("operators",operatorArray);
+
+                    peArray.add(peObject);
+                }
+
+
             }
             jsonOut.put("count",listCount);
-            jsonOut.set("jobs",jobArray);
+            jsonOut.set("pes",peArray);
             //System.out.println(sb.toString());
             return new CommandResult(jsonOut.toString());
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
-                System.out.println("ListJobs caught Exception: " + e.toString());
+                System.out.println("ListPes caught Exception: " + e.toString());
                 e.printStackTrace();
             }
             return new CommandResult(ExitStatus.FAILED_COMMAND, null, e.getLocalizedMessage());

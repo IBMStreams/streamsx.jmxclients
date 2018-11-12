@@ -19,11 +19,9 @@ package streams.jmx.client.commands;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
 
-import com.beust.jcommander.DynamicParameter;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.Parameters;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import com.ibm.streams.management.domain.DomainMXBean;
@@ -80,16 +78,16 @@ public class GetResourceTag extends AbstractDomainCommand {
                 jsonOut.put("tag", tagName);
                 jsonOut.put("description", theResourceTag.getDescription());
                 if (theResourceTag.isDefinitionFormatProperties()) {
-                  ArrayNode propertyArray = mapper.createArrayNode();
-                  for (Map.Entry<String,String> entry : theResourceTag.getDefinitionAsProperties().entrySet()) {
-                    ObjectNode propertyObject = mapper.createObjectNode();
-                    propertyObject.put("property",entry.getKey().toString());
-                    propertyObject.put("value",entry.getValue());
-                    propertyArray.add(propertyObject);
-                  }
-                  jsonOut.set("properties",propertyArray);
+                    ArrayNode propertyArray = mapper.createArrayNode();
+                    for (Map.Entry<String,String> entry : theResourceTag.getDefinitionAsProperties().entrySet()) {
+                        ObjectNode propertyObject = mapper.createObjectNode();
+                        propertyObject.put("property",entry.getKey().toString());
+                        propertyObject.put("value",entry.getValue());
+                        propertyArray.add(propertyObject);
+                    }
+                    jsonOut.set("properties",propertyArray);
                 } else {
-                  jsonOut.put("properties", theResourceTag.getDefinitionAsCustomFormat());
+                    jsonOut.put("properties", theResourceTag.getDefinitionAsCustomFormat());
                 }
             } else {
                 throw new Exception("The following tag is not defined in the " + domain.getName() + "domain: " + tagName);
