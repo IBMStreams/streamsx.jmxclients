@@ -100,34 +100,28 @@ public class GetProperty extends AbstractInstanceCommand {
             jsonOut.put("instance",instance.getName());
 
             if (applicationEv) {
-                try {
-                    TreeMap<String,String> applicationEvMap = new TreeMap<String,String>();
-                    applicationEvMap.putAll(instance.getApplicationEnvironmentVariables());
- 
-                    if (instanceProperties != null && instanceProperties.size() > 0) {
-                        for (String propertyName : instanceProperties) {
-                            if (applicationEvMap.containsKey(propertyName)) {
-                                ObjectNode propertyObject = mapper.createObjectNode();
-                                propertyObject.put("property",propertyName);
-                                propertyObject.put("value",applicationEvMap.get(propertyName));
-                                propertyArray.add(propertyObject);
-                            } else {
-                                LOGGER.warn("The following properrty is not an application property: {}", propertyName);
-                            }
-                        }
-                    } else {
-                        for (Map.Entry<String, String> entry : applicationEvMap.entrySet()) {
+                TreeMap<String,String> applicationEvMap = new TreeMap<String,String>();
+                applicationEvMap.putAll(instance.getApplicationEnvironmentVariables());
+
+                if (instanceProperties != null && instanceProperties.size() > 0) {
+                    for (String propertyName : instanceProperties) {
+                        if (applicationEvMap.containsKey(propertyName)) {
                             ObjectNode propertyObject = mapper.createObjectNode();
-                            propertyObject.put("property",entry.getKey().toString());
-                            propertyObject.put("value",entry.getValue());
+                            propertyObject.put("property",propertyName);
+                            propertyObject.put("value",applicationEvMap.get(propertyName));
                             propertyArray.add(propertyObject);
-                        }   
+                        } else {
+                            LOGGER.warn("The following properrty is not an application property: {}", propertyName);
+                        }
                     }
-                } catch ( UndeclaredThrowableException e) {
-                    LOGGER.debug("Caught UndeclaredThrowableException (Usually because of wrong version of streams mx .jar files");
-                    Throwable t = e.getUndeclaredThrowable();
-                    LOGGER.debug("Unwrapped: {}: {}", t.getClass(),t.getLocalizedMessage());
-                }            
+                } else {
+                    for (Map.Entry<String, String> entry : applicationEvMap.entrySet()) {
+                        ObjectNode propertyObject = mapper.createObjectNode();
+                        propertyObject.put("property",entry.getKey().toString());
+                        propertyObject.put("value",entry.getValue());
+                        propertyArray.add(propertyObject);
+                    }   
+                }
             } else {
                 if (instanceProperties != null && instanceProperties.size() > 0) {
                     for (String propertyName : instanceProperties) {

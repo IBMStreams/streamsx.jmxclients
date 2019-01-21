@@ -27,6 +27,7 @@ import com.beust.jcommander.Parameters;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
@@ -47,6 +48,9 @@ public class SetProperty extends AbstractInstanceCommand {
    
     @Parameter(description = "property-name=property-value ...", required=false)
     private List<String> instancePropertiesString;
+
+    @Parameter(names = {"--application-ev"}, description = "Specifies that the property is an application environment variable.", required = false)
+    private boolean applicationEv = false;
 
     //@Parameter(description = "property-name=property-value ...", required=false,
     //   converter = KeyValueConverter.class)
@@ -95,29 +99,51 @@ public class SetProperty extends AbstractInstanceCommand {
             jsonOut.put("domain",domain.getName());
             jsonOut.put("instance",instance.getName());
 
-            for (AbstractMap.SimpleImmutableEntry<String, String> keyValuePair : instanceProperties) {
-                LOGGER.debug("About to set property {} = {}",keyValuePair.getKey(), keyValuePair.getValue());
-                ObjectNode propertyObject = mapper.createObjectNode();
-                InstanceMXBean.PropertyId propertyId = null;
-                try {
-                    propertyId = InstanceMXBean.PropertyId.fromString(keyValuePair.getKey());
-                } catch (IllegalArgumentException e) {
-                    LOGGER.warn("The following property is not valid: {}",keyValuePair.getKey());
-                }
-                try {
-                    if (propertyId != null) {
-                        String oldValue = instance.getProperty(propertyId);
-                        instance.setProperty(InstanceMXBean.PropertyId.fromString(keyValuePair.getKey()),keyValuePair.getValue());
-                        propertyObject.put("property",propertyId.toString());
-                        propertyObject.put("newvalue",keyValuePair.getValue());
-                        propertyObject.put("previousvalue",oldValue);
-                        propertyArray.add(propertyObject);
+
+            if (applicationEv) {
+                // Get existing application environment variables
+                Map<String,String> applicationEvMap = instance.getApplicationEnvironmentVariables();
+
+                for (AbstractMap.SimpleImmutableEntry<String, String> keyValuePair : instanceProperties) {
+                    ObjectNode propertyObject = mapper.createObjectNode();
+                    propertyObject.put("property",keyValuePair.getKey());
+                    propertyObject.put("newvalue",keyValuePair.getValue());
+                    // Check to see if it already exists
+                    if (applicationEvMap.containsKey(keyValuePair.getKey().toString())) {
+                        propertyObject.put("previousvalue",applicationEvMap.get(keyValuePair.getKey()));
+                        LOGGER.debug("About to change application environment variable {} = {}",keyValuePair.getKey(), keyValuePair.getValue());
+                        instance.changeApplicationEnvironmentVariable(keyValuePair.getKey(), keyValuePair.getValue());
+                    } else {
+                        propertyObject.put("previousvalue","");
+                        LOGGER.debug("About to add application environment variable {} = {}",keyValuePair.getKey(), keyValuePair.getValue());
+                        instance.addApplicationEnvironmentVariable(keyValuePair.getKey(), keyValuePair.getValue());
                     }
-                } catch (IllegalStateException e) {
-                    LOGGER.warn(e.getLocalizedMessage());
+                    propertyArray.add(propertyObject);
+                }
+            } else {
+                for (AbstractMap.SimpleImmutableEntry<String, String> keyValuePair : instanceProperties) {
+                    LOGGER.debug("About to set property {} = {}",keyValuePair.getKey(), keyValuePair.getValue());
+                    ObjectNode propertyObject = mapper.createObjectNode();
+                    InstanceMXBean.PropertyId propertyId = null;
+                    try {
+                        propertyId = InstanceMXBean.PropertyId.fromString(keyValuePair.getKey());
+                    } catch (IllegalArgumentException e) {
+                        LOGGER.warn("The following property is not valid: {}",keyValuePair.getKey());
+                    }
+                    try {
+                        if (propertyId != null) {
+                            String oldValue = instance.getProperty(propertyId);
+                            instance.setProperty(InstanceMXBean.PropertyId.fromString(keyValuePair.getKey()),keyValuePair.getValue());
+                            propertyObject.put("property",propertyId.toString());
+                            propertyObject.put("newvalue",keyValuePair.getValue());
+                            propertyObject.put("previousvalue",oldValue);
+                            propertyArray.add(propertyObject);
+                        }
+                    } catch (IllegalStateException e) {
+                        LOGGER.warn(e.getLocalizedMessage());
+                    }
                 }
             }
-
             jsonOut.set("properties",propertyArray);
             jsonOut.put("count",propertyArray.size());
 
