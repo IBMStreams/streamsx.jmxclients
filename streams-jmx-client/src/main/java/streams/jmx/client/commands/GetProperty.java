@@ -39,7 +39,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-@Parameters(commandDescription = Constants.DESC_GETDOMAINSTATE)
+@Parameters(commandDescription = Constants.DESC_GETPROPERTY)
 public class GetProperty extends AbstractInstanceCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
     + GetProperty.class.getName());
@@ -50,6 +50,8 @@ public class GetProperty extends AbstractInstanceCommand {
     @Parameter(names = {"-a","--all"}, description = "List values of all instance properties", required = false)
     private boolean showAll = false; 
 
+    @Parameter(names = {"--application-ev"}, description = "Specifies to retrieve values for application environment variables.", required = false)
+    private boolean applicationEv = false;
 
     public GetProperty() {
     }
@@ -79,7 +81,7 @@ public class GetProperty extends AbstractInstanceCommand {
                 throw new ParameterException("The following options are mutually exclusive: {[-a,--all] | [property-name ...]}");
             }
 
-            // domain-property or all is required
+            // instance-property or all is required
             if ((((instanceProperties != null && instanceProperties.size() >0)?1:0) + 
                 ((showAll == true)?1:0))<1) {
                 throw new ParameterException("A required option or argument was not specified. Specify one of the following options or arguments: {[-a,--all] | [property-name ...]}");
@@ -97,51 +99,76 @@ public class GetProperty extends AbstractInstanceCommand {
             jsonOut.put("domain",domain.getName());
             jsonOut.put("instance",instance.getName());
 
-            if (instanceProperties != null && instanceProperties.size() > 0) {
-                for (String propertyName : instanceProperties) {
-                    LOGGER.debug("Looking up property: {}", propertyName);
-                    ObjectNode propertyObject = mapper.createObjectNode();
-                    InstanceMXBean.PropertyId propertyId = null;
-                    try {
-                        propertyId = InstanceMXBean.PropertyId.fromString(propertyName);
-                    } catch (IllegalArgumentException e) {
-                        LOGGER.warn("The following property is not valid: {}",propertyName);
-                    }
-                    if (propertyId != null) {
-                        String propertyValue = instance.getProperty(propertyId);
-                        propertyObject.put("property",propertyName);
-                        propertyObject.put("value",propertyValue);
-                        propertyArray.add(propertyObject);
-                    }
-                }
-            } else {
-                // all were specified
-                try {
-                    // Sort the properties
-                    TreeMap<InstanceMXBean.PropertyId,String> propertyMap = new TreeMap<InstanceMXBean.PropertyId,String>(new PropertyComparator());
-                    propertyMap.putAll(instance.getProperties(true));
+            if (applicationEv) {
+                TreeMap<String,String> applicationEvMap = new TreeMap<String,String>();
+                applicationEvMap.putAll(instance.getApplicationEnvironmentVariables());
 
-                    for (Map.Entry<InstanceMXBean.PropertyId, String> entry : propertyMap.entrySet()) {
+                if (instanceProperties != null && instanceProperties.size() > 0) {
+                    for (String propertyName : instanceProperties) {
+                        if (applicationEvMap.containsKey(propertyName)) {
+                            ObjectNode propertyObject = mapper.createObjectNode();
+                            propertyObject.put("property",propertyName);
+                            propertyObject.put("value",applicationEvMap.get(propertyName));
+                            propertyArray.add(propertyObject);
+                        } else {
+                            LOGGER.warn("The following properrty is not an application property: {}", propertyName);
+                        }
+                    }
+                } else {
+                    for (Map.Entry<String, String> entry : applicationEvMap.entrySet()) {
                         ObjectNode propertyObject = mapper.createObjectNode();
                         propertyObject.put("property",entry.getKey().toString());
                         propertyObject.put("value",entry.getValue());
                         propertyArray.add(propertyObject);
                     }   
-                } catch ( UndeclaredThrowableException e) {
-                    LOGGER.debug("Caught UndeclaredThrowableException (Usually because of wrong version of streams mx .jar files");
-                    Throwable t = e.getUndeclaredThrowable();
-                    LOGGER.debug("Unwrapped: {}: {}", t.getClass(),t.getLocalizedMessage());
-                }            
-            }
+                }
+            } else {
+                if (instanceProperties != null && instanceProperties.size() > 0) {
+                    for (String propertyName : instanceProperties) {
+                        LOGGER.debug("Looking up property: {}", propertyName);
+                        ObjectNode propertyObject = mapper.createObjectNode();
+                        InstanceMXBean.PropertyId propertyId = null;
+                        try {
+                            propertyId = InstanceMXBean.PropertyId.fromString(propertyName);
+                        } catch (IllegalArgumentException e) {
+                            LOGGER.warn("The following property is not valid: {}",propertyName);
+                        }
+                        if (propertyId != null) {
+                            String propertyValue = instance.getProperty(propertyId);
+                            propertyObject.put("property",propertyName);
+                            propertyObject.put("value",propertyValue);
+                            propertyArray.add(propertyObject);
+                        }
+                    }
+                } else {
+                    // all were specified
+                    try {
+                        // Sort the properties
+                        TreeMap<InstanceMXBean.PropertyId,String> propertyMap = new TreeMap<InstanceMXBean.PropertyId,String>(new PropertyComparator());
+                        propertyMap.putAll(instance.getProperties(true));
 
+                        for (Map.Entry<InstanceMXBean.PropertyId, String> entry : propertyMap.entrySet()) {
+                            ObjectNode propertyObject = mapper.createObjectNode();
+                            propertyObject.put("property",entry.getKey().toString());
+                            propertyObject.put("value",entry.getValue());
+                            propertyArray.add(propertyObject);
+                        }   
+                    } catch ( UndeclaredThrowableException e) {
+                        LOGGER.debug("Caught UndeclaredThrowableException (Usually because of wrong version of streams mx .jar files");
+                        Throwable t = e.getUndeclaredThrowable();
+                        LOGGER.debug("Unwrapped: {}: {}", t.getClass(),t.getLocalizedMessage());
+                    }            
+                }
+            }
 
             jsonOut.set("properties",propertyArray);
             jsonOut.put("count",propertyArray.size());
 
+
             return new CommandResult(jsonOut.toString());
         } catch (Exception e) {
             if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("GetDomainProperty caught Exception: {}", e.toString());
+                LOGGER.debug("GetProperty caught Exception: {}", e.toString());
                 e.printStackTrace();
             }
             return new CommandResult(ExitStatus.FAILED_COMMAND, null, e.getLocalizedMessage());

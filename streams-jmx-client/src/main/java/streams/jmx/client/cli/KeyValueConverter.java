@@ -29,11 +29,21 @@ public class KeyValueConverter implements IStringConverter<AbstractMap.SimpleImm
 
     @Override
     public AbstractMap.SimpleImmutableEntry<String,String> convert(String keyValuePair) {
-		String[] s = keyValuePair.split("=");
-		if (s.length !=2 ) {
+		if (keyValuePair.indexOf("=") == 0) {
 			throw new ParameterException(getErrorMessage(keyValuePair));
 		}
-		return new AbstractMap.SimpleImmutableEntry<String,String>(s[0],s[1]);
+		String[] s = keyValuePair.split("=");
+		String key;
+		String value = "";
+		if (s.length == 1) {
+			key = s[0];
+		} else if (s.length == 2) {
+			key = s[0];
+			value = s[1];
+		} else {
+			throw new ParameterException(getErrorMessage(keyValuePair));
+		}
+		return new AbstractMap.SimpleImmutableEntry<String,String>(key,value);
     		//return convertInstanceList(instanceList);
 	}
 	
