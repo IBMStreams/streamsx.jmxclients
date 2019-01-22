@@ -28,6 +28,7 @@ Requests for additional commands are welcome and contributions are encouraged.
 |lspes|Report health summary for each PE
 |lstag|List tags defined for a domain
 |mktag|Create a resource tag in a domain with description and resource definition
+|rmproperty|Remove an instance property or application variable
 |rmtag|Remove a resource tag from a domain
 |setdomainproperty|Set one or more property values for a domain
 |setproperty|Set one or more property values for an instance
@@ -158,6 +159,7 @@ lsjobs                Get a list of the jobs running in an instance
 lspes                 Report health summary for each PE
 lstag                 List tags defined for a domain
 mktag                 Create a resource tag in a domain with description and resource definition
+rmproperty            Remove an instance property or application ev
 rmtag                 Remove a resource tag from a domain
 setdomainproperty     Set one or more property values for a domain
 setproperty           Set one or more property values for an instance
