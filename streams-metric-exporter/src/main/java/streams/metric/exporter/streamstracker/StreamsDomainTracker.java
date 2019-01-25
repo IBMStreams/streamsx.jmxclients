@@ -16,7 +16,6 @@
 
 package streams.metric.exporter.streamstracker;
 
-import java.net.InterfaceAddress;
 import java.net.MalformedURLException;
 import java.util.TimerTask;
 import java.util.Arrays;
