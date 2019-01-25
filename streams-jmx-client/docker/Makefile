@@ -3,7 +3,7 @@ all: image
 #REPOSITORY=
 #WHOAMI=$(shell whoami)
 WHOAMI=bmwilli1
-IMAGE_VERSION=1.0.0
+IMAGE_VERSION=1.1.0
 IMAGE_NAME=streams-jmx-client
 FULL_IMAGE_NAME=${WHOAMI}/${IMAGE_NAME}
 DOCKERFILE=Dockerfile
