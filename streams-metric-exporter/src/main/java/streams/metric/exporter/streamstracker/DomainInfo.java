@@ -70,7 +70,8 @@ public class DomainInfo {
 	    	setInstances(bean.getInstances());
 	    	setResources(bean.getResources());
     	} catch (Exception e) {
-    		throw new StreamsTrackerException("Exception setting the Domain Info using Domain JMX Bean",e);
+			LOGGER.error("Exception setting the Domain Info using the Domain JMX Bean: {}",e.getLocalizedMessage());
+    		throw new StreamsTrackerException("Exception setting the Domain Info using Domain JMX Bean: " + e.getLocalizedMessage(),e);
     	}
     }
 
