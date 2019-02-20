@@ -61,6 +61,8 @@ import org.slf4j.LoggerFactory;
  * An <code>MXBeanSourceProvider</code> that pools its connections to the JMX
  * server, reusing MBeanServerConnection instances per distinct combination of
  * JMX uri, username, password, and provider.
+ * 
+ * JMX uri can be a comma-separated list for HA
  */
 public class JmxConnectionPool implements MXBeanSourceProvider {
     private static final String STREAMS_X509CERT = "STREAMS_X509CERT";
@@ -218,6 +220,11 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
      * NOTE: In Streams 4.x the JMX server is a domain service, thus the streams
      * instance can stop/start without affecting the JMX server Clients of this
      * connection pool need to monitor the instance (e.g. start date change)
+     * 
+     * New: The jmxUri can be a comma-separated list
+     * When a connection is lost, it will attempt the first in the list
+     * If that fails, it will try the next.  The list is considered
+     * priority ordered.
      */
     private class PooledJmxConnection {
         private JMXConnector mConnector = null;
@@ -229,6 +236,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
         private ConnectionNotificationListener mConnectionNotificationListener = null;
 
         private String jmxUri = null;
+        private List<String> jmxUriList = null;
         private String user = null;
         private String password = null;
         private String protocol = null;
@@ -244,6 +252,17 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             this.password = password;
             this.provider = provider;
             this.protocol = protocol;
+
+            createUriList(jmxUri);
+        }
+
+        private void createUriList(String jmxUri) {
+            //ArrayList<String> uriList = new ArrayList<String>();
+            LOGGER.trace("Creating jmx uri list...");
+
+            this.jmxUriList = Arrays.asList(jmxUri.split("\\s*,\\s*"));
+
+            LOGGER.trace("List contains {} elements.",this.jmxUriList.size());
         }
 
         public void doStart() throws IOException, SecurityException {
@@ -264,8 +283,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                     LOGGER.warn(
                             "Failed initial connection to JMX Server {}. Verify port number and ensure it is running.",
                             this.jmxUri);
-                    System.out.println("*** e: " + e);
-                    e.printStackTrace();
+                    LOGGER.warn("  Exception: {}",e.toString());
 
                     if (!retryConnections) {
                         throw e;
@@ -289,7 +307,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                 // If can retry, then wait a bit
                 if (needToRetry && canRetry) {
                     LOGGER.info(
-                            "Retrying initial JMX connection in " + startRetryDelay + " seconds...");
+                            "Retrying intial jmx connection based on exception type and settings in " + startRetryDelay + " seconds...");
                     try {
                         Thread.sleep(startRetryDelay * 1000);
                     } catch (InterruptedException e) {
@@ -304,8 +322,14 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
         /*
          * initNetworkConnection Use the attributes of this class and attempt to
          * connect to the JMX server
+         * 
+         * If a uri list was provided:
+         *   Loop through all connections in uri list before returning / throwing exception
+         *   If no uri's work, throw exceptions of last failure.
          */
         private void initNetworkConnection() throws IOException {
+            String curJmxUri = null;
+
             if (mConnector != null) {
                 try {
                     LOGGER.trace("** initNetworkConnection: mConnector with connection id ("
@@ -316,8 +340,9 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                     // ignore, as this is best effort
                 }
             }
+            mConnector = null;
 
-            LOGGER.trace("...connection not found or null, creating new connection...");
+            LOGGER.trace("...configuring jmx connection properties ...");
             HashMap<String, Object> env = new HashMap<String, Object>();
             // Only set username/password credentials if available, othewise
             // assume PKI key used
@@ -340,8 +365,40 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
             // sslOption in Streams, set for JMX Connections
             env.put("jmx.remote.tls.enabled.protocols", protocol);
 
-            mConnector = JMXConnectorFactory.connect(new JMXServiceURL(jmxUri),
-                    env);
+
+            // Loop through list attempting connection only if the user passed a list of uri's
+            // NOTE: Security and other RuntimeExceptions will be raised immediately
+            if (jmxUriList.size() > 1) {
+                LOGGER.trace("A list of uri's was used, attempt to try each until success or all fail");
+                for (int curIndex = 0; curIndex < jmxUriList.size(); curIndex++) {
+                    curJmxUri = jmxUriList.get(curIndex);
+                    LOGGER.trace("using uri index: {}, uri: {}",curIndex,curJmxUri);
+
+                    LOGGER.trace("... attempting connection to: {}",curJmxUri);
+                    try {
+                    mConnector = JMXConnectorFactory.connect(new JMXServiceURL(curJmxUri), env);
+                    } catch (Exception e) {
+                        LOGGER.warn(
+                                "Failed connection to JMX Server {} in list {}: {}",
+                                curJmxUri, this.jmxUri, e.toString());
+                        // If last item in uri list throw exception
+                        if (curIndex == (jmxUriList.size() -1 )) {
+                            LOGGER.trace("Last uri attempted, throwing exception.");
+                            throw e;
+                        } else {
+                            LOGGER.trace("Attempting next uri...");
+                        }
+                    }
+                    // Connection successful
+                    break;
+                }
+            } else {
+                curJmxUri = this.jmxUriList.get(0);
+                LOGGER.trace("A single uri was used, attemting connection to: {}...",curJmxUri);
+
+                // Just a single uri used, allow exceptions to be thrown.
+                mConnector = JMXConnectorFactory.connect(new JMXServiceURL(curJmxUri), env);
+            }
             mConnectionId = mConnector.getConnectionId();
             mConnector.addConnectionNotificationListener(
                     getConnectionNotificationListener(), null, null);
@@ -365,7 +422,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                         initNetworkConnection();
                     } catch (Exception e) {
                         LOGGER.warn(
-                                "** Failed to reconnect to JMX Server {}. => {}", jmxUri, e.getMessage());
+                                "** Failed to reconnect to a JMX Server {}. => {}", jmxUri, e.getMessage());
                         scheduleReconnect();
                     }
                 }
