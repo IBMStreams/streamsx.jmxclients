@@ -387,6 +387,7 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
                             throw e;
                         } else {
                             LOGGER.trace("Attempting next uri...");
+                            continue;
                         }
                     }
                     // Connection successful
