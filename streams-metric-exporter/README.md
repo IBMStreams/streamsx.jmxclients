@@ -77,7 +77,6 @@ Usage: streams-metric-exporter [options]
     -d, --domain
       Streams domain name
       Environment Variable: STREAMS_DOMAIN_ID
-      Default: StreamsDomain
     --help
       Display command line arguments
     -h, --host
@@ -88,36 +87,36 @@ Usage: streams-metric-exporter [options]
       Streams instance name.  Only used if Instance List not provided.
       Environment Variable: STREAMS_INSTANCE_ID
     --instancelist
-      Comma separated list of 1 or more Streams Instances to monitor ('ALL' for all instances). Default ALL if STREAMS_INSTANCE_ID
+      Comma separated list of 1 or more Streams Instances to monitor ('ALL' for all instances). Default ALL if STREAMS_INSTANCE_ID 
       is not set.
       Envrionment Variable: STREAMS_EXPORTER_INSTANCE_LIST
       Default: [UNSPECIFIED]
     --jmxhttphost
-      Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment
+      Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment 
       Variable: STREAMS_EXPORTER_JMX_HTTP_HOST
     --jmxhttpport
-      Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment
+      Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment 
       Variable: STREAMS_EXPORTER_JMX_HTTP_PORT
     --jmxssloption
       SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
-      Environment Variable:
-      STREAMS_EXPORTER_JMX_SSLOPTION
+      Environment Variable: 
+      STREAMS_EXPORTER_JMX_SSLOPTION 
       Default: TLSv1
     --jmxtruststore
       Java keystore of certificates/signers to trust from JMX Server
       Environment Variable: STREAMS_EXPORTER_JMX_TRUSTSTORE
     -j, --jmxurl
-      JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975)
-      Environment Variable: STREAMS_EXPORTER_JMXCONNECT
-      Default: service:jmx:jmxmp://192.168.242.141:9975
+      JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975). Supports comma-separated list for failover.
+      Environment 
+      Variable: STREAMS_EXPORTER_JMXCONNECT
     --logdir
       Logging direcotry.  If not set or empty log to stdout.
      Environment Variable: STREAMS_EXPORTER_LOGDIR
-      Default: <empty string>
+      Default: [empty string]
     -l, --loglevel
       Logging level [ fatal | error | warn | info | debug | trace ]
       Environment Variable: STREAMS_EXPORTER_LOGLEVEL
-      Default: trace
+      Default: info
     --noconsole
       Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.
       Default: false
@@ -134,15 +133,15 @@ Usage: streams-metric-exporter [options]
       Default: 10
     --serverkeystore
       Java keystore containing server certificate and key to identify server side of this application
-      Environment Variable:
-      STREAMS_EXPORTER_SERVER_KEYSTORE
+      Environment Variable: 
+      STREAMS_EXPORTER_SERVER_KEYSTORE 
     --serverkeystorepwd
       Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
-      Environment Variable:
-      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD
+      Environment Variable: 
+      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD 
     --serverprotocol
       http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
-      Environment
+      Environment 
       Variable: STREAMS_EXPORTER_SERVER_PROTOCOL
       Default: http
     -u, --user
@@ -151,7 +150,7 @@ Usage: streams-metric-exporter [options]
     -v, --version
       Display version information
       Default: false
-    --webPath,
+    --webPath, 
       Base URI prefix (e.g. /someprefix)
       Environment Variable: STREAMS_EXPORTER_WEBPATH
       Default: /
@@ -169,6 +168,13 @@ service:jmx:jmxmp://localhost:9975 -d StreamsDomain  \
 password: <enter streamsadmin password>
 ```
 The ``--instancelist`` option allows the specification of 0 or more instances.  If none or chosen or it is set to the value ``ALL`` then all instances metrics will be exported.  In addition, instances are created and removed, the cooresponding metrics will be added and removed.  If, however, you specify a specific list of instances, then any addtional instances that exist in the domain or are created after the application is started WILL NOT be included in the exported set.
+
+# JMX Connection Failover
+The ``-j|--jmxurl`` option accepts a comma separated list of jmx connection urls.<br> 
+Example: ```service:jmx:jmxmp://host1:9975,service:jmx:jmxmp://host2:9975```<br>
+When attempting a connection to the jmx server, each of these will be tried in order without delay.
+If a list is provided and a connection cannot be made to any of the url's in the list, then an exception
+may be raised and normal delay / retry logic used.  The connection acquired will stay active until it is lost.  At that time, the list will be retried from the beginning.
 
 # Logging
 Logging is performed through the log4j 1.2 facility. There are two arguments to control logging.
