@@ -99,6 +99,7 @@ public class JobDetails implements NotificationListener {
 	private boolean jobTopologyRefreshRequired = false;
 
 	private final Map<BigInteger, String> peResourceMap = new HashMap<BigInteger, String>();
+	private final Map<String, String> operatorKindMap = new HashMap<String, String>();
 	private final Map<String, Map<Integer, String>> operatorInputPortNames = new HashMap<String, Map<Integer, String>>();
 	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
 
@@ -666,6 +667,7 @@ public class JobDetails implements NotificationListener {
 		for (String operatorName : operators) {
 			OperatorMXBean operatorBean = beanSource.getOperatorMXBean(getDomain(), getInstance(), getJobid(),
 					operatorName);
+			operatorKindMap.put(operatorName,operatorBean.getOperatorKind());
 			mapOperatorInputPortNames(beanSource, operatorName, operatorBean.getInputPorts());
 			mapOperatorOutputPortNames(beanSource, operatorName, operatorBean.getOutputPorts());
 		}
@@ -967,6 +969,7 @@ public class JobDetails implements NotificationListener {
 						JSONObject operator = (JSONObject) operatorArray.get(op);
 						//System.out.println(operator.toString());
 						String operatorName = (String)operator.get("name");
+						String operatorKind = this.operatorKindMap.get(operatorName);
 //						System.out.println("OPERATOR NAME: " + operatorName);
 						JSONArray opMetricsArray = (JSONArray) operator.get("metrics");
 						/* Operator Metrics Loop, these are non-standard metrics */
@@ -988,7 +991,8 @@ public class JobDetails implements NotificationListener {
 										name,
 										resource,
 										peid,
-										operatorName).set((long)metric.get("value"));
+										operatorName,
+										operatorKind).set((long)metric.get("value"));
 								break;
 							}
 						}	// End Operator Metrics Loop		
@@ -1014,6 +1018,7 @@ public class JobDetails implements NotificationListener {
 											resource,
 											peid,
 											operatorName,
+											operatorKind,
 											inputPortName).set((long)metric.get("value"));
 									break;
 								}
@@ -1041,6 +1046,7 @@ public class JobDetails implements NotificationListener {
 											resource,
 											peid,
 											operatorName,
+											operatorKind,
 											outputPortName).set((long)metric.get("value"));
 									break;
 								}
