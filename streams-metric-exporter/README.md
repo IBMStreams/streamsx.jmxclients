@@ -289,6 +289,7 @@ Note: the streams-metric-exporter resolves operator input and output ports to na
 |**instancename**|name of streams instance (instance is reserved by prometheus)|
 |**jobname**| name of streams job (job is reserved by prometheus)|
 |**operatorname**| name of operator|
+|**operatorkind**| kind of operator (e.g. spl.relational::Functor)
 |**inputportname**| name of input port|
 |**outputportname**| name of output port|
 |**resource**| name of streams resource|
@@ -313,7 +314,7 @@ streams_job_pecount{domainname="StreamsDomain",instancename="StreamsInstance",jo
 
 # HELP streams_operator_ip_nTuplesProcessed Streams operator input port metric: nTuplesProcessed
 # TYPE streams_operator_ip_nTuplesProcessed gauge
-streams_operator_ip_nTuplesProcessed{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",resource="streamsqse",peid="1",operatorname="FilterStream",inputportname="BeaconStream",} 675632.0
+streams_operator_ip_nTuplesProcessed{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",resource="streamsqse",peid="1",operatorname="FilterStream",operatorkind="spl.relational.Filter",inputportname="BeaconStream",} 675632.0
 
 # HELP streams_pe_op_connection_congestionFactor Streams pe output port connection metric: congestionFactor
 # TYPE streams_pe_op_connection_congestionFactor gauge
