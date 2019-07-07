@@ -30,7 +30,7 @@ under the License.
   <description>IBM Streams JMX Client Application.</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jackson.version>2.9.8</jackson.version>
+		<jackson.version>2.9.9</jackson.version>
 		<streams.version>4.x</streams.version>
 	</properties>
 
@@ -76,7 +76,7 @@ under the License.
 		 <dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>${jackson.version}</version>
+			<version>[${jackson.version},)</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
