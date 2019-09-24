@@ -27,11 +27,16 @@ import java.util.regex.Pattern;
 
 import io.prometheus.client.Gauge;
 import streams.metric.exporter.metrics.MetricsExporter;
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+//import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+
+// For local Main debugging
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.PatternLayout;
 
 
 public class PrometheusMetricsExporter extends MetricsExporter {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
+	//private static final Logger LOGGER = LoggerFactory.getLogger("root." + PrometheusMetricsExporter.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root");
 	// Singleton Pattern
 	static MetricsExporter singletonExporter = null;
 
@@ -121,29 +126,47 @@ public class PrometheusMetricsExporter extends MetricsExporter {
 
 		public void set(double val) {
 			Gauge g = getGauge(name);
-			if (g != null)
-				g.labels((String[]) labelValues.toArray()).set(val);
+			try {
+				if (g != null)
+					g.labels((String[]) labelValues.toArray()).set(val);
+				else {
+					LOGGER.debug("Tried to do a set on a gauge that did not exist name={}",name);
+				}
+			} catch (IllegalArgumentException e) {
+				LOGGER.error("Attempting to set Prometheus Metric value returned IllegalArgumentException");
+				LOGGER.error("Metric: name={}, labelValues={}",name,String.join(",",labelValues));
+				LOGGER.error("This should not occur.  Usually caused by invalid labels for metric.  Get this fixed!!");
+			}
 		}
 	}
 	
-//	 public static void main(String[] args) {
-//		 	MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
-//		 	
-//	        System.out.println("Hello World!"); // Display the string.
-//	        Metric m1 = metricsExporter.getStreamsMetric("nTuplesSubmitted", StreamsObjectType.JOB, "StreamsInstance","Job 1");
-//	        Metric m2 = metricsExporter.getStreamsMetric("nTuplesSubmitted", StreamsObjectType.JOB, "StreamsInstance","Job 1","Operator 1");
-//	        Metric m3 = metricsExporter.getStreamsMetric("nTuplesSubmitted", StreamsObjectType.JOB, "StreamsInstance","Job 1","Operator 1");
-//
-//	        System.out.println("m1.equals(m2): " + m1.equals(m2));
-//	        System.out.println("m1.equals(m1): " + m1.equals(m1));
-//	        System.out.println("m2.equals(m3): " + m2.equals(m3));
-//	        
-//	        System.out.println("size: " + metricsExporter.getMetricIndex().size());
-//	        metricsExporter.removeAllChildStreamsMetrics("StreamsInstance","Job 1");
-//	        System.out.println("size after remove: " + metricsExporter.getMetricIndex().size());
-//
-//	        
-//	        //System.out.println(m1.labelChildOf("StreamsInstance","Job 1"));
-//	        //System.out.println(m1.labelChildOf("SomthingElse","Another"));
-//	    }
+	 public static void main(String[] args) {
+			 MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
+			 		org.apache.log4j.Logger logger = org.apache.log4j.Logger.getRootLogger();
+					PatternLayout layout = new PatternLayout("%d{ISO8601} - %-5p [%t:%C{1}@%L] - %m%n");
+
+					ConsoleAppender consoleAppender = new ConsoleAppender(layout);
+					consoleAppender.setName("PMETEST");
+					logger.addAppender(consoleAppender);
+					logger.setLevel(org.apache.log4j.Level.toLevel("trace"));
+
+	        System.out.println("Hello World!"); // Display the string.
+	        Metric m1 = metricsExporter.getStreamsMetric("nTuplesSubmitted", StreamsObjectType.JOB, "StreamsInstance","Job 1");
+	        Metric m2 = metricsExporter.getStreamsMetric("nTuplesSubmitted", StreamsObjectType.JOB, "StreamsInstance","Job 1","Operator 1");
+	        Metric m3 = metricsExporter.getStreamsMetric("nTuplesSubmitted", StreamsObjectType.JOB, "StreamsInstance","Job 1","Operator 1");
+	        Metric m4 = metricsExporter.getStreamsMetric("nTuplesSubmitted", StreamsObjectType.JOB, "");
+					m4.set(1.0);
+
+	        System.out.println("m1.equals(m2): " + m1.equals(m2));
+	        System.out.println("m1.equals(m1): " + m1.equals(m1));
+	        System.out.println("m2.equals(m3): " + m2.equals(m3));
+	        
+	        System.out.println("size: " + metricsExporter.getMetricIndex().size());
+	        metricsExporter.removeAllChildStreamsMetrics("StreamsInstance","Job 1");
+	        System.out.println("size after remove: " + metricsExporter.getMetricIndex().size());
+
+	        
+	        //System.out.println(m1.labelChildOf("StreamsInstance","Job 1"));
+	        //System.out.println(m1.labelChildOf("SomthingElse","Another"));
+	    }
 }

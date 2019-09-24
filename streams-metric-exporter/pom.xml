@@ -22,7 +22,7 @@ under the License.
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>streamsx.jmxclients</groupId>
 	<artifactId>streams-metric-exporter</artifactId>
-	<version>1.3.0</version>
+	<version>1.3.1</version>
 	<packaging>jar</packaging>
 
 	<name>streams-metric-exporter</name>
@@ -129,7 +129,8 @@ under the License.
 		<dependency>
 			<groupId>com.beust</groupId>
 			<artifactId>jcommander</artifactId>
-			<version>[1.58,)</version>
+			<!--<version>[1.58,)</version>-->
+			<version>1.58</version>
 		</dependency>
 		<dependency>
 		  <groupId>io.prometheus</groupId>
