@@ -30,7 +30,7 @@ under the License.
   <description>IBM Streams JMX Client Application.</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<jackson.version>2.9.9</jackson.version>
+		<jackson.version>2.9.10</jackson.version>
 		<streams.version>4.x</streams.version>
 	</properties>
 
@@ -92,8 +92,8 @@ under the License.
 		<dependency>
 			<groupId>com.beust</groupId>
 			<artifactId>jcommander</artifactId>
-			<version>[1.72,)</version> 
-			<!--<version>1.74</version>-->
+			<!--<version>[1.72,)</version> -->
+			<version>1.72</version>
 		</dependency>
 		<dependency>
 			<groupId>jline</groupId>
