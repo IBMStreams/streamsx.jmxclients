@@ -23,7 +23,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
-import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -74,14 +73,14 @@ public class SnapshotJobs extends AbstractJobListCommand {
                 throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [--jobnames <job-names>,...]}");
             }
 
-            Set<BigInteger> jobsToSnapshot = null;
+            Set<String> jobsToSnapshot = null;
 
             if (getJobIdOptionList() != null && getJobIdOptionList().size() > 0) {
                 LOGGER.debug("Size of jobIds: " + getJobIdOptionList().size());
                 LOGGER.debug("jobIds: " + Arrays.toString(getJobIdOptionList().toArray())); 
 
                 // reference copy
-                jobsToSnapshot = new HashSet<BigInteger>(getJobIdOptionList());
+                jobsToSnapshot = new HashSet<String>(getJobIdOptionList());
             }
 
 
@@ -90,7 +89,7 @@ public class SnapshotJobs extends AbstractJobListCommand {
                 LOGGER.debug("jobNames: " + Arrays.toString(getJobNameOptionList().toArray()));
 
                 // reference copy
-                jobsToSnapshot = new HashSet<BigInteger>(getResolvedJobNameOptionList());
+                jobsToSnapshot = new HashSet<String>(getResolvedJobNameOptionList());
             }
 
             // Check if they wanted them all

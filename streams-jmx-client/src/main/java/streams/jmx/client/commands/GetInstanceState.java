@@ -24,7 +24,6 @@ import com.beust.jcommander.Parameters;
 import java.util.Set;
 
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.instance.InstanceServiceMXBean;
 import com.ibm.streams.management.resource.ResourceMXBean;
 
 import org.slf4j.Logger;
@@ -72,12 +71,12 @@ public class GetInstanceState extends AbstractInstanceCommand {
                 //get resource
                 //ObjectName objName = ObjectNameBuilder.resource(domain.getName(),s);
                 //ResourceMXBean resourceBean = JMX.newMXBeanProxy(getMBeanServerConnection(), objName, ResourceMXBean.class, true);
-                    ResourceMXBean resourceBean = getBeanSource().getResourceBean(instance.getDomain(), resourceId);
+                    ResourceMXBean resourceBean = getBeanSource().getResourceBean(instance.getName(), resourceId);
                 //json
                 ObjectNode resourceObject = mapper.createObjectNode();
                 resourceObject.put("resource",resourceId);
                 resourceObject.put("status",resourceBean.getStatus().toString());
-                resourceObject.put("schedulerStatus",resourceBean.getSchedulerStatus(getInstanceName()).toString());
+                resourceObject.put("schedulable",resourceBean.isApplicationResource());
 
                 // Instance Services
                 //List<InstanceServiceMXBean.Type> instanceServices = resourceBean.retrieveInstanceServices(getInstanceName());
@@ -85,11 +84,11 @@ public class GetInstanceState extends AbstractInstanceCommand {
 
 
                 ArrayNode serviceArray = mapper.createArrayNode();
-                for (InstanceServiceMXBean.Type serviceType : resourceBean.retrieveInstanceServices(getInstanceName())) {
-                    InstanceServiceMXBean serviceBean = getBeanSource().getInstanceServiceMXBean(getDomainName(), getInstanceName(), serviceType);
+                for (ResourceMXBean.ServiceType serviceType : resourceBean.getServices()) {
+                    ResourceMXBean.ServiceStatus serviceStatus = resourceBean.getServiceStatus(serviceType);
                     ObjectNode serviceObject = mapper.createObjectNode();
                     serviceObject.put("service", serviceType.toString());
-                    serviceObject.put("status", serviceBean.getStatus(resourceId).toString());
+                    serviceObject.put("status", serviceStatus.toString());
                     serviceArray.add(serviceObject);
                 }
             

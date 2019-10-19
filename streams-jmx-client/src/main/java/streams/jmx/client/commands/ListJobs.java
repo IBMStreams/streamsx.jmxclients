@@ -22,7 +22,6 @@ import streams.jmx.client.ExitStatus;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,7 +75,7 @@ public class ListJobs extends AbstractJobListCommand {
                 throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [--jobnames <job-names>,...]}");
             }
 
-            List<BigInteger> jobsToList = new ArrayList<BigInteger>();
+            List<String> jobsToList = new ArrayList<String>();
 
             if (getJobIdOptionList() != null && getJobIdOptionList().size() > 0) {
                 LOGGER.debug("Size of jobIds: " + getJobIdOptionList().size());
@@ -101,7 +100,7 @@ public class ListJobs extends AbstractJobListCommand {
             ArrayNode jobArray = mapper.createArrayNode();
             int listCount = 0;
 
-            for (BigInteger jobId : instance.getJobs()) {
+            for (String jobId : instance.getJobs()) {
                 // Check if we want this one
                 if (jobsToList.size() > 0) {
                     if (!jobsToList.contains(jobId))
@@ -110,12 +109,12 @@ public class ListJobs extends AbstractJobListCommand {
                 LOGGER.trace("Lookup up job bean for jobid: {} of instance: {}", jobId, instance.getName());
 
                 @SuppressWarnings("unused")
-                ObjectName jobObjectName = instance.registerJob(jobId);
-                JobMXBean job = getBeanSource().getJobBean(getDomainName(),getInstanceName(),jobId);
+                ObjectName jobObjectName = instance.registerJobById(jobId);
+                JobMXBean job = getBeanSource().getJobBean(getInstanceName(),jobId);
                 
                 listCount++;
                 ObjectNode jobObject = mapper.createObjectNode();
-                jobObject.put("id",jobId.longValue());
+                jobObject.put("id",jobId);
                 jobObject.put("status",job.getStatus().toString());
                 jobObject.put("health",job.getHealth().toString());
                 jobObject.put("startedbyuser",job.getStartedByUser());

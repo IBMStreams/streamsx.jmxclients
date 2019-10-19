@@ -19,7 +19,6 @@ package streams.jmx.client.jmx;
 import java.io.File;
 import java.net.UnknownHostException;
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.util.*;
 
@@ -40,11 +39,7 @@ import javax.management.NotificationListener;
 import javax.management.ListenerNotFoundException;
 
 import com.ibm.streams.management.ObjectNameBuilder;
-import com.ibm.streams.management.domain.DomainMXBean;
-import com.ibm.streams.management.domain.DomainServiceMXBean;
-import com.ibm.streams.management.domain.DomainServiceMXBean.Type;
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.instance.InstanceServiceMXBean;
 import com.ibm.streams.management.job.JobMXBean;
 import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
@@ -524,9 +519,9 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
         }
 
         @Override
-        public JobMXBean getJobBean(String domainId, String instanceId,
-                BigInteger jobId) {
-            ObjectName objName = ObjectNameBuilder.job(domainId, instanceId,
+        public JobMXBean getJobBean(String instanceId,
+                String jobId) {
+            ObjectName objName = ObjectNameBuilder.job(instanceId,
                     jobId);
 
             return JMX.newMXBeanProxy(connection, objName, JobMXBean.class,
@@ -534,101 +529,72 @@ public class JmxConnectionPool implements MXBeanSourceProvider {
         }
 
         @Override
-        public PeMXBean getPeBean(String domainId, String instanceId,
-                BigInteger peId) {
-            ObjectName objName = ObjectNameBuilder.pe(domainId, instanceId,
+        public PeMXBean getPeBean(String instanceId,
+                String peId) {
+            ObjectName objName = ObjectNameBuilder.pe(instanceId,
                     peId);
             return JMX
                     .newMXBeanProxy(connection, objName, PeMXBean.class, true);
         }
 
         @Override
-        public DomainMXBean getDomainBean(String domainId) {
-            ObjectName objName = ObjectNameBuilder.domain(domainId);
-
-            return JMX.newMXBeanProxy(connection, objName, DomainMXBean.class,
-                    true);
-        }
-
-        @Override
-        public InstanceMXBean getInstanceBean(String domainId, String instanceId) {
-            ObjectName objName = ObjectNameBuilder.instance(domainId,
-                    instanceId);
+        public InstanceMXBean getInstanceBean(String instanceId) {
+            ObjectName objName = ObjectNameBuilder.instance(instanceId);
             return JMX.newMXBeanProxy(connection, objName,
                     InstanceMXBean.class, true);
         }
 
         @Override
-        public ResourceMXBean getResourceBean(String domainId, String resourceId) {
+        public ResourceMXBean getResourceBean(String instanceId, String resourceId) {
             ObjectName resourceObjectName = ObjectNameBuilder.resource(
-                    domainId, resourceId);
+                    instanceId, resourceId);
 
             return JMX.newMXBeanProxy(connection, resourceObjectName,
                     ResourceMXBean.class, true);
         }
 
         @Override
-        public DomainServiceMXBean getDomainServiceBean(String domainId,
-                Type serviceType) {
-            ObjectName serviceObjectName = ObjectNameBuilder.domainService(
-                    domainId, serviceType);
-            return JMX.newMXBeanProxy(connection, serviceObjectName,
-                    DomainServiceMXBean.class, true);
-        }
-
-        @Override
-        public InstanceServiceMXBean getInstanceServiceMXBean(
-                String domainId,
-                String instanceId,
-                com.ibm.streams.management.instance.InstanceServiceMXBean.Type serviceType) {
-            ObjectName serviceObjectName = ObjectNameBuilder.instanceService(
-                    domainId, instanceId, serviceType);
-            return JMX.newMXBeanProxy(connection, serviceObjectName,
-                    InstanceServiceMXBean.class, true);
-        }
-
-        @Override
         public OperatorMXBean getOperatorMXBean(
-                String domainId, String instanceId, BigInteger jobId, String operator) {
-            ObjectName operatorName = ObjectNameBuilder.operator(domainId, instanceId, jobId, operator);
+                String instanceId, String jobId, String operator) {
+            ObjectName operatorName = ObjectNameBuilder.operator(instanceId, jobId, operator);
 
             return JMX.newMXBeanProxy(connection, operatorName, OperatorMXBean.class, true);
         }
 
         @Override
         public OperatorInputPortMXBean getOperatorInputPortMXBean(
-                String domainId, String instanceId, BigInteger jobId,
+                String instanceId, String jobId,
                 String operator, int indexWithinOperator) {
             ObjectName inputPortName = ObjectNameBuilder.operatorInputPort(
-                    domainId, instanceId, jobId, operator, indexWithinOperator);
+                    instanceId, jobId, operator, indexWithinOperator);
             return JMX.newMXBeanProxy(connection, inputPortName,
                     OperatorInputPortMXBean.class, true);
         }
 
         @Override
         public OperatorOutputPortMXBean getOperatorOutputPortMXBean(
-                String domainId, String instanceId, BigInteger jobId,
+                String instanceId, String jobId,
                 String operator, int indexWithinOperator) {
             ObjectName outputPortName = ObjectNameBuilder.operatorOutputPort(
-                    domainId, instanceId, jobId, operator, indexWithinOperator);
+                    instanceId, jobId, operator, indexWithinOperator);
             return JMX.newMXBeanProxy(connection, outputPortName,
                     OperatorOutputPortMXBean.class, true);
         }
 
         @Override
-        public PeInputPortMXBean getPeInputPortMXBean(String domainId,
-                String instanceId, BigInteger peId, int indexWithinPe) {
-            ObjectName inputPortName = ObjectNameBuilder.peInputPort(domainId,
+        public PeInputPortMXBean getPeInputPortMXBean(
+                String instanceId, String peId, int indexWithinPe) {
+            ObjectName inputPortName = ObjectNameBuilder.peInputPort(
                     instanceId, peId, indexWithinPe);
             return JMX.newMXBeanProxy(connection, inputPortName,
                     PeInputPortMXBean.class, true);
         }
 
         @Override
-        public PeOutputPortMXBean getPeOutputPortMXBean(String domainId,
-                String instanceId, BigInteger peId, int indexWithinPe) {
+        public PeOutputPortMXBean getPeOutputPortMXBean(
+                String instanceId, String peId, int indexWithinPe) {
             ObjectName outputPortName = ObjectNameBuilder.peOutputPort(
-                    domainId, instanceId, peId, indexWithinPe);
+                    instanceId, peId, indexWithinPe);
             return JMX.newMXBeanProxy(connection, outputPortName,
                     PeOutputPortMXBean.class, true);
         }

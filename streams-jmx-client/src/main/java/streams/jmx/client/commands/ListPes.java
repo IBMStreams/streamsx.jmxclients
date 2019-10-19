@@ -18,13 +18,11 @@ package streams.jmx.client.commands;
 
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
-import streams.jmx.client.cli.BigIntegerConverter;
 
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -47,9 +45,8 @@ public class ListPes extends AbstractJobListCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + ListPes.class.getName());
 
-    @Parameter(names = {"--pes"}, description = "A list of processing elements (PDs)", required = false,
-    converter = BigIntegerConverter.class)
-    private List<BigInteger> peIds;
+    @Parameter(names = {"--pes"}, description = "A list of processing elements (PDs)", required = false)
+    private List<String> peIds;
 
     public ListPes() {
     }
@@ -84,7 +81,7 @@ public class ListPes extends AbstractJobListCommand {
                 throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [--jobnames <job-names>,...]}");
             }
 
-            List<BigInteger> jobsToList = new ArrayList<BigInteger>();
+            List<String> jobsToList = new ArrayList<String>();
 
             if (getJobIdOptionList() != null && getJobIdOptionList().size() > 0) {
                 LOGGER.debug("Size of jobIds: " + getJobIdOptionList().size());
@@ -109,7 +106,7 @@ public class ListPes extends AbstractJobListCommand {
             ArrayNode peArray = mapper.createArrayNode();
             int listCount = 0;
 
-            for (BigInteger jobId : instance.getJobs()) {
+            for (String jobId : instance.getJobs()) {
                 // Check if we want this one
                 if (jobsToList.size() > 0) {
                     if (!jobsToList.contains(jobId))
@@ -118,10 +115,10 @@ public class ListPes extends AbstractJobListCommand {
                 LOGGER.trace("Lookup up job bean for jobid: {} of instance: {}", jobId, instance.getName());
 
                 @SuppressWarnings("unused")
-                ObjectName jobObjectName = instance.registerJob(jobId);
-                JobMXBean job = getBeanSource().getJobBean(getDomainName(),getInstanceName(),jobId);
+                ObjectName jobObjectName = instance.registerJobById(jobId);
+                JobMXBean job = getBeanSource().getJobBean(getInstanceName(),jobId);
                 
-                for (BigInteger peId : job.getPes()) {
+                for (String peId : job.getPes()) {
                     // Check if we want this one
                     if ((peIds != null) && (peIds.size() > 0)) {
                         if (!peIds.contains(peId))
@@ -129,13 +126,13 @@ public class ListPes extends AbstractJobListCommand {
                     }
 
 
-                    PeMXBean pe = getBeanSource().getPeBean(getDomainMXBean().getName(), instance.getName(), peId);
-                    ResourceMXBean resource = getBeanSource().getResourceBean(instance.getDomain(), pe.getResource());
+                    PeMXBean pe = getBeanSource().getPeBean(instance.getName(), peId);
+                    ResourceMXBean resource = getBeanSource().getResourceBean(instance.getName(), pe.getResource());
 
                     listCount++;
 
                     ObjectNode peObject = mapper.createObjectNode();
-                    peObject.put("id",peId.longValue());
+                    peObject.put("id",peId);
                     peObject.put("status",pe.getStatus().toString());
                     peObject.put("statusreason",pe.getStatusReason().toString());
                     peObject.put("health",pe.getHealth().toString());
@@ -143,7 +140,7 @@ public class ListPes extends AbstractJobListCommand {
                     peObject.put("ip",resource.getIpAddress());
                     peObject.put("pid",pe.getPid());
                     peObject.put("launchcount",pe.getLaunchCount());
-                    peObject.put("jobid",jobId.longValue());
+                    peObject.put("jobid",jobId);
                     peObject.put("jobname",job.getName());
 
                     ArrayNode operatorArray = mapper.valueToTree(pe.getOperators());

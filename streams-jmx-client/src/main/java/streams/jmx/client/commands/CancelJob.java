@@ -17,7 +17,6 @@
 package streams.jmx.client.commands;
 
 
-import streams.jmx.client.cli.BigIntegerConverter;
 import streams.jmx.client.Constants;
 import streams.jmx.client.ExitStatus;
 
@@ -25,7 +24,6 @@ import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
 import com.beust.jcommander.Parameters;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,14 +42,8 @@ public class CancelJob extends AbstractJobListCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + CancelJob.class.getName());
 
-    // Need to fix when converter is finally supported for main parameter
-    //@Parameter(description = "Job IDs to cancel", required=false,
-    //converter=BigIntegerConverter.class)
     @Parameter(description = "Job IDs to cancel", required=false)
-    private List<String> jobIdArgumentStrings = null;
-
-    private List<BigInteger> jobIdArguments = null;
-
+    private List<String> jobIdArguments = null;
 
     @Parameter(names = "--force", description = "Forces quick cancellation of job", required = false)
     private boolean forceCancel = false;
@@ -74,17 +66,17 @@ public class CancelJob extends AbstractJobListCommand {
         try {
 
             // Mutual Exclusivity Test
-            LOGGER.debug("mutual Exlusive total (should be < 2:" + (((jobIdArgumentStrings != null && jobIdArgumentStrings.size() > 0)?1:0) + 
+            LOGGER.debug("mutual Exlusive total (should be < 2:" + (((jobIdArguments != null && jobIdArguments.size() > 0)?1:0) + 
               ((getJobIdOptionList() != null && getJobIdOptionList().size() >0)?1:0) + 
               ((getJobNameOptionList() != null && getJobNameOptionList().size() > 0)?1:0)));
-            if ((((jobIdArgumentStrings != null && jobIdArgumentStrings.size() > 0)?1:0) + 
+            if ((((jobIdArguments != null && jobIdArguments.size() > 0)?1:0) + 
                  ((getJobIdOptionList() != null && getJobIdOptionList().size() >0)?1:0) + 
                  ((getJobNameOptionList() != null && getJobNameOptionList().size() > 0)?1:0))>1) {
                 throw new ParameterException("The following options are mutually exclusive: {[-j,--jobs <jobId>] | [<jobIdArgument>] | [--jobnames <job-names>,...]}");
             }
 
             // Job name or id required
-            if ((((jobIdArgumentStrings != null && jobIdArgumentStrings.size() > 0)?1:0) + 
+            if ((((jobIdArguments != null && jobIdArguments.size() > 0)?1:0) + 
                  ((getJobIdOptionList() != null && getJobIdOptionList().size() >0)?1:0) + 
                  ((getJobNameOptionList() != null && getJobNameOptionList().size() > 0)?1:0)) < 1) {
                 throw new ParameterException("A required option or argument was not specified. Specify one of the following options or arguments: {[-j,--jobs] | [<jobIdArgument>] | [--jobnames]}");
@@ -92,19 +84,11 @@ public class CancelJob extends AbstractJobListCommand {
 
             InstanceMXBean instance = getInstanceMXBean();
 
-            List<BigInteger> jobsToCancel = new ArrayList<BigInteger>();
+            List<String> jobsToCancel = new ArrayList<String>();
 
             // Work around until jcommander 1.74 available in maven
             //if ((jobIdArgumentString != null) && (!jobIdArgumentString.isEmpty())) {
-            if (jobIdArgumentStrings != null && jobIdArgumentStrings.size() > 0) {
-                LOGGER.debug("Attempting to convert jobIdArgumentStrings ({}) to BigIntegers...", Arrays.toString(jobIdArgumentStrings.toArray()));
-
-                jobIdArguments = new ArrayList<BigInteger>();
-
-                BigIntegerConverter bigIntegerConverter = new BigIntegerConverter("jobId");
-                for (String bigIntString : jobIdArgumentStrings) {
-                    jobIdArguments.add(bigIntegerConverter.convert(bigIntString));
-                }
+            if (jobIdArguments != null && jobIdArguments.size() > 0) {
 
                 LOGGER.debug("Size of jobIdArguments: " + jobIdArguments.size());
                 LOGGER.debug("jobIdArguments: " + Arrays.toString(jobIdArguments.toArray()));
@@ -133,20 +117,17 @@ public class CancelJob extends AbstractJobListCommand {
 
             LOGGER.debug("About to cancel following jobids: " + Arrays.toString(jobsToCancel.toArray()));
 
-            //BigInteger theJobId = (jobId != null ? jobId : jobIdArgument);
-
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jsonOut = mapper.createObjectNode();
             ArrayNode jobArray = mapper.createArrayNode();
             int cancelCount = 0;
             
-            //StringBuilder sb = new StringBuilder();
-            for (BigInteger jobid : jobsToCancel) {
+            for (String jobid : jobsToCancel) {
                 try {
                     instance.cancelJob(jobid, forceCancel);
                     cancelCount++;
                     ObjectNode jobObject = mapper.createObjectNode();
-                    jobObject.put("jobId", jobid.longValue());
+                    jobObject.put("jobId", jobid);
                     jobArray.add(jobObject);
                 } catch (IllegalStateException e) {
                     LOGGER.warn(e.getLocalizedMessage());

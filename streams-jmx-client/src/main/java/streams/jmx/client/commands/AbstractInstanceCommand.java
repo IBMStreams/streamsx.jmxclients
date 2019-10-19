@@ -33,7 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public abstract class AbstractInstanceCommand extends AbstractDomainCommand {
+public abstract class AbstractInstanceCommand extends AbstractJmxCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + AbstractInstanceCommand.class.getName());
 
@@ -48,25 +48,25 @@ public abstract class AbstractInstanceCommand extends AbstractDomainCommand {
     }
 
     @Override
-    protected final void prepareJmxDomainExecution() throws Exception {
-        LOGGER.trace("In prepareJmxDomainExecution...");
+    protected final void prepareJmxExecution() throws Exception {
+        LOGGER.trace("In prepareJmxExecution...");
         if (getInstanceName() == null) {
 		    throw new ParameterException(
 		        "Streams instance name must be specified.  Please use parameter (-i or --instance-id) or environment variable: " + Constants.ENV_INSTANCE_ID);
         }
 
         try {
-            instanceMXBean = getBeanSource().getInstanceBean(getDomainName(),getInstanceName());
+            instanceMXBean = getBeanSource().getInstanceBean(getInstanceName());
             // Set name by accessing bean.  Only way to get exceptions raised if it was not found
             setInstanceName(instanceMXBean.getName());
         } catch (UndeclaredThrowableException e) {
             Throwable t = e.getUndeclaredThrowable();
             if (t instanceof InstanceNotFoundException) {
                 LOGGER.warn(
-                        "Instance '{}' not found in the following domain: {}",
-                        getInstanceName(), getDomainName());
+                        "Instance '{}' not found",
+                        getInstanceName());
                 throw new StreamsClientException(StreamsClientErrorCode.INSTANCE_NOT_FOUND,
-                "The " + this.instanceName + " instance does not exist for the following domain: " + getDomainName(), e);
+                "The " + this.instanceName + " instance does not exist", e);
             } else {
                 LOGGER.trace("Unexpected exception ("
                         + t.getClass()
@@ -78,10 +78,10 @@ public abstract class AbstractInstanceCommand extends AbstractDomainCommand {
 
         } catch (InstanceNotFoundException infe) {
             LOGGER.warn(
-                "Instance '{}' not found in the following domain: {}",
-                getInstanceName(), getDomainName());
+                "Instance '{}' not found",
+                getInstanceName());
             throw new StreamsClientException(StreamsClientErrorCode.INSTANCE_NOT_FOUND,
-            "The " + this.instanceName + " instance does not exist for the following domain: " + getDomainName(), infe);
+            "The " + this.instanceName + " instance does not exist");
         }
 
         prepareJmxInstanceExecution();
@@ -91,7 +91,6 @@ public abstract class AbstractInstanceCommand extends AbstractDomainCommand {
     protected void prepareJmxInstanceExecution() throws Exception {}
 
     protected final InstanceMXBean getInstanceMXBean() throws Exception {
-        //return getBeanSource().getInstanceBean(getDomainName(),getInstanceName());
         return instanceMXBean;
     }
 

@@ -16,9 +16,6 @@
 
 package streams.jmx.client.commands;
 
-import streams.jmx.client.cli.BigIntegerConverter;
-
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,9 +33,8 @@ public abstract class AbstractJobListCommand extends AbstractInstanceCommand {
             + AbstractJobListCommand.class.getName());
 
 
-    @Parameter(names = {"-j","--jobs"}, description = "A list of job ids delimited by commas", required = false,
-    converter = BigIntegerConverter.class)
-    private List<BigInteger> jobIds;
+    @Parameter(names = {"-j","--jobs"}, description = "A list of job ids delimited by commas", required = false)
+    private List<String> jobIds;
     //private String jobIdString;
 
     @Parameter(names = {"--jobnames"}, description = "Specifies a list of job names, which are delimited by commas.", required = false)
@@ -63,7 +59,7 @@ public abstract class AbstractJobListCommand extends AbstractInstanceCommand {
     // Override in decendent class
     protected void prepareJmxJobListExecution() throws Exception {}
 
-    protected final List<BigInteger> getJobIdOptionList() {
+    protected final List<String> getJobIdOptionList() {
         return jobIds;
     }
 
@@ -71,21 +67,21 @@ public abstract class AbstractJobListCommand extends AbstractInstanceCommand {
         return jobNames;
     }
 
-    public List<BigInteger> getResolvedJobNameOptionList() throws Exception {
+    public List<String> getResolvedJobNameOptionList() throws Exception {
 
         InstanceMXBean instance = getInstanceMXBean();
 
-        ArrayList<BigInteger> jobNameIds = null;
+        ArrayList<String> jobNameIds = null;
 
         if (jobNames != null && jobNames.size() > 0) {
             LOGGER.debug("Size of jobNames: " + jobNames.size());
             LOGGER.debug("jobNames: " + Arrays.toString(jobNames.toArray()));
 
-            jobNameIds = new ArrayList<BigInteger>();
+            jobNameIds = new ArrayList<String>();
             for (String jobname : jobNames) {
                 LOGGER.debug("Lookup up jobId of jobName({})",jobname);
                 try {
-                    BigInteger curJobId = instance.getJobId(jobname);
+                    String curJobId = instance.getJobId(jobname);
                     jobNameIds.add(curJobId);
                 } catch (IllegalStateException e) {
                     LOGGER.warn(e.getLocalizedMessage());

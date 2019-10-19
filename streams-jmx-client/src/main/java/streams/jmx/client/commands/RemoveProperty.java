@@ -26,7 +26,6 @@ import com.beust.jcommander.Parameters;
 import java.util.List;
 import java.util.Map;
 
-import com.ibm.streams.management.domain.DomainMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
 
 import org.slf4j.Logger;
@@ -75,12 +74,10 @@ public class RemoveProperty extends AbstractInstanceCommand {
             ObjectMapper mapper = new ObjectMapper();
             ObjectNode jsonOut = mapper.createObjectNode();
 
-            DomainMXBean domain = getDomainMXBean();
             InstanceMXBean instance = getInstanceMXBean();
 
             // Populate the result object
             ArrayNode propertyArray = mapper.createArrayNode();
-            jsonOut.put("domain",domain.getName());
             jsonOut.put("instance",instance.getName());
 
 

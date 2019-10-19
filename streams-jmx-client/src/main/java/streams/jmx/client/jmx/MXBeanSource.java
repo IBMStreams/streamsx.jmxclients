@@ -16,14 +16,9 @@
 
 package streams.jmx.client.jmx;
 
-import java.math.BigInteger;
-
 import javax.management.MBeanServerConnection;
 
-import com.ibm.streams.management.domain.DomainMXBean;
-import com.ibm.streams.management.domain.DomainServiceMXBean;
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.instance.InstanceServiceMXBean;
 import com.ibm.streams.management.job.JobMXBean;
 import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
@@ -47,105 +42,62 @@ public interface MXBeanSource {
     /**
      * Gets a job management bean.
      * 
-     * @param domainId
-     *            the domain to which the job was submitted.
      * @param instanceId
      *            the instance to which the job was submitted.
      * @param jobId
      *            the ID that was assigned to the Job after submission.
      * @return the JobMXBean
      */
-    JobMXBean getJobBean(String domainId, String instanceId, BigInteger jobId);
+    JobMXBean getJobBean(String instanceId, String jobId);
 
     /**
      * Gets a Processing Element management bean.
      * 
-     * @param domainId
-     *            the domain in which the processing element exists.
      * @param instanceId
      *            the instance in which the processing element exists.
      * @param peId
      *            the ID that was assigned to the PE during job submission.
      * @return the PeMXBean
      */
-    PeMXBean getPeBean(String domainId, String instanceId, BigInteger peId);
+    PeMXBean getPeBean(String instanceId, String peId);
 
-    /**
-     * Gets a Domain management bean.
-     * 
-     * @param domainId
-     *            the name of the domain.
-     * @return the DomainMXBean
-     */
-    DomainMXBean getDomainBean(String domainId);
 
     /**
      * Gets an Instance management bean.
      * 
-     * @param domainId
-     *            the name of the domain in which the instance exists.
      * @param instanceId
      *            the name of the instance.
      * @return the InstanceMXBean
      */
-    InstanceMXBean getInstanceBean(String domainId, String instanceId);
+    InstanceMXBean getInstanceBean(String instanceId);
 
     /**
      * Gets a Resource management bean.
      * 
-     * @param domainId
-     *            the name of the domain to which the resource belongs.
+     * @param instanceId
+     *            the name of the instance to which the resource belongs.
      * @param resourceId
      *            the name of the resource.
      * @return the ResourceMXBean
      */
-    ResourceMXBean getResourceBean(String domainId, String resourceId);
+    ResourceMXBean getResourceBean(String instanceId, String resourceId);
 
-    /**
-     * Gets a Domain Service management bean.
-     * 
-     * @param domainId
-     *            the name of the domain containing the service.
-     * @param serviceType
-     *            the type of domain service
-     * @return the DomainServiceMXBean
-     */
-    DomainServiceMXBean getDomainServiceBean(String domainId,
-            DomainServiceMXBean.Type serviceType);
-
-    /**
-     * Gets an Instance Service management bean.
-     * 
-     * @param domainId
-     *            the name of the domain containing the service.
-     * @param instanceId
-     *            the name of the instance containing the service.
-     * @param serviceType
-     *            the type of instance service
-     * @return the InstanceServiceMXBean
-     */
-    InstanceServiceMXBean getInstanceServiceMXBean(String domainId,
-            String instanceId, InstanceServiceMXBean.Type serviceType);
 
 
     /**
      * Gets an Operator management bean.
      * 
-     * @param domainId the name of the domain containing the service.
      * @param instanceId the name of the instance
      * @param jobId the id of the job that includes the operator
      * @param operator the name of the operator
      * @return the OperatorMXBean
      */
-    OperatorMXBean getOperatorMXBean(String domainId, String instanceId,
-            BigInteger jobId, String operator);
+    OperatorMXBean getOperatorMXBean(String instanceId,
+            String jobId, String operator);
     
     /**
      * Gets an Operator Input Port management bean.
      * 
-     * @param domainId
-     *            the name of the domain containing the job that includes the
-     *            operator and input port.
      * @param instanceId
      *            the name of the instance containing the job that includes the
      *            operator and input port.
@@ -157,16 +109,13 @@ public interface MXBeanSource {
      *            the index of the input port within the operator
      * @return the OperatorInputPortMXBean
      */
-    OperatorInputPortMXBean getOperatorInputPortMXBean(String domainId,
-            String instanceId, BigInteger jobId, String operator,
+    OperatorInputPortMXBean getOperatorInputPortMXBean(
+            String instanceId, String jobId, String operator,
             int indexWithinOperator);
 
     /**
      * Gets an Operator Output Port management bean.
      * 
-     * @param domainId
-     *            the name of the domain containing the job that includes the
-     *            operator and output port.
      * @param instanceId
      *            the name of the instance containing the job that includes the
      *            operator and output port.
@@ -178,16 +127,13 @@ public interface MXBeanSource {
      *            the index of the output port within the operator
      * @return the OperatorOutputPortMXBean
      */
-    OperatorOutputPortMXBean getOperatorOutputPortMXBean(String domainId,
-            String instanceId, BigInteger jobId, String operator,
+    OperatorOutputPortMXBean getOperatorOutputPortMXBean(
+            String instanceId, String jobId, String operator,
             int indexWithinOperator);
 
     /**
      * Gets a PE Input Port management bean.
      * 
-     * @param domainId
-     *            the name of the domain containing the pe that includes the
-     *            input port
      * @param instanceId
      *            the name of the instance containing the pe that includes the
      *            input port
@@ -196,15 +142,12 @@ public interface MXBeanSource {
      * @param indexWithinPe
      *            the index of the input port within the PE
      */
-    PeInputPortMXBean getPeInputPortMXBean(String domainId, String instanceId,
-            BigInteger peId, int indexWithinPe);
+    PeInputPortMXBean getPeInputPortMXBean(String instanceId,
+            String peId, int indexWithinPe);
 
     /**
      * Gets a PE Output Port management bean.
      * 
-     * @param domainId
-     *            the name of the domain containing the pe that includes the
-     *            output port
      * @param instanceId
      *            the name of the instance containing the pe that includes the
      *            output port
@@ -213,6 +156,6 @@ public interface MXBeanSource {
      * @param indexWithinPe
      *            the index of the output port within the PE
      */
-    PeOutputPortMXBean getPeOutputPortMXBean(String domainId,
-            String instanceId, BigInteger peId, int indexWithinPe);
+    PeOutputPortMXBean getPeOutputPortMXBean(
+            String instanceId, String peId, int indexWithinPe);
 }

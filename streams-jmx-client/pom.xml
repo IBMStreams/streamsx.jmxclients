@@ -22,7 +22,7 @@ under the License.
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>streamsx.jmxclients</groupId>
 	<artifactId>streams-jmx-client</artifactId>
-	<version>1.1.0</version>
+	<version>5.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>streams-jmx-client</name>
@@ -44,12 +44,12 @@ under the License.
 <dependency>
 	<groupId>com.ibm.streams.management</groupId>
 	<artifactId>jmxmp</artifactId>
-	<version>4</version>
+	<version>5</version>
 </dependency>
 <dependency>
 	<groupId>com.ibm.streams.management</groupId>
 	<artifactId>mx</artifactId>
-	<version>4</version>
+	<version>5</version>
 </dependency>
     <dependency>
       <groupId>org.glassfish.external</groupId>

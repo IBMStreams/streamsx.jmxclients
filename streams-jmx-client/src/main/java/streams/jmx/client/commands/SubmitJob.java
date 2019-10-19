@@ -36,7 +36,7 @@ import javax.management.ObjectName;
 import com.ibm.streams.management.OperationListenerMXBean;
 import com.ibm.streams.management.OperationStatusMessage;
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.job.DeployInformation;
+import com.ibm.streams.management.ContentTransfer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -127,18 +127,22 @@ public class SubmitJob extends AbstractInstanceCommand {
             
             InstanceMXBean instance = getInstanceMXBean();
     
-            DeployInformation deployInformation = instance.deployApplication(theSabFile.getName());
+            // ContentTransfer
+            // URI 0: http for app bundle
+            // URI 1: http for job config overlay
+            // URI 2: http put signal complete
+            ContentTransfer deployInformation = instance.deployApplication(theSabFile.getName());
 
             //Put Job Configuration Overlay if provided
             if (jobConfigFile != null) {
                 LOGGER.debug("Sending job config overlay file to HTTP Server");
-                getJmxServiceContext().getWebClient().putFile(deployInformation.getOperatorConfigurationUri(),
+                getJmxServiceContext().getWebClient().putFile(deployInformation.getUris().get(1),
                     "application/json", jobConfigFile, getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort());
             }
 
             //Put sab file to http endpoint
             LOGGER.debug("Sending .sab file to HTTP Server");
-            getJmxServiceContext().getWebClient().putFile(deployInformation.getUri(),
+            getJmxServiceContext().getWebClient().putFile(deployInformation.getUris().get(0),
                 "application/x-jar", (sabFile != null ? sabFile : sabFileArgument), getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort());
 
             // Test using operationListener
@@ -151,14 +155,15 @@ public class SubmitJob extends AbstractInstanceCommand {
 
             // Submit the job    
             jsonOut.put("jobId", instance.submitJob(
-                deployInformation.getApplicationId(),
+                deployInformation.getId(),
                 params,
-                configSettings,
-                override,
+                false, // Not a preview
+                //configSettings, -- NOT SURE WHAT HAPPENED TO THEM in v5
+                //override, -- No more override resource load protection in v5
                 jobGroup,
                 jobName,
                 opListener.getId() // listenerId
-                ).longValue());
+                ));
 
             for (OperationStatusMessage osm : opListener.getMessages()) {
                 System.out.println(osm.getMessage());
