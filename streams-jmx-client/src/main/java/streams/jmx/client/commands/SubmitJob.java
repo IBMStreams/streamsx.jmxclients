@@ -27,6 +27,8 @@ import com.beust.jcommander.Parameters;
 import com.beust.jcommander.converters.FileConverter;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,8 +43,13 @@ import com.ibm.streams.management.ContentTransfer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+
+import org.apache.commons.lang.StringUtils;
 
 @Parameters(commandDescription = Constants.DESC_SUBMITJOB)
 public class SubmitJob extends AbstractInstanceCommand {
@@ -79,8 +86,12 @@ public class SubmitJob extends AbstractInstanceCommand {
     @Parameter(names = {"-J","--jobgroup"}, description = "Specifies the job group", required = false)
     private String jobGroup=null;
 
-    @Parameter(names = {"--override"}, description = "Do not use resource load protection")
-    private boolean override = false;
+    @Parameter(names = {"-w","--preview"}, description = "Indicates to preview the job submission and produce results as a job configuration overlay json file", required=false)
+    private boolean preview = false;
+
+    @Parameter(names = {"-q","--out_jobConfig"}, description = "Specifies the name of the output file in which the command writes the operator configuration information.", required=false,
+        converter=com.beust.jcommander.converters.FileConverter.class)
+    private File jobConfigOutFile=null;
 
     public SubmitJob() {
     } 
@@ -117,6 +128,23 @@ public class SubmitJob extends AbstractInstanceCommand {
                 throw new ParameterException("A required option or argument was not specified. Specify one of the following options or arguments: {[-f,--file <file-name>] | [<sabFileArgument>]}");
             }
 
+            // Check preview options and what is allowed
+            if (preview) {
+                LOGGER.debug("About to set preview file");
+
+                // Future check that --outfile is not used (and --file when we move to be exactly like streamtool)
+                if (jobConfigOutFile == null) {
+                    String[] fileParts = StringUtils.split(sabFile.getName(),".");
+                    Path currentRelativePath = Paths.get("");
+                    Path curPath = currentRelativePath.toAbsolutePath();
+                    jobConfigOutFile = new File(curPath.toFile(),fileParts[0] + "_config.json");
+                }
+                LOGGER.debug("preview outputfile: {}", jobConfigOutFile.toString());
+            } else {
+                // Cannot specify --out)_jobConfig
+
+            }
+
             LOGGER.debug("...Finished argument checking.", sabFileArgumentString);
 
             File theSabFile = (sabFile != null ? sabFile : sabFileArgument);
@@ -145,33 +173,63 @@ public class SubmitJob extends AbstractInstanceCommand {
             getJmxServiceContext().getWebClient().putFile(deployInformation.getUris().get(0),
                 "application/x-jar", (sabFile != null ? sabFile : sabFileArgument), getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort());
 
-            // Test using operationListener
+            //Get operational listener
             ObjectName opListenerName = instance.createOperationListener();
             //OperationListenerMXBean opListener = 
             OperationListenerMXBean opListener = JMX.newMXBeanProxy(
                 getBeanSource().getMBeanServerConnection(), opListenerName,
                 OperationListenerMXBean.class, true);
 
+            /**** TESTING GETTING BACK THE JCO */
+            if (preview) {
+                // Preview the job
+                String jcoUri = instance.submitJob(
+                    deployInformation.getId(),
+                    params,
+                    true, // Just a preview
+                    jobGroup,
+                    jobName,
+                    opListener.getId() // listenerId
+                    );
+                LOGGER.debug("Retrieving preview from uri: {}, override host: {}, override port: {}",jcoUri, getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort());
+                // Replace this with writing out file
+                //jsonOut.put("preview", getJmxServiceContext().getWebClient().get(jcoUri, getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort()));
+                String previewJsonString = getJmxServiceContext().getWebClient().get(jcoUri, getConfig().getJmxHttpHost(), getConfig().getJmxHttpPort());
 
-            // Submit the job    
-            jsonOut.put("jobId", instance.submitJob(
-                deployInformation.getId(),
-                params,
-                false, // Not a preview
-                //configSettings, -- NOT SURE WHAT HAPPENED TO THEM in v5
-                //override, -- No more override resource load protection in v5
-                jobGroup,
-                jobName,
-                opListener.getId() // listenerId
-                ));
+                // Test parsing the json
+                ObjectMapper previewMapper = new ObjectMapper();
+                ObjectNode previewJson = (ObjectNode)previewMapper.readTree(previewJsonString);
+                ObjectWriter previewWriter = previewMapper.writer(new DefaultPrettyPrinter());
+                previewWriter.writeValue(jobConfigOutFile, previewJson);
+                jsonOut.put("previewFile",jobConfigOutFile.getAbsolutePath());
+
+                // Test removing results for later
+                //previewJson.remove("results");
+                //jsonOut.put("preview",previewJsonString);
+                //jsonOut.put("modified",previewJson.toString());
+
+            } else {
+                // Submit the job    
+                jsonOut.put("jobId", instance.submitJob(
+                    deployInformation.getId(),
+                    params,
+                    false, // Not a preview
+                    //configSettings, -- NOT SURE WHAT HAPPENED TO THEM in v5
+                    //override, -- No more override resource load protection in v5
+                    jobGroup,
+                    jobName,
+                    opListener.getId() // listenerId
+                    ));
+            }
 
             for (OperationStatusMessage osm : opListener.getMessages()) {
                 System.out.println(osm.getMessage());
             }
+
             return new CommandResult(jsonOut.toString());
         } catch (Exception e) {
-            LOGGER.debug("GetInstanceState caught Exception: " + e.toString());
-            //e.printStackTrace();
+            LOGGER.debug("SubmitJob caught Exception: " + e.toString());
+            e.printStackTrace();
             return new CommandResult(ExitStatus.FAILED_COMMAND, null, e.getLocalizedMessage());
         }
     }
