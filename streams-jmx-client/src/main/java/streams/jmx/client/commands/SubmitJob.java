@@ -141,7 +141,9 @@ public class SubmitJob extends AbstractInstanceCommand {
                 }
                 LOGGER.debug("preview outputfile: {}", jobConfigOutFile.toString());
             } else {
-                // Cannot specify --out)_jobConfig
+                if (jobConfigOutFile != null) {
+                    throw new ParameterException("The Job Config output parameter [-q|--out_jobConfig] cannot be specified without the preview parameter: [-w|--preview]");
+                }
 
             }
 
@@ -229,7 +231,7 @@ public class SubmitJob extends AbstractInstanceCommand {
             return new CommandResult(jsonOut.toString());
         } catch (Exception e) {
             LOGGER.debug("SubmitJob caught Exception: " + e.toString());
-            e.printStackTrace();
+            if (LOGGER.isDebugEnabled()) {e.printStackTrace();};
             return new CommandResult(ExitStatus.FAILED_COMMAND, null, e.getLocalizedMessage());
         }
     }
