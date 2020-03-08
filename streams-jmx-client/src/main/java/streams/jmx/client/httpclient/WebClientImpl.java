@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 // NOTE: This is in the process of being redone from java.net.URL to use Apache Commons
 
 package streams.jmx.client.httpclient;
@@ -42,6 +41,7 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
@@ -118,38 +118,9 @@ public class WebClientImpl implements WebClient {
 
 
     public String get(String fromUri, String host, String port) throws WebClientException{
-    		String newUri = fromUri;
-    		// If either host or port need to be overridden
-    		boolean hostOverride = false;
-    		boolean portOverride = false;
-    		if ((host != null) && (!host.isEmpty())) {
-    			hostOverride = true;
-    		}
-    		if ((port != null) && (!port.isEmpty())) {
-    			portOverride = true;
-    		}
-    		if ((hostOverride) || (portOverride)) {
-    			LOG.debug("httpClient.get called to replace host and/or port of uri({}) with host: {}, port: {}",fromUri,host,port);
-	    		try {
-		        URL url = new URL(fromUri);
-		        String theHost = url.getHost();
-		        int thePort = url.getPort();
-		        
-		        if (hostOverride) {
-		        		theHost = host;
-		        }
-		        if (portOverride) {
-		        		thePort = Integer.parseInt(port);
-		        }
-		        
-		        URL newUrl = new URL(url.getProtocol(),theHost,thePort,url.getFile());
-		        newUri = newUrl.toString();
-		        LOG.debug("httpClient.get new uri: {}",newUri);
-	    		} catch (IOException e) {
-	            throw new WebClientException(String.format("Failed GET request to uri %s", fromUri), e);
-	    		}
-    		}
-    		return get(newUri);
+        // Rewrite Uri
+        String newUri = rewriteUriHostPort(fromUri, host, port);
+    	return get(newUri);
     }
 
 
@@ -212,38 +183,106 @@ public class WebClientImpl implements WebClient {
 
 
     public void putFile(String toUri, String contentType, File file, String host, String port) throws WebClientException{
-        String newUri = toUri;
+        // Rewrite Uri
+        String newUri = rewriteUriHostPort(toUri, host, port);
+
+        putFile(newUri, contentType, file);
+    }
+
+
+
+    @Override
+    public void putString(String toUri, String contentType, String content) throws WebClientException {
+
+        try {
+
+            SSLContextBuilder sslContextBuilder = SSLContextBuilder.create();
+            sslContextBuilder.loadTrustMaterial(ks, new TrustSelfSignedStrategy());
+            sslContextBuilder.setProtocol(this.sslProtocol);
+            SSLContext sslContext = sslContextBuilder.build();
+            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(sslContext, new NoopHostnameVerifier());
+
+            HttpClientBuilder httpClientBuilder = HttpClients.custom().setSSLSocketFactory(sslSocketFactory);
+            CloseableHttpClient httpClient = httpClientBuilder.build();
+            //CloseableHttpClient httpClient = HttpClients.createDefault();
+            HttpPut putFile = new HttpPut(toUri);  // throws IllegalArgumentException
+
+            try {
+
+                putFile.setEntity(new StringEntity(content,ContentType.create(contentType)));
+
+                ResponseHandler<HttpResponse> rh = new ResponseHandler<HttpResponse>() {
+                    @Override
+                    public HttpResponse handleResponse(final HttpResponse response) throws IOException {
+                        return response;
+                    }
+                };
+
+                HttpResponse response = httpClient.execute(putFile, rh);
+
+                if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+                    throw new WebClientException(String.format("Unable to send string (%s) to Streams JMX HTTP Server URI: %s",
+                        content, toUri));
+                }
+
+            } catch (Exception e) {
+                throw new WebClientException(e);
+            } finally {
+                putFile.releaseConnection();
+            }
+
+        } catch (Exception e) {
+            throw new WebClientException(e);
+        }
+    }
+
+
+    public void putString(String toUri, String contentType, String content, String host, String port) throws WebClientException{
+        // Rewrite Uri
+        String newUri = rewriteUriHostPort(toUri, host, port);
+
+        putString(newUri, contentType, content);
+    }
+
+
+
+    private String rewriteUriHostPort(String oldUri, String newHost, String newPort) throws WebClientException{
+        String newUri = oldUri;
         // If either host or port need to be overridden
         boolean hostOverride = false;
         boolean portOverride = false;
-        if ((host != null) && (!host.isEmpty())) {
+        if ((newHost != null) && (!newHost.isEmpty())) {
             hostOverride = true;
         }
-        if ((port != null) && (!port.isEmpty())) {
+        if ((newPort != null) && (!newPort.isEmpty())) {
             portOverride = true;
         }
         if ((hostOverride) || (portOverride)) {
-            LOG.debug("httpClient.putFile called to replace host and/or port of uri({}) with host: {}, port: {}",toUri,host,port);
+            LOG.debug("httpClient called to replace host and/or port of uri({}) with host: {}, port: {}",oldUri,newHost,newPort);
+
             try {
-                URL url = new URL(toUri);
+                URL url = new URL(oldUri);
                 String theHost = url.getHost();
                 int thePort = url.getPort();
                 
                 if (hostOverride) {
-                        theHost = host;
+                        theHost = newHost;
                 }
                 if (portOverride) {
-                        thePort = Integer.parseInt(port);
+                        thePort = Integer.parseInt(newPort);
                 }
                 
                 URL newUrl = new URL(url.getProtocol(),theHost,thePort,url.getFile());
                 newUri = newUrl.toString();
-                LOG.debug("httpClient.putFile new uri: {}",newUri);
+                LOG.debug("httpClientnew uri: {}",newUri);
+
             } catch (IOException e) {
-                throw new WebClientException(String.format("Failed URI host(%s)/port(%s) replacement to uri %s", host, port, toUri), e);
+                throw new WebClientException(String.format("Failed URI host(%s)/port(%s) replacement to uri %s", newHost, newPort, oldUri), e);
             }
         }
-        putFile(newUri, contentType, file);
-}
+
+        return newUri;
+
+    }
 
 }

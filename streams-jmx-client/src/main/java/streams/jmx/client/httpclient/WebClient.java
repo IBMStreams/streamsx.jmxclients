@@ -45,4 +45,8 @@ public interface WebClient {
     // putFile version with override of host and/or port available
     void putFile(String toUri, String contentType, File file, String host, String port) throws WebClientException;
 
+    void putString(String toUri, String contentType, String content) throws WebClientException;
+
+    // putString version with override of host and/or port available
+    void putString(String toUri, String contentType, String content, String host, String port) throws WebClientException;
 }
