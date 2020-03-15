@@ -98,7 +98,7 @@ public class JobDetails implements NotificationListener {
 	// Control over complete refresh of job required before next refresh
 	private boolean jobTopologyRefreshRequired = false;
 
-	private final Map<BigInteger, String> peResourceMap = new HashMap<BigInteger, String>();
+	//private final Map<BigInteger, String> peResourceMap = new HashMap<BigInteger, String>();
 	private final Map<String, String> operatorKindMap = new HashMap<String, String>();
 	private final Map<String, Map<Integer, String>> operatorInputPortNames = new HashMap<String, Map<Integer, String>>();
 	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
@@ -171,7 +171,7 @@ public class JobDetails implements NotificationListener {
 		}
 
 		try {
-			mapResources(beanSource);
+			//mapResources(beanSource);
 			mapPortNames(beanSource);
 		} catch (Exception e) {
 			String message = "Unable to create resource or operator port names";
@@ -202,7 +202,7 @@ public class JobDetails implements NotificationListener {
 			// Reset the port mappings as this will change when a topology change occurs
 			try {
 				MXBeanSource beanSource = monitor.getContext().getBeanSourceProvider().getBeanSource();
-				this.mapResources(beanSource);
+				//this.mapResources(beanSource);
 
 				operatorInputPortNames.clear();
 				operatorOutputPortNames.clear();
@@ -250,7 +250,10 @@ public class JobDetails implements NotificationListener {
 		this.jobMetrics = resolveMappings(jobMetrics);
 		updateExportedMetrics();
 	}
+
+
 	
+
 	public String getJobSnapshot() {
 		return jobSnapshot;
 	}
@@ -381,7 +384,7 @@ public class JobDetails implements NotificationListener {
 
 	public void setHealth(JobMXBean.Health health) {
 		this.health = health;
-		metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, this.streamsInstanceName, this.name).set((this.getHealth() == JobMXBean.Health.HEALTHY?1:0));
+		//metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, this.streamsInstanceName, this.name).set((this.getHealth() == JobMXBean.Health.HEALTHY?1:0));
 
 	}
 
@@ -612,10 +615,15 @@ public class JobDetails implements NotificationListener {
 	public void handleNotification(Notification notification, Object handback) {
 		try {
 			String notificationType = notification.getType();
-			LOGGER.trace("* Job Notification: " + notification);
+			LOGGER.trace("* Job Notification Type: " + notificationType + ", notification: " + notification);
 	
 			switch (notificationType) {
-	
+			case Notifications.JOB_CHANGED:
+				// JOB Changed notification can include PE relocated, but no user data to get more specific.  Asuume topology changed
+				LOGGER.debug("Instance({}) Job ({}) JOB_CHANGED Notification: Assume topology changed", this.instance, this.getJobid());
+				this.jobTopologyRefreshRequired = true;
+				break;
+
 			case AttributeChangeNotification.ATTRIBUTE_CHANGE:
 				AttributeChangeNotification acn = (AttributeChangeNotification) notification;
 				LOGGER.debug("* INSTANCE ({}) Job ({}) Notification: attribute ({}) changed from: {} to: {}", this.instance, this.getJobid(), acn.getAttributeName(), acn.getOldValue(), acn.getNewValue());
@@ -648,6 +656,7 @@ public class JobDetails implements NotificationListener {
     	}
 	}
 
+	/*
 	// Create mapping of peid to resource name it is running on
 	private void mapResources(MXBeanSource beanSource) {
 		Set<BigInteger> pes = getJobBean().getPes();
@@ -660,6 +669,7 @@ public class JobDetails implements NotificationListener {
 			peResourceMap.put(peid,peBean.getResource());
 		}
 	}
+	*/
 
 	private void mapPortNames(MXBeanSource beanSource) {
 		Set<String> operators = getJobBean().getOperators();
@@ -719,8 +729,9 @@ public class JobDetails implements NotificationListener {
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 
-					// Add resource name
-					resolveResource(pe);
+					// Add resource name, status, and health
+					//resolveResource(pe);
+					enrichPEMetrics(pe);
 
 					JSONArray operatorArray = (JSONArray) pe.get("operators");
 
@@ -741,14 +752,7 @@ public class JobDetails implements NotificationListener {
 		return metricsSnapshot;
 	}
 
-	// For the given pe JsonObject, lookup its id in the resource map and set a new resource attribute to be used in export metric labels
-	@SuppressWarnings("unchecked")
-	private void resolveResource(JSONObject pe) {
-		BigInteger peid = new BigInteger(pe.get("id").toString());
-		String resource = peResourceMap.get(peid);
-		LOGGER.trace("Resolving PE ({}) to Resource ({}) mapping in job ({}) metrics",peid.toString(),resource,getJobid().toString());
-		pe.put("resource",resource);
-	}
+
 
 	@SuppressWarnings("unchecked")
 	private void resolveOperatorInputPortNames(JSONObject operator) {
@@ -802,6 +806,44 @@ public class JobDetails implements NotificationListener {
 		}
 	}
 
+	/*
+	// For the given pe JsonObject, lookup its id in the resource map and set a new resource attribute to be used in export metric labels
+	@SuppressWarnings("unchecked")
+	private void resolveResource(JSONObject pe) {
+		BigInteger peid = new BigInteger(pe.get("id").toString());
+		String resource = peResourceMap.get(peid);
+		LOGGER.trace("Resolving PE ({}) to Resource ({}) mapping in job ({}) metrics",peid.toString(),resource,getJobid().toString());
+		pe.put("resource",resource);
+	}
+	*/
+
+	/* This is a temporary approach to getting PE status and health into the metrics JSON so we can
+		supress certain metrics when the PE is restarting */
+	@SuppressWarnings("unchecked")
+	private void enrichPEMetrics(JSONObject metrics_pe) {
+		String metrics_peid = metrics_pe.get("id").toString();
+		if (this.jobSnapshot != null) {
+			JSONParser parser = new JSONParser();
+			try {
+				JSONObject snapshotObject = (JSONObject) parser.parse(this.jobSnapshot);
+				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
+				for (int i = 0; i < peArray.size(); i++) {
+					JSONObject pe = (JSONObject) peArray.get(i);
+					String peid = (String)pe.get("id");
+					if (metrics_peid.equals(peid)) {
+						LOGGER.debug("enrichPEMetrics: enriching metrics pe: " + peid + " from snapshot");
+						LOGGER.debug("enrichPEMetrics: snapshot pe: " + peArray.get(i));
+						metrics_pe.put("status",pe.get("status"));
+						metrics_pe.put("health",pe.get("health"));
+						metrics_pe.put("resource",pe.get("resource"));
+					}
+				}
+			} catch (ParseException e) {
+				throw new IllegalStateException(e);
+			}
+		}
+	}
+
 	private String getOperatorName(JSONObject operator) {
 		return operator.get("name").toString();
 	}
@@ -851,19 +893,32 @@ public class JobDetails implements NotificationListener {
 			JSONParser parser = new JSONParser();
 			try {
 				JSONObject metricsObject = (JSONObject) parser.parse(this.jobMetrics);
-
 				JSONArray peArray = (JSONArray) metricsObject.get("pes");
 				
 				/* Job Metrics */
 				long ncpu = 0, nrmc = 0, nmc = 0;
 				long numconnections = 0, totalcongestion = 0, curcongestion = 0;
 				long maxcongestion = 0 , avgcongestion = 0, mincongestion = 999;
+				LOGGER.debug("Metrics, job status: " + this.getStatus());
+				LOGGER.debug("Metrics, job helath: " + this.getHealth());
 				/* PE Loop */
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 					String peid = (String)pe.get("id");
+					String status = (String)pe.get("status");
+					String health = (String)pe.get("health");
 					String resource = (String)pe.get("resource");
 
+					LOGGER.debug("Metrics, pe: " + peid + " resource: " + resource);
+					LOGGER.debug("Metrics, pe: " + peid + " status: " + status);
+					LOGGER.debug("Metrics, pe: " + peid + " health: " + health);
+
+					// If the PE is not healthy, then its resource may not be correct while it is being
+					// relocated, and we cannot create / update those metrics
+					if (!health.equalsIgnoreCase("healthy")) {
+						LOGGER.info("Metrics, pe: " + peid + " is NOT healthy, NOT setting metrics");
+						continue; // skip to next pe in loop
+					}
 
 					JSONArray peMetricsArray = (JSONArray) pe.get("metrics");
 					/* PE Metrics Loop */
@@ -872,6 +927,7 @@ public class JobDetails implements NotificationListener {
 						String metricName = (String)metric.get("name");
 						switch (metricName) {
 						case "nCpuMilliseconds":
+							LOGGER.debug("Metrics, pe: " + peid + " resource: " + resource + " nCpuMilliseconds: " + metric.get("value"));
 							ncpu += (long)metric.get("value");
 							break;
 						case "nResidentMemoryConsumption":
@@ -1084,6 +1140,12 @@ public class JobDetails implements NotificationListener {
 			try {
 				JSONObject snapshotObject = (JSONObject) parser.parse(this.jobSnapshot);
 
+				String health = (String)snapshotObject.get("health");
+				LOGGER.debug("snapshot Metrics job health: " + health);
+				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, this.streamsInstanceName, this.name).set(getHealthAsMetric(health));
+
+
+
 				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
 				
 				// Metrics to create
@@ -1094,6 +1156,12 @@ public class JobDetails implements NotificationListener {
 					JSONObject pe = (JSONObject) peArray.get(i);
 					String peid = (String)pe.get("id");
 					String resource = (String)pe.get("resource");
+
+
+					LOGGER.debug("Snapshots, pe: " + peid + " status: " + (String)pe.get("status"));
+					LOGGER.debug("Snapshots, pe: " + peid + " helath: " + (String)pe.get("health"));
+					LOGGER.debug("Snapshots, pe: " + peid + " resource: " + resource);
+
 					
 					launchCount = (long)pe.get("launchCount");
 					
@@ -1110,4 +1178,22 @@ public class JobDetails implements NotificationListener {
 			}
 		} // end if snapshot != null
 	}
+
+    private double getHealthAsMetric(String health) {
+    	double value = 0;
+    	switch (JobMXBean.Health.fromString(health)) {
+    	case HEALTHY :
+    		value = 1;
+    		break;
+    	case PARTIALLY_HEALTHY:
+    	case PARTIALLY_UNHEALTHY:
+			value = 0.5;
+			break;
+    	default:
+    		value = 0;
+		}
+		LOGGER.debug("getHealthAsMetric(" + health + ") = " + value);
+    	return value;
+    }
+
 }

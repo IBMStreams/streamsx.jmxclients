@@ -1282,7 +1282,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     	case PARTIALLY_RUNNING:
     	case PARTIALLY_FAILED:
     	case STOPPING:
-    		value = 0.5;
+            value = 0.5;
+            break;
     	default:
     		value = 0;
     	}
