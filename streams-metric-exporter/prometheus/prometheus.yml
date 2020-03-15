@@ -4,3 +4,8 @@ scrape_configs:
     metrics_path: /prometheus
     static_configs:
     - targets: ['streamsexporter:25500']
+  - job_name: streamsexporter
+    scrape_interval: 10s
+    metrics_path: /prometheus
+    static_configs:
+    - targets: ['172.31.29.41:25500']

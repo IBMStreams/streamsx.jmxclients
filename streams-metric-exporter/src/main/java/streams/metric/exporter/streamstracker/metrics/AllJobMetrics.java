@@ -62,6 +62,8 @@ public class AllJobMetrics {
 
     private void setAllMetrics(String allMetrics) {
         this.allMetrics = allMetrics;
+        LOGGER.debug("allMetrics: ");
+        LOGGER.debug(allMetrics);
     }
 
     public Date getLastMetricsRefresh() {
