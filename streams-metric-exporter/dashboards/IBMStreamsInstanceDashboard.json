@@ -17,7 +17,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 2,
-  "iteration": 1584561443753,
+  "iteration": 1584576302458,
   "links": [
     {
       "$$hashKey": "object:1080",
@@ -748,9 +748,20 @@
         {
           "expr": "rate(streams_pe_op_nTuplesSubmitted{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
           "format": "time_series",
+          "hide": true,
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
           "refId": "A",
+          "step": 2
+        },
+        {
+          "expr": "sum by (jobname,peid) (rate(streams_pe_op_nTuplesSubmitted{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m]))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
+          "refId": "B",
           "step": 2
         }
       ],
@@ -839,8 +850,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(streams_pe_ip_nTuplesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
+          "expr": "sum by (jobname, peid) (rate(streams_pe_ip_nTuplesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m]))",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
           "refId": "A",
@@ -932,8 +944,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(streams_pe_op_nTupleBytesSubmitted{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
+          "expr": "sum by (jobname, peid) (rate(streams_pe_op_nTupleBytesSubmitted{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m]))",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
           "refId": "A",
@@ -1025,8 +1038,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(streams_pe_ip_nTupleBytesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m])",
+          "expr": "sum by (jobname, peid) (rate(streams_pe_ip_nTupleBytesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m]))",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{jobname}} peid: {{peid}} Index: {{index}}",
           "refId": "A",
@@ -1116,8 +1130,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "streams_pe_launchCount{instancename=~\"$instancename\",jobname=~\"$jobname\"}",
+          "expr": "sum by (jobname, peid) (streams_pe_launchCount{instancename=~\"$instancename\",jobname=~\"$jobname\"})",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{jobname}}:{{peid}}",
           "refId": "A"
@@ -1206,8 +1221,9 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(streams_operator_ip_nTuplesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[2m])",
+          "expr": "sum by (jobname, peid, operatorname) (rate(streams_operator_ip_nTuplesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\"}[2m]))",
           "format": "time_series",
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "{{operatorname}} (pe: {{peid}})",
           "refId": "A"
@@ -1318,7 +1334,7 @@
     ]
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-6h",
     "to": "now"
   },
   "timepicker": {
@@ -1352,5 +1368,5 @@
   "variables": {
     "list": []
   },
-  "version": 4
+  "version": 5
 }
