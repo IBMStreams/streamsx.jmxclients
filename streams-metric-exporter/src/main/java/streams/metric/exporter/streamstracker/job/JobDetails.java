@@ -47,7 +47,6 @@ import com.ibm.streams.management.job.JobMXBean;
 import com.ibm.streams.management.job.OperatorMXBean;
 import com.ibm.streams.management.job.OperatorInputPortMXBean;
 import com.ibm.streams.management.job.OperatorOutputPortMXBean;
-import com.ibm.streams.management.job.PeMXBean;
 
 import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
@@ -60,22 +59,41 @@ import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 
 /* Job Details including map of port names so metrics can have names for ports rather than just ids */
-public class JobDetails implements NotificationListener {
+public class JobDetails {
 	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 
 	private StreamsInstanceTracker monitor;
 	private ServiceConfig config = null;
+	private String domain = null;
 	private String streamsInstanceName;
-	private BigInteger jobid;
-	private JobMXBean jobBean;
-	private JobMXBean.Status status;
+	private String instance = null;
+	private String jobid = null;
+	private String status = null;
+	private String health = null;
+	private String jobname = null;
+
+	private String jobSnapshot = null;
 	private String jobMetrics = null;
+
+	private final Map<String, Map<String, String>> peInfoMap = new HashMap<String, Map<String, String>>();
+	private final Map<String, String> operatorKindMap = new HashMap<String, String>();
+	// port maps <operatorname, map<indexWithinOperator,portname>>
+	private final Map<String, Map<String, String>> operatorInputPortNames = new HashMap<String, Map<String, String>>();
+	private final Map<String, Map<String, String>> operatorOutputPortNames = new HashMap<String, Map<String, String>>();
+
+		/* Metrics Exporter*/
+	/* Temporary solution: always use Prometheus exporter */
+	/* Future: Make this pluggable, add Elasticsearch exporter */
+	private MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
+
+/*
+	private JobMXBean jobBean;
+	//private JobMXBean.Status status;
 	// private String jobResolvedMetrics = null;
 	private Date lastMetricsRefresh = null;
 	private Date lastMetricsFailure = null;
 	private boolean lastMetricsRefreshFailed = false;
 	
-	private String jobSnapshot = null;
 	private Date lastSnapshotRefresh = null;
 	private Date lastSnapshotFailure = null;
 	private boolean lastSnapshotRefreshFailed = false;
@@ -86,306 +104,154 @@ public class JobDetails implements NotificationListener {
 	private String applicationScope = null;
 	private String applicationVersion = null;
 	private String dataPath = null;
-	private String domain = null;
-	private JobMXBean.Health health = JobMXBean.Health.UNKNOWN;
-	private String instance = null;
+	//private JobMXBean.Health health = JobMXBean.Health.UNKNOWN;
 	private String jobGroup = null;
-	private String name = null;
 	private String outputPath = null;
 	private String startedByUser = null;
 	private long submitTime = 0;
+*/
 
 	// Control over complete refresh of job required before next refresh
-	private boolean jobTopologyRefreshRequired = false;
+	//private boolean jobTopologyRefreshRequired = false;
 
-	//private final Map<BigInteger, String> peResourceMap = new HashMap<BigInteger, String>();
-	private final Map<String, String> operatorKindMap = new HashMap<String, String>();
-	private final Map<String, Map<Integer, String>> operatorInputPortNames = new HashMap<String, Map<Integer, String>>();
-	private final Map<String, Map<Integer, String>> operatorOutputPortNames = new HashMap<String, Map<Integer, String>>();
 
-	/* Metrics Exporter*/
-	/* Temporary solution: always use Prometheus exporter */
-	/* Future: Make this pluggable, add Elasticsearch exporter */
-	private MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
+
 	
-	public JobDetails(StreamsInstanceTracker monitor, BigInteger jobid, JobMXBean jobBean) {
+	public JobDetails(StreamsInstanceTracker monitor, String jobid) {
 		this.monitor = monitor;
 		this.config = monitor.getConfig();
 
-		//try {
-			this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
-		//} catch (StreamsTrackerException sme) {
-		//	String message = "jobDetails Constructor: Error getting streams instance name from monitor, setting to UNKNOWN.";
-		//	LOGGER.warn(message, sme);
-		//	this.streamsInstanceName = "UNKNOWN";
-		//}
+		this.domain = monitor.getDomainName();
+		this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
+
 		setJobid(jobid);
-		setJobBean(jobBean);
-		setStatus(JobMXBean.Status.UNKNOWN);
+		//setStatus(JobMXBean.Status.UNKNOWN);
 		setJobMetrics(null);
 		setJobSnapshot(null);
+
 		createExportedMetrics();
-
-		MXBeanSource beanSource = null;
-		MBeanServerConnection mbsc = null;
-		try {
-			beanSource = monitor.getContext().getBeanSourceProvider().getBeanSource();
-			mbsc = beanSource.getMBeanServerConnection();
-		} catch (IOException e) {
-			String message = "jobDetails Constructor: Exception getting MBeanServerConnection from JMX Connection Pool";
-			LOGGER.error(message, e);
-
-			throw new IllegalStateException(e);
-		}
-		
-		this.setName(jobBean.getName());
-		this.setStatus(jobBean.getStatus());
-		this.setAdlFile(jobBean.getAdlFile());
-		this.setApplicationName(jobBean.getApplicationName());
-		this.setApplicationPath(jobBean.getApplicationPath());
-		this.setApplicationScope(jobBean.getApplicationScope());
-		this.setApplicationVersion(jobBean.getApplicationVersion());
-		this.setDataPath(jobBean.getDataPath());
-		this.setDomain(jobBean.getDomain());
-		this.setHealth(jobBean.getHealth());
-		this.setInstance(jobBean.getInstance());
-		this.setJobGroup(jobBean.getJobGroup());
-		this.setOutputPath(jobBean.getOutputPath());
-		this.setStartedByUser(jobBean.getStartedByUser());
-		this.setSubmitTime(jobBean.getSubmitTime());
-
-		// Setup notifications (should handle exceptions)
-		try {
-			ObjectName jobObjName = ObjectNameBuilder.job(domain, instance, jobid);
-			NotificationFilterSupport filter = new NotificationFilterSupport();
-			// Only worry about changes that may be status, instance level
-			// handles removal of jobs
-			filter.enableType(Notifications.JOB_CHANGED);
-			filter.enableType(AttributeChangeNotification.ATTRIBUTE_CHANGE);
-			mbsc.addNotificationListener(jobObjName, this, filter, null);
-		} catch (Exception e) {
-			String message = "Error setting up job notification for JMX";
-			LOGGER.error(message, e);
-
-			throw new IllegalStateException(e);
-		}
-
-		try {
-			//mapResources(beanSource);
-			mapPortNames(beanSource);
-		} catch (Exception e) {
-			String message = "Unable to create resource or operator port names";
-			LOGGER.error(message, e);
-
-			throw new IllegalStateException(e);
-		}
 	}
 	
+	// Called by Instance to pass in snapshot and metrics to update exported metrics
+	public void refresh(String jobSnapshot, String jobMetrics) {
+		LOGGER.debug("Job refresh");
 
-	// Topology Refreshes could occur because of:
-	//   Dynamic UDP update (New PE's)
-	//   PE Relocation (need to update resourceMap)
-	private void handleTopologyRefresh() {
-		if (this.jobTopologyRefreshRequired) {
-			LOGGER.debug("Topology refresh required on job");
+		// Remove old metrics in case things moved around and new labels for things like resource are required
+		this.removeExportedMetrics();
+		this.createExportedMetrics();
 
-			// We must remove old exported metrics because they could be based on
-			// previous topology (e.g. PE's)  
-			// Danger here is if someone is using auto-refresh then the exported metrics
-			// could be empty until next refresh
-			// Not going to worry about this, because it is NOT recommended to use the 
-			// export interface with auto-refresh
-			this.removeExportedMetrics();
-			// Create the aggregate exported metrics
-			this.createExportedMetrics();
+		setJobSnapshot(jobSnapshot);
+		setJobMetrics(jobMetrics);
 
-			// Reset the port mappings as this will change when a topology change occurs
-			try {
-				MXBeanSource beanSource = monitor.getContext().getBeanSourceProvider().getBeanSource();
-				//this.mapResources(beanSource);
-
-				operatorInputPortNames.clear();
-				operatorOutputPortNames.clear();
-				this.mapPortNames(beanSource);
-			} catch (IOException e) {
-				// Assuming this means that JMX connection was lost, mark
-				// everything as unavailable
-				monitor.resetTracker();
-			}
-			this.jobTopologyRefreshRequired = false;
-		}
+		this.processSnapshot(jobSnapshot);
+		this.processMetrics(jobMetrics);
 	}
 
+	// Create Mappings for Metric Lookup and Snapshot based metrics
+	private void processSnapshot(String jobSnapshot) {
+		LOGGER.debug("processSnapshot");
+
+		// clear maps
+		peInfoMap.clear();
+		operatorKindMap.clear();
+		operatorInputPortNames.clear();
+		operatorOutputPortNames.clear();
+
+		if (jobSnapshot != null) {
+
+			JSONParser parser = new JSONParser();
+			try {
+				JSONObject snapshotObject = (JSONObject) parser.parse(jobSnapshot);
+
+				String instance = (String)snapshotObject.get("instance");
+				String status = (String)snapshotObject.get("status");
+				String health = (String)snapshotObject.get("health");
+				String jobname = (String)snapshotObject.get("name");
+
+				this.instance = instance;
+				this.status = status;
+				this.health = health;
+				this.jobname = jobname;
+
+				LOGGER.debug("snapshot Metrics job health: " + health);
+
+				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
+
+				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
+				
+				// Metrics to create
+				long launchCount = 0;
+				
+				/* PE Loop */
+				for (int i = 0; i < peArray.size(); i++) {
+					JSONObject pe = (JSONObject) peArray.get(i);
+
+					String peid = (String)pe.get("id");
+					String resource = (String)pe.get("resource");
+
+					// Capture peInfo for metrics
+					HashMap<String, String> peInfo = new HashMap<String, String>();
+					peInfo.put("status",(String)pe.get("status"));
+					peInfo.put("health",(String)pe.get("health"));
+					peInfo.put("resource",(String)pe.get("resource"));
+					peInfoMap.put(peid, peInfo);
+
+					mapOperatorKindAndPortNames(pe);
+
+					
+					launchCount = (long)pe.get("launchCount");
+					
+					metricsExporter.getStreamsMetric("launchCount",
+							StreamsObjectType.PE,
+							this.domain,
+							instance,
+							jobname,
+							resource,
+							peid).set(launchCount);	
+				} // End pe loop
+			} catch (ParseException e) {
+				throw new IllegalStateException(e);
+			}
+		} // end if snapshot != null
+	}
 
 	/* Stop/unregister anything you need to */
 	public void close() {
 		removeExportedMetrics();
 	}
 
-	public BigInteger getJobid() {
-		return jobid;
-	}
+	//public BigInteger getJobid() {
+	//	return jobid;
+	//}
 
-	public void setJobid(BigInteger jobid) {
-		this.jobid = jobid;
-	}
+	//public void setJobid(BigInteger jobid) {
+	//	this.jobid = jobid;
+	//}
 
-	public JobMXBean getJobBean() {
-		return jobBean;
-	}
-
-	public void setJobBean(JobMXBean jobBean) {
-		this.jobBean = jobBean;
-	}
 
 	public String getJobMetrics() {
-		return jobMetrics;
+		return this.jobMetrics;
 	}
 
 	public void setJobMetrics(String jobMetrics) {
-		// If topology has changed we need to reset a few things
-		handleTopologyRefresh();
-
-		// Resolve resources and portnames and update stored json
-		this.jobMetrics = resolveMappings(jobMetrics);
-		updateExportedMetrics();
+		this.jobMetrics = jobMetrics;
 	}
 
+	public String getJobid() {
+		return this.jobid;
+	}
 
-	
+	public void setJobid(String jobid) {
+		this.jobid = jobid;
+	}
+
 
 	public String getJobSnapshot() {
 		return jobSnapshot;
 	}
 
 	public void setJobSnapshot(String jobSnapshot) {
-		// If topology has changed we need to reset a few things
-		handleTopologyRefresh();
-
 		this.jobSnapshot = jobSnapshot;
-		updateExportedSnapshotMetrics();
-	}
-
-	public JobMXBean.Status getStatus() {
-		return status;
-	}
-
-	public void setStatus(JobMXBean.Status status) {
-		this.status = status;
-	}
-
-	public Date getLastMetricsRefresh() {
-		return lastMetricsRefresh;
-	}
-
-	public void setLastMetricsRefresh(Date lastMetricsRefresh) {
-		this.lastMetricsRefresh = lastMetricsRefresh;
-	}
-
-	public Date getLastMetricsFailure() {
-		return lastMetricsFailure;
-	}
-
-	public void setLastMetricsFailure(Date lastMetricsFailure) {
-		this.lastMetricsFailure = lastMetricsFailure;
-	}
-
-	public boolean isLastMetricsRefreshFailed() {
-		return lastMetricsRefreshFailed;
-	}
-
-	public void setLastMetricsRefreshFailed(boolean lastMetricsRefreshFailed) {
-		this.lastMetricsRefreshFailed = lastMetricsRefreshFailed;
-	}
-	
-	public Date getLastSnapshotRefresh() {
-		return lastSnapshotRefresh;
-	}
-
-	public void setLastSnapshotRefresh(Date lastSnapshotRefresh) {
-		this.lastSnapshotRefresh = lastSnapshotRefresh;
-	}
-
-	public Date getLastSnapshotFailure() {
-		return lastSnapshotFailure;
-	}
-
-	public void setLastSnapshotFailure(Date lastSnapshotFailure) {
-		this.lastSnapshotFailure = lastSnapshotFailure;
-	}
-
-	public boolean isLastSnapshotRefreshFailed() {
-		return lastSnapshotRefreshFailed;
-	}
-
-	public void setLastSnapshotRefreshFailed(boolean lastSnapshotRefreshFailed) {
-		this.lastSnapshotRefreshFailed = lastSnapshotRefreshFailed;
-	}
-
-	public String getAdlFile() {
-		return adlFile;
-	}
-
-	public void setAdlFile(String adlFile) {
-		this.adlFile = adlFile;
-	}
-
-	public String getApplicationName() {
-		return applicationName;
-	}
-
-	public void setApplicationName(String applicationName) {
-		this.applicationName = applicationName;
-	}
-
-	public String getApplicationPath() {
-		return applicationPath;
-	}
-
-	public void setApplicationPath(String applicationPath) {
-		this.applicationPath = applicationPath;
-	}
-
-	public String getApplicationScope() {
-		return applicationScope;
-	}
-
-	public void setApplicationScope(String applicationScope) {
-		this.applicationScope = applicationScope;
-	}
-
-	public String getApplicationVersion() {
-		return applicationVersion;
-	}
-
-	public void setApplicationVersion(String applicationVersion) {
-		this.applicationVersion = applicationVersion;
-	}
-
-	public String getDataPath() {
-		return dataPath;
-	}
-
-	public void setDataPath(String dataPath) {
-		this.dataPath = dataPath;
-	}
-
-	public String getDomain() {
-		return domain;
-	}
-
-	public void setDomain(String domain) {
-		this.domain = domain;
-	}
-
-	public JobMXBean.Health getHealth() {
-		return health;
-	}
-
-	public void setHealth(JobMXBean.Health health) {
-		this.health = health;
-		//metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, this.streamsInstanceName, this.name).set((this.getHealth() == JobMXBean.Health.HEALTHY?1:0));
-
 	}
 
 	public String getInstance() {
@@ -396,44 +262,29 @@ public class JobDetails implements NotificationListener {
 		this.instance = instance;
 	}
 
-	public String getJobGroup() {
-		return jobGroup;
+
+	public String getStatus() {
+		return status;
 	}
 
-	public void setJobGroup(String jobGroup) {
-		this.jobGroup = jobGroup;
+	public void setStatus(String status) {
+		this.status = status;
 	}
 
-	public String getName() {
-		return name;
+	public String getHealth() {
+		return health;
 	}
 
-	public void setName(String name) {
-		this.name = name;
+	public void setHealth(String health) {
+		this.health = health;
 	}
 
-	public String getOutputPath() {
-		return outputPath;
+	public String getJobname() {
+		return jobname;
 	}
 
-	public void setOutputPath(String outputPath) {
-		this.outputPath = outputPath;
-	}
-
-	public String getStartedByUser() {
-		return startedByUser;
-	}
-
-	public void setStartedByUser(String startedByUser) {
-		this.startedByUser = startedByUser;
-	}
-
-	public long getSubmitTime() {
-		return submitTime;
-	}
-
-	public void setSubmitTime(long submitTime) {
-		this.submitTime = submitTime;
+	public void setJobname(String jobname) {
+		this.jobname = jobname;
 	}
 
 	/*
@@ -443,6 +294,7 @@ public class JobDetails implements NotificationListener {
 	public JobInfo getJobInfo() {
 
 		JobInfo ji = new JobInfo();
+		/*
 		ji.setAdlFile(adlFile);
 		ji.setApplicationName(applicationName);
 		ji.setApplicationPath(applicationPath);
@@ -468,6 +320,7 @@ public class JobDetails implements NotificationListener {
 		ji.setSubmitTime(submitTime);
 		//ji.setJobMetrics(resolvePortNames(jobMetrics));
 		// Already resolved
+		*/
 		ji.setJobMetrics(jobMetrics);
 		ji.setJobSnapshot(jobSnapshot);
 
@@ -475,248 +328,66 @@ public class JobDetails implements NotificationListener {
 
 	}
 
-	public void updateStatus() throws IOException {
-		LOGGER.trace("** In updateStatus for job " + this.getJobid());
-		// Be careful with timing and just in case the notification of job
-		// removal is delayed, catch exception if job is gone before we
-		// process notification
-		// Found issue with Streams JMX, does not declare that
-		// instanceNotFOundException thrown so comes out as
-		// UndeclaredThrowableException
-		try {
-			JobMXBean jobBean = this.getJobBean();
-			this.setStatus(jobBean.getStatus());
 
-			// While we are here, update everything from the bean
-			this.setAdlFile(jobBean.getAdlFile());
-			this.setApplicationName(jobBean.getApplicationName());
-			this.setApplicationPath(jobBean.getApplicationPath());
-			this.setApplicationScope(jobBean.getApplicationScope());
-			this.setApplicationVersion(jobBean.getApplicationVersion());
-			this.setDataPath(jobBean.getDataPath());
-			this.setDomain(jobBean.getDomain());
-			this.setHealth(jobBean.getHealth());
-			this.setInstance(jobBean.getInstance());
-			this.setJobGroup(jobBean.getJobGroup());
-			this.setName(jobBean.getName());
-			this.setOutputPath(jobBean.getOutputPath());
-			this.setStartedByUser(jobBean.getStartedByUser());
-			this.setSubmitTime(jobBean.getSubmitTime());
-
-		} catch (UndeclaredThrowableException e) {
-			LOGGER.debug("* Handling jobBean.getStatus() UndeclaredThrowableException and unwrapping it");
-			Throwable t = e.getUndeclaredThrowable();
-			if (t instanceof IOException) {
-				LOGGER.debug("*    It was an IOException we can handle, throwing the IOException");
-				throw (IOException) t;
-			} else {
-				LOGGER.debug(
-						"*    It was an " + t.getClass() + " which was unexpected, throw original undeclarable...");
-				throw e;
-			}
-		}		
-	}
 
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
 		// String newline = System.getProperty("line.separator");
-		result.append("Job: " + this.getJobid() + ": " + this.getStatus());
-		result.append(", applicationName: " + this.getApplicationName());
+		result.append("Job name: " + this.getJobname());
 		result.append(" Metrics: " + this.getJobMetrics());
 		result.append(" Snapshot: " + this.getJobSnapshot());
 		return result.toString();
 	}
 
-	/*
-	 * getJobSnapshot: method to grab snapshot of job from JMX Server
-	 * NOTE: This existed before we started caching the snapshots to get PE launchCount
-	 * This is left for on-demand behavior of snaphot REST call
-	 */
+/*****************************************************************
+ * Create Maps for easy reference when processing metrics
+ * Some information is only found in the snapshot json
+ *****************************************************************/
 
-	public String getSnapshot(int maximumDepth, boolean includeStaticAttributes) throws StreamsTrackerException {
+	private void mapOperatorKindAndPortNames(JSONObject peObject) {
 
-		StringBuilder newSnapshot = new StringBuilder();
-
-		// Create hashMap for timing Stuff
-		LinkedHashMap<String, Long> timers = new LinkedHashMap<String, Long>();
-		StopWatch stopwatch = new StopWatch();
-		String uri = null;
-
-		/**** JMX Interaction *****/
-		try {
-			stopwatch.start();
-			/***
-			 * ISSUE: snapshotJobMetrics does not declare it throws IOException
-			 * but it does and comes back to us as UndeclaredThrowableException,
-			 * handle that here
-			 */
-			try {
-				uri = this.getJobBean().snapshot(maximumDepth, includeStaticAttributes);
-			} catch (UndeclaredThrowableException e) {
-				LOGGER.trace("* Handling snapshotJobMetrics UndeclaredThrowableException and unwrapping it");
-				Throwable t = e.getUndeclaredThrowable();
-				if (t instanceof IOException) {
-					LOGGER.trace("*    It was an IOException we can handle, throwing the IOException");
-					throw (IOException) t;
-				} else {
-					LOGGER.trace(
-							"*    It was an " + t.getClass() + " which was unexpected, throw original undeclarable...");
-					throw e;
-				}
-			}
-			stopwatch.stop();
-			timers.put("job.snapshot", stopwatch.getTime());
-
-		} catch (IOException e) {
-			// IOException from JMX usually means server restarted or domain
-			LOGGER.warn("** job.snapshot JMX Interaction IOException **");
-			LOGGER.info("details", e);
-
-			throw new StreamsTrackerException(StreamsTrackerErrorCode.JMX_IOERROR,
-					"Unable to retrieve snapshots at this time.", e);
-
-		} catch (Exception e) {
-			throw new StreamsTrackerException(StreamsTrackerErrorCode.UNSPECIFIED_ERROR,
-					"Unable to retrieve snapshots at this time.", e);
-		}
-
-		/******* HTTPS Interaction ********/
-		try {
-			LOGGER.trace("* job.snapshot * Connect to snapshot URI and retrieve...");
-			stopwatch.reset();
-			stopwatch.start();
-			// set up trust manager
-			newSnapshot.append(monitor.getContext().getWebClient().get(uri,this.config.getJmxHttpHost(),this.config.getJmxHttpPort()));
-
-			stopwatch.stop();
-			timers.put("connect and retrieve snapshot", stopwatch.getTime());
-
-		} catch (Exception e) {
-			throw new StreamsTrackerException(StreamsTrackerErrorCode.UNSPECIFIED_ERROR,
-					"Unable to retrieve snapshots at this time.", e);
-		}
-
-		LOGGER.debug("job.shapshot timings:");
-		for (Map.Entry<String, Long> entry : timers.entrySet()) {
-			LOGGER.debug(entry.getKey() + ": " + entry.getValue());
-		}
-
-		LOGGER.trace("Exited");
-
-		return String.valueOf(newSnapshot);
-	}
-
-	/*
-	 * JobDetails: handleNotification Original version just listened for any
-	 * kind of notification and then went and pulled the new status Moving to a
-	 * specific processing of the notification.
-	 */
-	public void handleNotification(Notification notification, Object handback) {
-		try {
-			String notificationType = notification.getType();
-			LOGGER.trace("* Job Notification Type: " + notificationType + ", notification: " + notification);
-	
-			switch (notificationType) {
-			case Notifications.JOB_CHANGED:
-				// JOB Changed notification can include PE relocated, but no user data to get more specific.  Asuume topology changed
-				LOGGER.debug("Instance({}) Job ({}) JOB_CHANGED Notification: Assume topology changed", this.instance, this.getJobid());
-				this.jobTopologyRefreshRequired = true;
-				break;
-
-			case AttributeChangeNotification.ATTRIBUTE_CHANGE:
-				AttributeChangeNotification acn = (AttributeChangeNotification) notification;
-				LOGGER.debug("* INSTANCE ({}) Job ({}) Notification: attribute ({}) changed from: {} to: {}", this.instance, this.getJobid(), acn.getAttributeName(), acn.getOldValue(), acn.getNewValue());
-				// Support for Streams 4.3 which introduced topology changes (dynamic UDP)
-				// When the topology changes, we need to update our port mappings
-				// If any other attribute changes, updateStatus()
-				try {
-					switch (acn.getAttributeName()) {
-						case "GenerationId":
-							LOGGER.debug("Job GenerationId changed, setting flag so next snapshot or metrics update topology and port mappings reset");
-
-							this.jobTopologyRefreshRequired = true;
-
-							break;
-						default: 
-					this.updateStatus();
-							break;
-					}
-				} catch (IOException e) {
-					// Assuming this means that JMX connection was lost, mark
-					// everything as unavailable
-					monitor.resetTracker();
-				}
-	
-				break;
-			}
-    	} catch (Exception e) {
-    		LOGGER.error("Job ({}) Notification Handler caught exception: {}",this.name,e.toString());
-    		e.printStackTrace();
-    	}
-	}
-
-	/*
-	// Create mapping of peid to resource name it is running on
-	private void mapResources(MXBeanSource beanSource) {
-		Set<BigInteger> pes = getJobBean().getPes();
-
-		// Clear old map
-		peResourceMap.clear();
-
-		for (BigInteger peid : pes) {
-			PeMXBean peBean = beanSource.getPeBean(getDomain(), getInstance(), peid);
-			peResourceMap.put(peid,peBean.getResource());
-		}
-	}
-	*/
-
-	private void mapPortNames(MXBeanSource beanSource) {
-		Set<String> operators = getJobBean().getOperators();
-
-		for (String operatorName : operators) {
-			OperatorMXBean operatorBean = beanSource.getOperatorMXBean(getDomain(), getInstance(), getJobid(),
-					operatorName);
-			operatorKindMap.put(operatorName,operatorBean.getOperatorKind());
-			mapOperatorInputPortNames(beanSource, operatorName, operatorBean.getInputPorts());
-			mapOperatorOutputPortNames(beanSource, operatorName, operatorBean.getOutputPorts());
+		JSONArray operatorArray = (JSONArray) peObject.get("operators");
+		
+		/* Operator Loop */
+		for (int i = 0; i < operatorArray.size(); i++) {
+			JSONObject operator = (JSONObject) operatorArray.get(i);
+			String operatorName = (String)operator.get("name");
+			String operatorKind = (String)operator.get("operatorKind");
+			operatorKindMap.put(operatorName,operatorKind);
+			mapOperatorInputPortNames(operator, operatorName);
+			mapOperatorOutputPortNames(operator, operatorName);
 		}
 	}
 
-	//@SuppressWarnings("unchecked")
-	private void mapOperatorInputPortNames(MXBeanSource beanSource, String operatorName, Set<Integer> inputPorts) {
-		for (Integer portIndex : inputPorts) {
-			OperatorInputPortMXBean bean = beanSource.getOperatorInputPortMXBean(getDomain(), getInstance(), getJobid(),
-					operatorName, portIndex);
+	// port maps <operatorname, map<indexWithinOperator,portname>>
+	private void mapOperatorInputPortNames(JSONObject operator, String operatorName) {
+		JSONArray inputPortsArray = (JSONArray) operator.get("inputPorts");
+		Map<String,String> inputPortNames = new HashMap<String,String>();
 
-			Map<Integer, String> inputPortNames = operatorInputPortNames.get(operatorName);
-
-			if (inputPortNames == null) {
-				inputPortNames = new HashMap<Integer, String>();
-				operatorInputPortNames.put(operatorName, inputPortNames);
-			}
-
-			inputPortNames.put(portIndex, bean.getName());
+		for (int i = 0; i < inputPortsArray.size(); i++) {
+			JSONObject ip = (JSONObject) inputPortsArray.get(i);
+			String indexWithinOperator = (String)ip.get("indexWithinOperator");
+			String inputPortName = (String)ip.get("name");
+			inputPortNames.put(indexWithinOperator,inputPortName);
 		}
+		operatorInputPortNames.put(operatorName,inputPortNames);
 	}
 
-	//@SuppressWarnings("unchecked")
-	private void mapOperatorOutputPortNames(MXBeanSource beanSource, String operatorName, Set<Integer> outputPorts) {
-		for (Integer portIndex : outputPorts) {
-			OperatorOutputPortMXBean bean = beanSource.getOperatorOutputPortMXBean(getDomain(), getInstance(),
-					getJobid(), operatorName, portIndex);
+	private void mapOperatorOutputPortNames(JSONObject operator, String operatorName) {
+		JSONArray outputPortsArray = (JSONArray) operator.get("outputPorts");
+		Map<String,String> outputPortNames = new HashMap<String,String>();
 
-			Map<Integer, String> outputPortNames = operatorOutputPortNames.get(operatorName);
-
-			if (outputPortNames == null) {
-				outputPortNames = new HashMap<Integer, String>();
-				operatorOutputPortNames.put(operatorName, outputPortNames);
-			}
-
-			outputPortNames.put(portIndex, bean.getName());
+		for (int i = 0; i < outputPortsArray.size(); i++) {
+			JSONObject ip = (JSONObject) outputPortsArray.get(i);
+			String indexWithinOperator = (String)ip.get("indexWithinOperator");
+			String outputPortName = (String)ip.get("name");
+			outputPortNames.put(indexWithinOperator,outputPortName);
 		}
+		operatorOutputPortNames.put(operatorName,outputPortNames);
 	}
 
+/*
 	private String resolveMappings(String metricsSnapshot) {
 		if (metricsSnapshot != null) {
 
@@ -751,9 +422,9 @@ public class JobDetails implements NotificationListener {
 
 		return metricsSnapshot;
 	}
+*/
 
-
-
+/*
 	@SuppressWarnings("unchecked")
 	private void resolveOperatorInputPortNames(JSONObject operator) {
 		JSONArray inputPortArray = (JSONArray) operator.get("inputPorts");
@@ -763,7 +434,7 @@ public class JobDetails implements NotificationListener {
 		}
 
 		String operatorName = getOperatorName(operator);
-		Map<Integer, String> inputPortNames = operatorInputPortNames.get(operatorName);
+		Map<String, String> inputPortNames = operatorInputPortNames.get(operatorName);
 
 		if (inputPortNames == null) {
 			return;
@@ -789,7 +460,7 @@ public class JobDetails implements NotificationListener {
 		}
 
 		String operatorName = getOperatorName(operator);
-		Map<Integer, String> outputPortNames = operatorOutputPortNames.get(operatorName);
+		Map<String, String> outputPortNames = operatorOutputPortNames.get(operatorName);
 
 		if (outputPortNames == null) {
 			return;
@@ -806,19 +477,7 @@ public class JobDetails implements NotificationListener {
 		}
 	}
 
-	/*
-	// For the given pe JsonObject, lookup its id in the resource map and set a new resource attribute to be used in export metric labels
-	@SuppressWarnings("unchecked")
-	private void resolveResource(JSONObject pe) {
-		BigInteger peid = new BigInteger(pe.get("id").toString());
-		String resource = peResourceMap.get(peid);
-		LOGGER.trace("Resolving PE ({}) to Resource ({}) mapping in job ({}) metrics",peid.toString(),resource,getJobid().toString());
-		pe.put("resource",resource);
-	}
-	*/
 
-	/* This is a temporary approach to getting PE status and health into the metrics JSON so we can
-		supress certain metrics when the PE is restarting */
 	@SuppressWarnings("unchecked")
 	private void enrichPEMetrics(JSONObject metrics_pe) {
 		String metrics_peid = metrics_pe.get("id").toString();
@@ -851,7 +510,7 @@ public class JobDetails implements NotificationListener {
 	private int getOperatorPortIndex(JSONObject port) {
 		return ((Number) port.get("indexWithinOperator")).intValue();
 	}
-	
+*/
 	private void createExportedMetrics() {
 		LOGGER.trace("createExportedMetrics");
 		// Create our own metrics that will be aggregates of Streams metrics
@@ -876,9 +535,11 @@ public class JobDetails implements NotificationListener {
 		// When this job is removed, remove all metrics for this job
 		// (really its the specific instance of the metric for the streams objects of this job)
 		LOGGER.trace("removeExportedMetrics()");
-		metricsExporter.removeAllChildStreamsMetrics(this.domain, this.streamsInstanceName,name);
+		metricsExporter.removeAllChildStreamsMetrics(this.domain, this.streamsInstanceName,this.jobname);
 	}
-	private void updateExportedMetrics() {
+
+
+	private void processMetrics(String jobMetrics) {
 		/* Use this.jobMetrics to update the exported metrics */
 		/* Some will be auto created, others we will control and aggregate */
 		/* Specifically, we aggregate PE metrics to the job level */
@@ -888,26 +549,30 @@ public class JobDetails implements NotificationListener {
 		/* a metric graphing tool crazy */
 		
 		/* Use SimpleJSON, it tests out pretty fast and easy to use */
-		if (this.jobMetrics != null) {
+		if (jobMetrics != null) {
 
 			JSONParser parser = new JSONParser();
 			try {
 				JSONObject metricsObject = (JSONObject) parser.parse(this.jobMetrics);
 				JSONArray peArray = (JSONArray) metricsObject.get("pes");
 				
-				/* Job Metrics */
+				// Job Metrics 
 				long ncpu = 0, nrmc = 0, nmc = 0;
 				long numconnections = 0, totalcongestion = 0, curcongestion = 0;
 				long maxcongestion = 0 , avgcongestion = 0, mincongestion = 999;
 				LOGGER.debug("Metrics, job status: " + this.getStatus());
 				LOGGER.debug("Metrics, job helath: " + this.getHealth());
-				/* PE Loop */
+				// PE Loop 
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 					String peid = (String)pe.get("id");
-					String status = (String)pe.get("status");
-					String health = (String)pe.get("health");
-					String resource = (String)pe.get("resource");
+
+					// Get info from peInfoMap
+					Map<String,String> peInfo = peInfoMap.get(peid);
+
+					String status = peInfo.get("status");
+					String health = peInfo.get("health");
+					String resource = peInfo.get("resource");
 
 					LOGGER.debug("Metrics, pe: " + peid + " resource: " + resource);
 					LOGGER.debug("Metrics, pe: " + peid + " status: " + status);
@@ -941,7 +606,7 @@ public class JobDetails implements NotificationListener {
 								StreamsObjectType.PE,
 								this.domain,
 								this.streamsInstanceName,
-								name,
+								this.jobname,
 								resource,
 								peid).set((long)metric.get("value"));
 					}
@@ -960,7 +625,7 @@ public class JobDetails implements NotificationListener {
 									StreamsObjectType.PE_INPUTPORT,
 									this.domain,
 									this.streamsInstanceName,
-									name,
+									this.jobname,
 									resource,
 									peid,
 									indexWithinPE).set((long)metric.get("value"));
@@ -982,7 +647,7 @@ public class JobDetails implements NotificationListener {
 									StreamsObjectType.PE_OUTPUTPORT,
 									this.domain,
 									this.streamsInstanceName,
-									name,
+									this.jobname,
 									resource,
 									peid,
 									indexWithinPE).set((long)metric.get("value"));
@@ -1010,7 +675,7 @@ public class JobDetails implements NotificationListener {
 										StreamsObjectType.PE_OUTPUTPORT_CONNECTION,
 										this.domain,
 										this.streamsInstanceName,
-										name,
+										this.jobname,
 										resource,
 										peid,
 										indexWithinPE,
@@ -1028,6 +693,7 @@ public class JobDetails implements NotificationListener {
 						String operatorKind = this.operatorKindMap.get(operatorName);
 //						System.out.println("OPERATOR NAME: " + operatorName);
 						JSONArray opMetricsArray = (JSONArray) operator.get("metrics");
+
 						/* Operator Metrics Loop, these are non-standard metrics */
 						for (int om = 0; om < opMetricsArray.size(); om++) {
 							JSONObject metric = (JSONObject) opMetricsArray.get(om);
@@ -1044,7 +710,7 @@ public class JobDetails implements NotificationListener {
 										StreamsObjectType.OPERATOR,
 										this.domain,
 										this.streamsInstanceName,
-										name,
+										this.jobname,
 										resource,
 										peid,
 										operatorName,
@@ -1058,7 +724,8 @@ public class JobDetails implements NotificationListener {
 						for (int opip = 0; opip < opipArray.size(); opip++) {
 							JSONObject inputPort = (JSONObject)opipArray.get(opip);
 							//System.out.println("INPUTPORT: " + inputPort.toString());
-							String inputPortName = (String)inputPort.get("name");
+							String indexWithinOperator = (String)inputPort.get("indexWithinOperator");
+							String inputPortName = this.operatorInputPortNames.get(operatorName).get(indexWithinOperator);
 							//System.out.println("INPUTPORTNAME: " + inputPortName);
 							JSONArray ipMetrics = (JSONArray)inputPort.get("metrics");
 							for (int opipm = 0; opipm < ipMetrics.size(); opipm++) {
@@ -1070,7 +737,7 @@ public class JobDetails implements NotificationListener {
 											StreamsObjectType.OPERATOR_INPUTPORT,
 											this.domain,
 											this.streamsInstanceName,
-											name,
+											this.jobname,
 											resource,
 											peid,
 											operatorName,
@@ -1086,7 +753,8 @@ public class JobDetails implements NotificationListener {
 						for (int opop = 0; opop < opopArray.size(); opop++) {
 							JSONObject outputPort = (JSONObject)opopArray.get(opop);
 							//System.out.println("OUTPUTPORT: " + outputPort.toString());
-							String outputPortName = (String)outputPort.get("name");
+							String indexWithinOperator = (String)outputPort.get("indexWithinOperator");
+							String outputPortName = this.operatorOutputPortNames.get(operatorName).get(indexWithinOperator);
 							//System.out.println("OUTPUTPORTNAME: " + outputPortName);
 							JSONArray opMetrics = (JSONArray)outputPort.get("metrics");
 							for (int opopm = 0; opopm < opMetrics.size(); opopm++) {
@@ -1098,7 +766,7 @@ public class JobDetails implements NotificationListener {
 											StreamsObjectType.OPERATOR_OUTPUTPORT,
 											this.domain,
 											this.streamsInstanceName,
-											name,
+											this.jobname,
 											resource,
 											peid,
 											operatorName,
@@ -1111,24 +779,26 @@ public class JobDetails implements NotificationListener {
 						
 					} // End Operator Loop
 				} // End PE Loop
-				metricsExporter.getStreamsMetric("pecount", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, name).set(peArray.size());
-				metricsExporter.getStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,name).set(ncpu);
-				metricsExporter.getStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,name).set(nrmc);
-				metricsExporter.getStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,name).set(nmc);
+				metricsExporter.getStreamsMetric("pecount", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, this.jobname).set(peArray.size());
+				metricsExporter.getStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,this.jobname).set(ncpu);
+				metricsExporter.getStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,this.jobname).set(nrmc);
+				metricsExporter.getStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,this.jobname).set(nmc);
 				if (numconnections > 0)
 					avgcongestion = totalcongestion / numconnections;
 				// else it was initialized to 0;
-				metricsExporter.getStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, name).set(totalcongestion);
-				metricsExporter.getStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,name).set(avgcongestion);
-				metricsExporter.getStreamsMetric("max_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,name).set(maxcongestion);
+				metricsExporter.getStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, this.jobname).set(totalcongestion);
+				metricsExporter.getStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,this.jobname).set(avgcongestion);
+				metricsExporter.getStreamsMetric("max_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,this.jobname).set(maxcongestion);
 				if (mincongestion == 999) mincongestion = 0;
-				metricsExporter.getStreamsMetric("min_congestionFactor", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,name).set(mincongestion);
+				metricsExporter.getStreamsMetric("min_congestionFactor", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,this.jobname).set(mincongestion);
 			} catch (ParseException e) {
 				throw new IllegalStateException(e);
 			}
 		} // end if metrics != null
 	}
 	
+
+	/*
 	// Update Exported metrics that are derived from information in the job snapshot (e.g. PE Launch Count)
 	private void updateExportedSnapshotMetrics() {
 		
@@ -1151,7 +821,7 @@ public class JobDetails implements NotificationListener {
 				// Metrics to create
 				long launchCount = 0;
 				
-				/* PE Loop */
+				
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 					String peid = (String)pe.get("id");
@@ -1179,6 +849,8 @@ public class JobDetails implements NotificationListener {
 		} // end if snapshot != null
 	}
 
+	*/
+
     private double getHealthAsMetric(String health) {
     	double value = 0;
     	switch (JobMXBean.Health.fromString(health)) {
@@ -1195,5 +867,7 @@ public class JobDetails implements NotificationListener {
 		LOGGER.debug("getHealthAsMetric(" + health + ") = " + value);
     	return value;
     }
+
+
 
 }

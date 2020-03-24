@@ -75,10 +75,10 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 			if (sit.jobsAvailable()) {
 				jgen.writeArrayFieldStart("jobNameIndex");
 
-				Iterator<Map.Entry<String, BigInteger>> it = sit.getCurrentJobNameIndex().entrySet().iterator();
+				Iterator<Map.Entry<String, String>> it = sit.getCurrentJobNameIndex().entrySet().iterator();
 
 				while (it.hasNext()) {
-					Map.Entry<String, BigInteger> entry = it.next();
+					Map.Entry<String, String> entry = it.next();
 					jgen.writeStartObject();
 					jgen.writeStringField("key", entry.getKey().toString());
 					jgen.writeStringField("value", entry.getValue().toString());
@@ -88,11 +88,11 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 			}
 
 			if (sit.metricsAvailable()) {
-				Iterator<Map.Entry<BigInteger, JobInfo>> it = sit.getCurrentJobMap().entrySet().iterator();
+				Iterator<Map.Entry<String, JobInfo>> it = sit.getCurrentJobMap().entrySet().iterator();
 				jgen.writeNumberField("jobCount", sit.getCurrentJobMap().size());
 				jgen.writeArrayFieldStart("jobMap");
 				while (it.hasNext()) {
-					Map.Entry<BigInteger, JobInfo> entry = it.next();
+					Map.Entry<String, JobInfo> entry = it.next();
 					// jgen.writeObjectFieldStart("mapEntry");
 					jgen.writeStartObject();
 					jgen.writeObjectFieldStart("jobInfo");

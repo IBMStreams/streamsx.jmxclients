@@ -71,7 +71,7 @@ public class JobsResource {
 
         JobInfo ji = null;
 
-        ji = sit.getJobInfo(id);
+        ji = sit.getJobInfo(Integer.toString(id));
 
         return new JobResource(sit,ji);
 
