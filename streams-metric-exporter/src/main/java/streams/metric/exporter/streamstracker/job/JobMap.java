@@ -134,7 +134,7 @@ public class JobMap {
 
 	// ** Add Job to job map
 	public synchronized void addJobToMap(String jobid, JobDetails details) {
-
+		LOGGER.debug("jobMap.addJobToMap: jobDetails: " + details.toString());
 		jobDetailsMap.put(jobid, details);
 		jobNameIndex.put(details.getJobname(), jobid);
 	}

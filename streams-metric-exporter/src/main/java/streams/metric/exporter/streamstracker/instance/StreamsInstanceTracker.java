@@ -596,11 +596,11 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     /***********************************************************
      * Add Job to job map
      ***********************************************************/
-    private synchronized void addJobToMap(String jobid, String jobSnapshot) {
+    private synchronized void addJobToMap(String jobid, String jobname, String jobSnapshot) {
         InstanceMXBean instance = null;
         LOGGER.debug("AddJobToMap({})...", jobid);
 
-        JobDetails jd = new JobDetails(this, jobid);
+        JobDetails jd = new JobDetails(this, jobid, jobname);
         jd.setJobSnapshot(jobSnapshot);
         jobMap.addJobToMap(jobid, jd);
         
@@ -677,7 +677,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
                         for (int j = 0; j < jobArray.size(); j++) {
                             JSONObject jobObject = (JSONObject) jobArray.get(j);
+                            LOGGER.debug("snapshot jobObject: " + jobObject.toString());
                             String jobId = (String) jobObject.get("id");
+                            String jobname = (String) jobObject.get("name");
                             JobDetails jd = jobMap.getJob(jobId);
                             if (jd != null) {
                                 jd.setJobSnapshot(jobObject.toString());
@@ -688,7 +690,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                             } else {
                                 LOGGER.warn("Received Snapsbhot for jobId({}) that is not found in the current jobArray, adding to job Map",
                                         jobId);
-                                addJobToMap(jobId,jobObject.toString());
+                                addJobToMap(jobId,jobname,jobObject.toString());
                             }
                         }
                         

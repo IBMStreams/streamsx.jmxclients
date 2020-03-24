@@ -78,8 +78,8 @@ public class JobDetails {
 	private final Map<String, Map<String, String>> peInfoMap = new HashMap<String, Map<String, String>>();
 	private final Map<String, String> operatorKindMap = new HashMap<String, String>();
 	// port maps <operatorname, map<indexWithinOperator,portname>>
-	private final Map<String, Map<String, String>> operatorInputPortNames = new HashMap<String, Map<String, String>>();
-	private final Map<String, Map<String, String>> operatorOutputPortNames = new HashMap<String, Map<String, String>>();
+	private final Map<String, Map<Long, String>> operatorInputPortNames = new HashMap<String, Map<Long, String>>();
+	private final Map<String, Map<Long, String>> operatorOutputPortNames = new HashMap<String, Map<Long, String>>();
 
 		/* Metrics Exporter*/
 	/* Temporary solution: always use Prometheus exporter */
@@ -117,7 +117,8 @@ public class JobDetails {
 
 
 	
-	public JobDetails(StreamsInstanceTracker monitor, String jobid) {
+	public JobDetails(StreamsInstanceTracker monitor, String jobid, String jobname) {
+		LOGGER.debug("jobDetails constructor: jobid {}, jobname {}",jobid,jobname);
 		this.monitor = monitor;
 		this.config = monitor.getConfig();
 
@@ -125,6 +126,7 @@ public class JobDetails {
 		this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
 
 		setJobid(jobid);
+		setJobname(jobname);
 		//setStatus(JobMXBean.Status.UNKNOWN);
 		setJobMetrics(null);
 		setJobSnapshot(null);
@@ -280,7 +282,7 @@ public class JobDetails {
 	}
 
 	public String getJobname() {
-		return jobname;
+		return this.jobname;
 	}
 
 	public void setJobname(String jobname) {
@@ -334,6 +336,7 @@ public class JobDetails {
 	public String toString() {
 		StringBuilder result = new StringBuilder();
 		// String newline = System.getProperty("line.separator");
+		result.append("Job id: " + this.getJobid());
 		result.append("Job name: " + this.getJobname());
 		result.append(" Metrics: " + this.getJobMetrics());
 		result.append(" Snapshot: " + this.getJobSnapshot());
@@ -363,11 +366,11 @@ public class JobDetails {
 	// port maps <operatorname, map<indexWithinOperator,portname>>
 	private void mapOperatorInputPortNames(JSONObject operator, String operatorName) {
 		JSONArray inputPortsArray = (JSONArray) operator.get("inputPorts");
-		Map<String,String> inputPortNames = new HashMap<String,String>();
+		Map<Long,String> inputPortNames = new HashMap<Long,String>();
 
 		for (int i = 0; i < inputPortsArray.size(); i++) {
 			JSONObject ip = (JSONObject) inputPortsArray.get(i);
-			String indexWithinOperator = (String)ip.get("indexWithinOperator");
+			Long indexWithinOperator = (Long)ip.get("indexWithinOperator");
 			String inputPortName = (String)ip.get("name");
 			inputPortNames.put(indexWithinOperator,inputPortName);
 		}
@@ -376,11 +379,11 @@ public class JobDetails {
 
 	private void mapOperatorOutputPortNames(JSONObject operator, String operatorName) {
 		JSONArray outputPortsArray = (JSONArray) operator.get("outputPorts");
-		Map<String,String> outputPortNames = new HashMap<String,String>();
+		Map<Long,String> outputPortNames = new HashMap<Long,String>();
 
 		for (int i = 0; i < outputPortsArray.size(); i++) {
 			JSONObject ip = (JSONObject) outputPortsArray.get(i);
-			String indexWithinOperator = (String)ip.get("indexWithinOperator");
+			Long indexWithinOperator = (Long)ip.get("indexWithinOperator");
 			String outputPortName = (String)ip.get("name");
 			outputPortNames.put(indexWithinOperator,outputPortName);
 		}
@@ -724,7 +727,7 @@ public class JobDetails {
 						for (int opip = 0; opip < opipArray.size(); opip++) {
 							JSONObject inputPort = (JSONObject)opipArray.get(opip);
 							//System.out.println("INPUTPORT: " + inputPort.toString());
-							String indexWithinOperator = (String)inputPort.get("indexWithinOperator");
+							Long indexWithinOperator = (Long)inputPort.get("indexWithinOperator");
 							String inputPortName = this.operatorInputPortNames.get(operatorName).get(indexWithinOperator);
 							//System.out.println("INPUTPORTNAME: " + inputPortName);
 							JSONArray ipMetrics = (JSONArray)inputPort.get("metrics");
@@ -753,7 +756,7 @@ public class JobDetails {
 						for (int opop = 0; opop < opopArray.size(); opop++) {
 							JSONObject outputPort = (JSONObject)opopArray.get(opop);
 							//System.out.println("OUTPUTPORT: " + outputPort.toString());
-							String indexWithinOperator = (String)outputPort.get("indexWithinOperator");
+							Long indexWithinOperator = (Long)outputPort.get("indexWithinOperator");
 							String outputPortName = this.operatorOutputPortNames.get(operatorName).get(indexWithinOperator);
 							//System.out.println("OUTPUTPORTNAME: " + outputPortName);
 							JSONArray opMetrics = (JSONArray)outputPort.get("metrics");
