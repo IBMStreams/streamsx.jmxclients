@@ -34,7 +34,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.instance.InstanceInfo;
 import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
-import streams.metric.exporter.streamstracker.job.JobInfo;
 
 /**
  * Serializes a StreamsInstanceJobMonitor instance to JSON.
@@ -84,41 +83,6 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 					jgen.writeStringField("value", entry.getValue().toString());
 					jgen.writeEndObject();
 				}
-				jgen.writeEndArray();
-			}
-
-			if (sit.metricsAvailable()) {
-				Iterator<Map.Entry<String, JobInfo>> it = sit.getCurrentJobMap().entrySet().iterator();
-				jgen.writeNumberField("jobCount", sit.getCurrentJobMap().size());
-				jgen.writeArrayFieldStart("jobMap");
-				while (it.hasNext()) {
-					Map.Entry<String, JobInfo> entry = it.next();
-					// jgen.writeObjectFieldStart("mapEntry");
-					jgen.writeStartObject();
-					jgen.writeObjectFieldStart("jobInfo");
-
-					jgen.writeStringField("id", entry.getValue().getId().toString());
-					jgen.writeStringField("status", entry.getValue().getStatus().toString());
-					jgen.writeStringField("applicationName", entry.getValue().getApplicationName());
-					jgen.writeFieldName("metrics");
-					String jobMetrics = entry.getValue().getJobMetrics();
-					if (jobMetrics != null) {
-						jgen.writeRawValue(jobMetrics);
-					} else {
-						jgen.writeNull();
-					}
-					jgen.writeFieldName("snapshot");
-					String jobSnapshot = entry.getValue().getJobSnapshot();
-					if (jobSnapshot != null) {
-						jgen.writeRawValue(entry.getValue().getJobSnapshot());
-					} else {
-						jgen.writeNull();
-					}
-
-					jgen.writeEndObject();
-					jgen.writeEndObject();
-				}
-
 				jgen.writeEndArray();
 			}
 

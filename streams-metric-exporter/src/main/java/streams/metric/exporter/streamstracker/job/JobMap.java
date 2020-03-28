@@ -16,10 +16,8 @@
 
 package streams.metric.exporter.streamstracker.job;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -74,21 +72,6 @@ public class JobMap {
 		return jobDetailsMap.size();
 	}
 
-	/* Return a map using jobInfo objects rather than all details */
-	public synchronized Map<String, JobInfo> getJobMap() {
-		HashMap<String, JobInfo> m = new HashMap<String, JobInfo>();
-
-		Iterator<Map.Entry<String, JobDetails>> it = jobDetailsMap.entrySet().iterator();
-
-		while (it.hasNext()) {
-			Map.Entry<String, JobDetails> entry = it.next();
-
-			m.put(entry.getKey(), entry.getValue().getJobInfo());
-		}
-
-		return m;
-	}
-
 	/* Get list of job ids as a set */
 	public synchronized Set<String> getJobIds() {
 		return jobDetailsMap.keySet();
@@ -104,37 +87,8 @@ public class JobMap {
 		return jobDetailsMap.get(jobid);
 	}
 
-	/* Return job info of each job in the map */
-	public synchronized ArrayList<JobInfo> getJobInfo() {
-		ArrayList<JobInfo> jia = new ArrayList<JobInfo>();
-
-		Iterator<Map.Entry<String, JobDetails>> it = jobDetailsMap.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<String, JobDetails> pair = it.next();
-
-			JobDetails curInfo = (JobDetails) pair.getValue();
-			jia.add(curInfo.getJobInfo());
-		}
-
-		return jia;
-	}
-
-	/* Return job info of a specific job in the map */
-	public synchronized JobInfo getJobInfo(String jobid) {
-		JobDetails jd = null;
-		JobInfo ji = null;
-
-		jd = jobDetailsMap.get(jobid);
-		if (jd != null) {
-			ji = jd.getJobInfo();
-		}
-
-		return ji;
-	}
-
 	// ** Add Job to job map
 	public synchronized void addJobToMap(String jobid, JobDetails details) {
-		LOGGER.debug("jobMap.addJobToMap: jobDetails: " + details.toString());
 		jobDetailsMap.put(jobid, details);
 		jobNameIndex.put(details.getJobname(), jobid);
 	}

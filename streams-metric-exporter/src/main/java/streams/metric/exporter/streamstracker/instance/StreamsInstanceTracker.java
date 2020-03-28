@@ -16,14 +16,11 @@
 
 package streams.metric.exporter.streamstracker.instance;
 
-import java.math.BigInteger;
 import java.net.MalformedURLException;
 import java.text.Format;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Date;
@@ -31,8 +28,6 @@ import java.text.SimpleDateFormat;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 
-import javax.management.JMX;
-import javax.management.MBeanServerConnection;
 import javax.management.Notification;
 import javax.management.AttributeChangeNotification;
 import javax.management.NotificationFilterSupport;
@@ -47,10 +42,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.apache.commons.lang.time.StopWatch;
 import com.ibm.streams.management.ObjectNameBuilder;
-import com.ibm.streams.management.OperationListenerMXBean;
-import com.ibm.streams.management.OperationStatusMessage;
 import com.ibm.streams.management.instance.InstanceMXBean;
-import com.ibm.streams.management.job.JobMXBean;
 
 import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
@@ -63,7 +55,6 @@ import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
 import streams.metric.exporter.streamstracker.instance.InstanceInfo;
 import streams.metric.exporter.streamstracker.job.JobDetails;
-import streams.metric.exporter.streamstracker.job.JobInfo;
 import streams.metric.exporter.streamstracker.job.JobMap;
 import streams.metric.exporter.streamstracker.metrics.AllJobMetrics;
 import streams.metric.exporter.streamstracker.snapshots.AllJobSnapshots;
@@ -74,7 +65,7 @@ import com.ibm.streams.management.Notifications;
  * StreamsInstanceTracker
  *  Initialization
  *  		* Get InstanceMXBean
- *  		* Register for JMX Notifications
+ *  		* Register for JMX Notifications for the Instance
  *  		* Create InstanceInfo object
  *  Refresh
  *  		* Get Metrics Snapshot
@@ -89,7 +80,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
     private ServiceConfig config = null;
     private JmxServiceContext jmxContext;
-    private String protocol;
     private boolean autoRefresh;
 
     /* Domain info */
@@ -100,31 +90,19 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
     /* Job Metrics Info */
     private AllJobMetrics allJobMetrics = null;
-    private boolean metricsAvailable = false;
     
     /* Job Snapshots Info */
     private AllJobSnapshots allJobSnapshots = null;
-    private boolean snapshotsAvailable = false;
 
-    private boolean jobsAvailable = false;
-
+    /* Resource Map */
     private final Map<String, Map<String, Long>> instanceResourceMetrics = new HashMap<String, Map<String, Long>>();
     private Long instanceResourceMetricsLastUpdated = null;
     
-    /*****************************************
-     * Metrics Exporter for non REST JSON 
-     **************************************/
-    // Future change to plugin
+    /* Metrics Exporter */
 	private MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
 
-    /*****************************************
-     * JOB MAP and INDEXES
-     **************************************/
-    /* Job Map Info */
-    //private JobMap jobMap = new JobMap(this.instanceInfo.getInstanceName());
+    /* Job Map */
     private JobMap jobMap = null;
-    //private ConcurrentSkipListMap<BigInteger, JobDetails> jobMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
-    //private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
 
 
     /**************************************************************************
@@ -135,14 +113,13 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      ***************************************************************************/
     public StreamsInstanceTracker(JmxServiceContext jmxContext,
             String domainName, String instanceName, boolean autoRefresh,
-            String protocol, ServiceConfig config) throws StreamsTrackerException {
+            ServiceConfig config) throws StreamsTrackerException {
         LOGGER.debug("** Initializing StreamsInstanceTracker for: " + instanceName);
         this.config = config;
         this.jmxContext = jmxContext;
         this.domainName = domainName;
         this.instanceInfo.setInstanceName(instanceName);
         this.autoRefresh = autoRefresh;
-        this.protocol = protocol;
         this.jmxContext.getBeanSourceProvider().addBeanSourceProviderListener(this);
         jobMap = new JobMap(instanceName);
 
@@ -150,91 +127,15 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
         if (this.instanceInfo.isInstanceAvailable()) {
             updateInstanceResourceMetrics();
-            initAllJobs();
+//            initAllJobs();
         }
 
     }
     
-    
-    /******************************************************************
-     * REFRESH
-     * 
-     * Primary mechanism for updating internal state of instance
-     * from Streams JMX Server
-     * 
-     * Triggered by call from StreamsDomainTracker 
-     * Exceptions at this level should just be logged so that we
-     * continue to refresh.
-     * Some are expected in recoverable situations so only log at low
-     * level.
-     * Unexpected exceptions should be thrown
-     *****************************************************************/
-    public synchronized void refresh() throws StreamsTrackerException {
-        LOGGER.debug("** INSTANCE Refresh: {}",this.getInstanceInfo().getInstanceName());
-		LOGGER.trace("    current state: isInstanceAvailable: {}, jobsAvailable: {}, metricsAvailable {}, snapshotsAvailable {}",this.instanceInfo.isInstanceAvailable(), jobsAvailable, metricsAvailable, snapshotsAvailable);
-
-        StopWatch stopwatch = null;
-        if (LOGGER.isDebugEnabled()) {
-            stopwatch = new StopWatch();
-            stopwatch.reset();
-            stopwatch.start();
-        }
-		
-		if (!this.instanceInfo.isInstanceAvailable()) {
-        	LOGGER.trace("** Calling initStreamsInstance()");
-            initStreamsInstance();
-        }
-
-        if (instanceInfo.isInstanceAvailable()) {
-        	LOGGER.trace("** Calling updateInstanceResourceMetrics()");
-        	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE,
-        			this.domainName,
-        			this.instanceInfo.getInstanceName()).set(jobMap.size());
-            updateInstanceResourceMetrics();
-        
-
-
-        	LOGGER.trace("** Calling updateAllJobSnapshots(true)");
-            updateAllJobSnapshots(true);
-        
-        
-
-        	LOGGER.trace("** Calling updateAllJobMetrics(true)");
-            updateAllJobMetrics(true);
-        
-
-            LOGGER.trace("** Calling refreshAllJobs()");
-            refreshAllJobs();
-        } else {
-            LOGGER.debug("Instance refresh: Instance was not available according tocheck");
-        }
-        
-        if (LOGGER.isDebugEnabled()) {
-            stopwatch.stop();
-            LOGGER.debug("StreamsInstanceTracker(" + this.instanceInfo.getInstanceName() + ") Refresh Time (ms) :" + stopwatch.getTime());              
-        }
-        
-    }
-
-    private void refreshAllJobs() {
-        // Get currently tracked jobs
-        Set<String> currentJobIds = new HashSet<String>(jobMap.getJobIds());
-
-        LOGGER.debug("refreshAllJobs currentJobIds.size() = " + currentJobIds.size());
-        for (String jobId : currentJobIds) {
-            LOGGER.debug("Calling refresh for JobId({}).",jobId);
-            JobDetails jd = jobMap.getJob(jobId);
-            jd.refresh(jd.getJobSnapshot(),jd.getJobMetrics());
-        }
-
-    }
 
     /*******************************************************************************
-     * INIT STREAMS INSTANCE 
      * 
-     * Get The Instance Bean
-     * 
-     * Setup Notifications
+     *   I N I T I A L I Z A T I O N
      * 
      *******************************************************************************/
     private synchronized void initStreamsInstance() throws StreamsTrackerException {
@@ -273,32 +174,18 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
                 resetTracker();
                 return;
             } else {
-                // Force jobs and metrics to initialize by setting instance as
-                // available
                 LOGGER.info("Streams Instance '{}' found, Status: {}", new Object[] {
                         instance.getName(), instance.getStatus() });
                 this.instanceInfo.setInstanceAvailable(true);
-                jobsAvailable = false;
-                metricsAvailable = false;
             }
 
-            // Setup notifications (should handle exceptions)
             ObjectName instanceObjName = ObjectNameBuilder.instance(domainName,
                     this.instanceInfo.getInstanceName());
             NotificationFilterSupport filter = new NotificationFilterSupport();
             filter.disableAllTypes();
             filter.enableType(AttributeChangeNotification.ATTRIBUTE_CHANGE);
-            filter.enableType(Notifications.INSTANCE_DELETED); // Will tell us
-                                                               // if the
-                                                               // instance we
-                                                               // are
-                                                               // monitoring is
-                                                               // deleted
+            filter.enableType(Notifications.INSTANCE_DELETED);
 
-            // Create notification listener for new jobs, if it fails, we need
-            // to reset state
-            // so that instance is initialized again assuming this is a
-            // temporary JMX issue.
             // Remove just incase it is already set
             try {
                 beanSource.getMBeanServerConnection()
@@ -345,7 +232,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             resetTracker();
         }
 
-        // Initialize Snapshots
+        // Initialize Snapshots Handler
         try {
             if (allJobSnapshots == null) {
                 allJobSnapshots = new AllJobSnapshots(this.jmxContext, 
@@ -361,7 +248,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             resetTracker();
         }
 
-        // Initialize Metrics
+        // Initialize Metrics Handler
         try {
             if (allJobMetrics == null) {
                 allJobMetrics = new AllJobMetrics(this.jmxContext, 
@@ -377,11 +264,129 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             resetTracker();
         }
         
-
-
-
+        // Create the metrics we will set for the instance
         createExportedInstanceMetrics();
     }
+
+
+
+    
+    /******************************************************************
+     * REFRESH
+     * 
+     * Primary mechanism for updating internal state of instance
+     * from Streams JMX Server
+     * 
+     * Triggered by call from StreamsDomainTracker 
+     * Exceptions at this level should just be logged so that we
+     * continue to refresh.
+     * Some are expected in recoverable situations so only log at low
+     * level.
+     * Unexpected exceptions should be thrown
+     *****************************************************************/
+    public synchronized void refresh() throws StreamsTrackerException {
+        LOGGER.debug("** INSTANCE Refresh: {}",this.getInstanceInfo().getInstanceName());
+		LOGGER.trace("    current state: isInstanceAvailable: {}",this.instanceInfo.isInstanceAvailable());
+
+        StopWatch totaltimer = null;
+        StopWatch stopwatch = null;
+        LinkedHashMap<String, Long> timers = null;
+        if (LOGGER.isDebugEnabled()) {
+            totaltimer = new StopWatch();
+            stopwatch = new StopWatch();
+            timers = new LinkedHashMap<String, Long>();
+            totaltimer.reset();
+            totaltimer.start();
+            stopwatch.reset();
+            stopwatch.start();
+        }
+        
+        // If something made the instance unavailable (usually via notification) initialize it
+		if (!this.instanceInfo.isInstanceAvailable()) {
+        	LOGGER.debug("Streams Instance Refresh: Instance not available, try and initialize it.");
+            initStreamsInstance();
+
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch.stop();
+                timers.put("Intialize Streams Instance",stopwatch.getTime());
+                stopwatch.reset();
+                stopwatch.start();
+            }
+        }
+
+        if (instanceInfo.isInstanceAvailable()) {
+        	LOGGER.trace("** Calling updateInstanceResourceMetrics()");
+        	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE,
+        			this.domainName,
+        			this.instanceInfo.getInstanceName()).set(jobMap.size());
+            updateInstanceResourceMetrics();
+        
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch.stop();
+                timers.put("Update Instance Resource Metrics",stopwatch.getTime());
+                stopwatch.reset();
+                stopwatch.start();
+            }
+
+        	LOGGER.trace("** Calling updateAllJobSnapshots(true)");
+            updateAllJobSnapshots(true);
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch.stop();
+                timers.put("Update All Job Snapshots",stopwatch.getTime());
+                stopwatch.reset();
+                stopwatch.start();
+            }
+
+        	LOGGER.trace("** Calling updateAllJobMetrics(true)");
+            updateAllJobMetrics(true);
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch.stop();
+                timers.put("Update All Job Metrics",stopwatch.getTime());
+                stopwatch.reset();
+                stopwatch.start();
+            }
+        
+
+            LOGGER.trace("** Calling refreshAllJobs()");
+            refreshAllJobs();
+            if (LOGGER.isDebugEnabled()) {
+                stopwatch.stop();
+                timers.put("Refresh All Jobs",stopwatch.getTime());
+                stopwatch.reset();
+                stopwatch.start();
+            }
+
+        } else {
+            LOGGER.debug("Instance refresh: Instance was not available for this refresh");
+        }
+
+
+        if (LOGGER.isDebugEnabled()) {
+            totaltimer.stop();
+            stopwatch.stop();
+            LOGGER.debug("** INSTANCE refresh timing (ms):");
+            for (Map.Entry<String,Long> entry : timers.entrySet()) {
+                LOGGER.debug("   " + entry.getKey() + " timing: " + entry.getValue());
+            }
+            LOGGER.debug("Total instance (" + this.instanceInfo.getInstanceName() + ") Refresh Time (ms) :" + totaltimer.getTime());              
+        }
+        
+    }
+
+    private void refreshAllJobs() {
+        // Get currently tracked jobs
+        Set<String> currentJobIds = new HashSet<String>(jobMap.getJobIds());
+
+        LOGGER.debug("refreshAllJobs currentJobIds.size() = " + currentJobIds.size());
+        for (String jobId : currentJobIds) {
+            LOGGER.debug("Calling refresh for JobId({}).",jobId);
+            JobDetails jd = jobMap.getJob(jobId);
+            jd.refresh(jd.getJobSnapshot(),jd.getJobMetrics());
+        }
+
+    }
+
+
 
     /*******************************************************************************
      * INIT ALL JOBS 
@@ -390,11 +395,12 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      * Initialize Snapshots
      * 
      *******************************************************************************/
-    private synchronized void initAllJobs() throws StreamsTrackerException {
+/*
+     private synchronized void initAllJobs() throws StreamsTrackerException {
 
         jobMap.clear();
 
-        if (this.instanceInfo.isInstanceAvailable() && jobsAvailable) {
+        if (this.instanceInfo.isInstanceAvailable()) {
 
             StopWatch stopwatch = null;
             LinkedHashMap<String, Long> timers = null;
@@ -499,6 +505,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         }
 
     }
+    */
 
 
     
@@ -510,9 +517,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      ****************************************************************************/
     public synchronized void resetTracker() {
         this.instanceInfo.setInstanceAvailable(false);
-        this.jobsAvailable = false;
-        this.metricsAvailable = false;
-        this.snapshotsAvailable = false;
+
         // Set Metrics Failure on metrics Object
         if (this.allJobMetrics != null) {
         	this.allJobMetrics.setLastMetricsFailure(new Date());
@@ -628,8 +633,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      ********************************************************************************/
     private synchronized void updateAllJobSnapshots(boolean refreshFromServer)
             throws StreamsTrackerException {
-        LOGGER.trace("***** Entered updateAllJobSnapshots, refreshFromServer {}, jobsAvailable {}",
-                refreshFromServer, jobsAvailable);
+        LOGGER.trace("***** Entered updateAllJobSnapshots, refreshFromServer {}",
+                refreshFromServer);
         
         // Current Job IDs for use in determine missing jobs or jobs that need to be removed
         Set<String> currentJobIds = null;
@@ -677,7 +682,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
                         for (int j = 0; j < jobArray.size(); j++) {
                             JSONObject jobObject = (JSONObject) jobArray.get(j);
-                            LOGGER.debug("snapshot jobObject: " + jobObject.toString());
                             String jobId = (String) jobObject.get("id");
                             String jobname = (String) jobObject.get("name");
                             JobDetails jd = jobMap.getJob(jobId);
@@ -729,8 +733,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
      ********************************************************************************/
     private synchronized void updateAllJobMetrics(boolean refreshFromServer)
             throws StreamsTrackerException {
-        LOGGER.trace("***** Entered updateAllJobMetrics, refreshFromServer {}, jobsAvailable {}",
-                refreshFromServer, jobsAvailable);
+        LOGGER.trace("***** Entered updateAllJobMetrics, refreshFromServer {}",
+                refreshFromServer);
         
         LOGGER.trace("** updateAllJobMetrics Start timer...");
         StopWatch sw = new StopWatch();
@@ -826,28 +830,12 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         return domainName;
     }
 
-    public synchronized boolean jobsAvailable() {
-        return jobsAvailable;
-    }
-
-    public synchronized boolean metricsAvailable() {
-        return metricsAvailable;
-    }
-    
-    public synchronized boolean snapshotsAvailable() {
-    	return snapshotsAvailable;
-    }
-
     public synchronized boolean isAutoRefresh() {
         return autoRefresh;
     }
 
     public synchronized Long getInstanceResourceMetricsLastUpdated() {
         return instanceResourceMetricsLastUpdated;
-    }
-
-    public synchronized Map<String, JobInfo> getCurrentJobMap() {
-    	return jobMap.getJobMap();
     }
 
     public synchronized Map<String, String> getCurrentJobNameIndex() {
@@ -974,71 +962,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         return allJobSnapshots;
     }    
 
-    public synchronized ArrayList<JobInfo> getAllJobInfo() throws StreamsTrackerException {
-        ArrayList<JobInfo> jia = null;
-
-        if ((this.instanceInfo == null)
-                || (!this.instanceInfo.isInstanceExists())) {
-            throw new StreamsTrackerException(
-                    StreamsTrackerErrorCode.ALL_JOBS_NOT_AVAILABLE,
-                    "The Streams instance "
-                            + this.instanceInfo.getInstanceName()
-                            + " does not exist.");
-        }
-
-        if (jobsAvailable) {
-        	jia = jobMap.getJobInfo();
-        } else {
-        	// empty array
-        	jia = new ArrayList<JobInfo>();
-        }
-        return jia;
-    }
-
-    public synchronized JobInfo getJobInfo(String jobid) throws StreamsTrackerException {
-        JobInfo ji = null;
-
-        ji = jobMap.getJobInfo(jobid);
-        if (ji == null) {
-            throw new StreamsTrackerException(
-                    StreamsTrackerErrorCode.JOB_NOT_FOUND, "Job id " + jobid
-                            + " does not exist");
-        }
-        
-        return ji;
-    }
-
-    // Single job snapshot on demand
-    // Was used before we started caching snapshots to get PE launchCounts
-    /*
-    public synchronized String getJobSnapshot(int jobid, int maximumDepth,
-            boolean includeStaticAttributes) throws StreamsTrackerException {
-        JobDetails jd = jobMap.getJob(jobid);
-
-        if (jd == null) {
-            throw new StreamsTrackerException(
-                    StreamsTrackerErrorCode.JOB_NOT_FOUND, "Job id " + jobid
-                            + " does not exist");
-        }
-
-        return jd.getSnapshot(maximumDepth, includeStaticAttributes);
-    }
-*/
-
-	String getProtocol() {
-        return protocol;
-    }
-
-
-
-
-
-
-    
-
-    
-    
-
     @Override
     public String toString() {
         StringBuilder result = new StringBuilder();
@@ -1054,15 +977,9 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         result.append("instanceAvailable:"
                 + this.instanceInfo.isInstanceAvailable());
         result.append(newline);
-        result.append("jobMapAvailable:" + jobsAvailable);
-        result.append(newline);
-        result.append("jobMetricsAvailable:" + metricsAvailable);
-        result.append(newline);
-        result.append("jobSnapshotsAvailable:" + snapshotsAvailable);
-        result.append(newline);        
         result.append("instanceResourceMetricsLastUpdated:" + convertTime(instanceResourceMetricsLastUpdated));
         result.append(newline);
-        if (jobsAvailable) {
+        if (jobMap != null) {
         	result.append(jobMap.toString());
         }
         return result.toString();

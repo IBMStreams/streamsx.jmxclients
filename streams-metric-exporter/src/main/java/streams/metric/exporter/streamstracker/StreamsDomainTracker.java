@@ -607,7 +607,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 							this.domainName,
                             instanceName,
                             this.isAutoRefresh(),
-							this.protocol,
 							this.config);
 					
 					this.instanceTrackerMap.addInstanceTrackerToMap(instanceName, newInstanceTracker);
