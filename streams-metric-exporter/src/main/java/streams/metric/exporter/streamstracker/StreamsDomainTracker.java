@@ -651,6 +651,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * DOMAIN METRICS
      *********************************/
     private void createExportedDomainMetrics() {
+        metricsExporter.createStreamsMetric("startTime", StreamsObjectType.DOMAIN, "Epoch time in milliseconds when the domain was started");
+	    metricsExporter.getStreamsMetric("startTime", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getStartTime());
         metricsExporter.createStreamsMetric("creationTime", StreamsObjectType.DOMAIN, "Epoch time in milliseconds when the domain was created");
 	    metricsExporter.getStreamsMetric("creationTime", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getCreationTime());
 	    metricsExporter.createStreamsMetric("status", StreamsObjectType.DOMAIN, "Domain status, 1: running, .5: starting, stopping, 0: stopped, removing, unknown");

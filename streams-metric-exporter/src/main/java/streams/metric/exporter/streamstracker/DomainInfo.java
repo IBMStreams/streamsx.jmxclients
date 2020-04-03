@@ -44,6 +44,7 @@ public class DomainInfo {
     private String status = DomainMXBean.Status.UNKNOWN.toString();
     private String fullProductVersion = null;
 	private Long creationTime = null;
+	private Long startTime=null;
     private String creationUser = null;
     private String externalResourceManager = null;
     private int highAvailabilityCount = 0;
@@ -62,7 +63,8 @@ public class DomainInfo {
     public void updateInfo(DomainMXBean bean) throws StreamsTrackerException {
     	try {
 	    	setStatus(bean.getStatus().toString());
-	    	setFullProductVersion(bean.getActiveVersion().getFullProductVersion());
+			setFullProductVersion(bean.getActiveVersion().getFullProductVersion());
+			setStartTime(bean.getStartTime());
 			setCreationTime(bean.getCreationTime());
 	    	setCreationUser(bean.getCreationUser());
 	    	setExternalResourceManager(bean.getExternalResourceManager());
@@ -107,6 +109,14 @@ public class DomainInfo {
 
 	public void setCreationTime(long creationTime) {
 		this.creationTime = creationTime;
+	}
+
+	public Long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
 	}
 
 	public String getCreationUser() {
