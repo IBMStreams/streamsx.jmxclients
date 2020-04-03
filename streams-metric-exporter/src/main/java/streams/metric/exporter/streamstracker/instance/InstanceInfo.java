@@ -31,6 +31,7 @@ public class InstanceInfo {
     private String instanceName = null;
     private InstanceMXBean.Status instanceStatus = InstanceMXBean.Status.UNKNOWN;
     private Long instanceStartTime = null;
+    private Long instanceCreationTime = null;
 
     @JsonIgnore
     private boolean instanceAvailable = false;
@@ -66,6 +67,15 @@ public class InstanceInfo {
     public void setInstanceStartTime(Long instanceStartTime) {
         this.instanceStartTime = instanceStartTime;
     }
+
+    public Long getInstanceCreationTime() {
+        return instanceCreationTime;
+    }
+
+    public void setInstanceCreationTime(Long instanceCreationTime) {
+        this.instanceCreationTime = instanceCreationTime;
+    }
+
 
     public boolean isInstanceAvailable() {
         return instanceAvailable;

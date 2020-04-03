@@ -651,10 +651,12 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * DOMAIN METRICS
      *********************************/
     private void createExportedDomainMetrics() {
-	    	metricsExporter.createStreamsMetric("status", StreamsObjectType.DOMAIN, "Domain status, 1: running, .5: starting, stopping, 0: stopped, removing, unknown");
-	    	metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
-	    	metricsExporter.createStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, "Number of instances currently created in the streams domain");
-	    	metricsExporter.getStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getInstances().size());
+        metricsExporter.createStreamsMetric("creationTime", StreamsObjectType.DOMAIN, "Epoch time in milliseconds when the domain was created");
+	    metricsExporter.getStreamsMetric("creationTime", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getCreationTime());
+	    metricsExporter.createStreamsMetric("status", StreamsObjectType.DOMAIN, "Domain status, 1: running, .5: starting, stopping, 0: stopped, removing, unknown");
+	    metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
+	    metricsExporter.createStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, "Number of instances currently created in the streams domain");
+	    metricsExporter.getStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getInstances().size());
     }
     
     private void removeExportedDomainMetrics() {

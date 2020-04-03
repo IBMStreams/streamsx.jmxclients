@@ -16,22 +16,8 @@
 
 package streams.metric.exporter.streamstracker.job;
 
-import java.io.IOException;
-
-import java.lang.reflect.UndeclaredThrowableException;
-import java.math.BigInteger;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
-
-import javax.management.AttributeChangeNotification;
-import javax.management.MBeanServerConnection;
-import javax.management.Notification;
-import javax.management.NotificationFilterSupport;
-import javax.management.NotificationListener;
-import javax.management.ObjectName;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,19 +25,10 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.apache.commons.lang.time.StopWatch;
 
-import com.ibm.streams.management.Notifications;
-import com.ibm.streams.management.ObjectNameBuilder;
 import com.ibm.streams.management.job.JobMXBean;
-import com.ibm.streams.management.job.OperatorMXBean;
-import com.ibm.streams.management.job.OperatorInputPortMXBean;
-import com.ibm.streams.management.job.OperatorOutputPortMXBean;
 
 import streams.metric.exporter.ServiceConfig;
-import streams.metric.exporter.error.StreamsTrackerErrorCode;
-import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
@@ -71,6 +48,7 @@ public class JobDetails {
 	private String status = null;
 	private String health = null;
 	private String jobname = null;
+	private long submitTime = 0;
 
 	private String jobSnapshot = null;
 	private String jobMetrics = null;
@@ -108,7 +86,6 @@ public class JobDetails {
 	private String jobGroup = null;
 	private String outputPath = null;
 	private String startedByUser = null;
-	private long submitTime = 0;
 */
 
 	// Control over complete refresh of job required before next refresh
@@ -169,12 +146,14 @@ public class JobDetails {
 				String status = (String)snapshotObject.get("status");
 				String health = (String)snapshotObject.get("health");
 				String jobname = (String)snapshotObject.get("name");
+				Long submitTime = (Long)snapshotObject.get("submitTime");
 
 				this.instance = instance;
 				this.status = status;
 				this.health = health;
 				this.jobname = jobname;
 
+				metricsExporter.getStreamsMetric("submitTime", StreamsObjectType.JOB, this.domain, instance, jobname).set(submitTime);
 				LOGGER.debug("snapshot Metrics job health: " + health);
 
 				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
@@ -354,9 +333,10 @@ public class JobDetails {
 		// Operator, Operator InputPort, and Operator OutputPort metrics
 		// are automatically created based on metrics discovered in json
 		
-		// job health
+		// job snapshot based metrics
+		metricsExporter.createStreamsMetric("submitTime", StreamsObjectType.JOB, "Epoch time in milliseconds when job was submitted");
 		metricsExporter.createStreamsMetric("healthy", StreamsObjectType.JOB, "Job health, set to 1 of job is healthy else 0");
-		// job metrics
+		// job calculated metrics
 		metricsExporter.createStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB, "Sum of each pe metric: nCpuMilliseconds");
 		metricsExporter.createStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nResidentMemoryConsumption");
 		metricsExporter.createStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nMemoryConsumption");

@@ -141,6 +141,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
     private synchronized void initStreamsInstance() throws StreamsTrackerException {
         MXBeanSource beanSource = null;
         LOGGER.debug("initStreamsInstance()");
+
+        // Initialize connection to Instance via JMX Instance Bean
         try {
 
             beanSource = jmxContext.getBeanSourceProvider().getBeanSource();
@@ -162,6 +164,7 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
             this.instanceInfo.setInstanceExists(true);
             this.instanceInfo.setInstanceStatus(instance.getStatus());
             this.instanceInfo.setInstanceStartTime(instance.getStartTime());
+            this.instanceInfo.setInstanceCreationTime(instance.getCreationTime());
 
             // If instanceStartTime is null, then instance not ready, do not
             // need to
@@ -315,10 +318,18 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         }
 
         if (instanceInfo.isInstanceAvailable()) {
-        	LOGGER.trace("** Calling updateInstanceResourceMetrics()");
+
+
+            metricsExporter.getStreamsMetric("startTime", StreamsObjectType.INSTANCE, 
+                    this.domainName, this.instanceInfo.getInstanceName()).set(this.instanceInfo.getInstanceStartTime());
+             metricsExporter.getStreamsMetric("creationTime", StreamsObjectType.INSTANCE, 
+                    this.domainName, this.instanceInfo.getInstanceName()).set(this.instanceInfo.getInstanceCreationTime());
+
+
         	metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE,
-        			this.domainName,
-        			this.instanceInfo.getInstanceName()).set(jobMap.size());
+        			this.domainName, this.instanceInfo.getInstanceName()).set(jobMap.size());
+                    
+            LOGGER.trace("** Calling updateInstanceResourceMetrics()");
             updateInstanceResourceMetrics();
         
             if (LOGGER.isDebugEnabled()) {
@@ -385,127 +396,6 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
         }
 
     }
-
-
-
-    /*******************************************************************************
-     * INIT ALL JOBS 
-     * 
-     * Initialize Metrics
-     * Initialize Snapshots
-     * 
-     *******************************************************************************/
-/*
-     private synchronized void initAllJobs() throws StreamsTrackerException {
-
-        jobMap.clear();
-
-        if (this.instanceInfo.isInstanceAvailable()) {
-
-            StopWatch stopwatch = null;
-            LinkedHashMap<String, Long> timers = null;
-            if (LOGGER.isDebugEnabled()) {
-                stopwatch = new StopWatch();
-                timers = new LinkedHashMap<String, Long>();
-                stopwatch.reset();
-                stopwatch.start();
-            }
-            
-            
-            // Initialize Snapshots
-            try {
-                // Try to only create it if it does not exist and rely on the
-                // clearing of the metrics so we preserve our timing attributes
-                if (allJobSnapshots == null) {
-                    allJobSnapshots = new AllJobSnapshots(this.jmxContext,
-                            this.domainName,
-                            this.instanceInfo.getInstanceName(),
-                            this.config.getJmxHttpHost(),
-                            this.config.getJmxHttpPort());
-                } else {
-                    allJobSnapshots.clear();
-                }
-
-                if (LOGGER.isDebugEnabled()) {
-                    stopwatch.stop();
-                    timers.put("Initialize AllJobSnapshots", stopwatch.getTime());
-                    stopwatch.reset();
-                    stopwatch.start();
-                }
-
-                // Assume available, may need a more detailed check in the
-                // future
-                snapshotsAvailable = true;
-
-                // Do not refresh from server because the AllJobSnapshots constructor pulled
-                // them
-                if (snapshotsAvailable) {
-                    updateAllJobSnapshots(false);
-                }
-            } catch (IOException e) {
-                LOGGER.warn("JMX IO Exception when initializing all job snapshots, resetting monitor. Exception message: "
-                        + e.getLocalizedMessage());
-                resetTracker();
-            }           
-
-            if (LOGGER.isDebugEnabled()) {
-                stopwatch.stop();
-                timers.put("updateAllJobSnapshots(false)", stopwatch.getTime());
-                stopwatch.reset();
-                stopwatch.start();
-            }            
-            
-            // Initialize Metrics
-            try {
-                // Try to only create it if it does not exist and rely on the
-                // clearing of the metrics so we preserve our timing attributes
-                if (allJobMetrics == null) {
-                    allJobMetrics = new AllJobMetrics(this.jmxContext,
-                            this.domainName,
-                            this.instanceInfo.getInstanceName(),
-                            this.config.getJmxHttpHost(),
-                            this.config.getJmxHttpPort());
-                } else {
-                    allJobMetrics.clear();
-                }
-
-                if (LOGGER.isDebugEnabled()) {
-                    stopwatch.stop();
-                    timers.put("Initialize AllJobMetrics", stopwatch.getTime());
-                    stopwatch.reset();
-                    stopwatch.start();
-                }
-
-                // Assume available, may need a more detailed check in the
-                // future
-                metricsAvailable = true;
-
-                // Do not refresh from server because the AllJobMetrics constructor pulled
-                // them
-                if (metricsAvailable) {
-                    updateAllJobMetrics(false);
-                }
-            } catch (IOException e) {
-                LOGGER.warn("JMX IO Exception when initializing all job metrics, resetting monitor. Exception message: "
-                        + e.getLocalizedMessage());
-                resetTracker();
-            }
-            
-            
-            if (LOGGER.isDebugEnabled()) {
-                stopwatch.stop();
-                timers.put("updateAllJobMetrics(false)", stopwatch.getTime());
-                LOGGER.debug("** INSTANCE Initialize Job snapshots and metrics timing (ms):");
-                for (Map.Entry<String, Long> entry : timers.entrySet()) {
-                    LOGGER.debug("   " + entry.getKey() + " timing: "
-                            + entry.getValue());
-                }
-            }
-
-        }
-
-    }
-    */
 
 
     
@@ -1004,6 +894,8 @@ public class StreamsInstanceTracker implements NotificationListener, MXBeanSourc
 
     
     private void createExportedInstanceMetrics() {
+		metricsExporter.createStreamsMetric("creationTime", StreamsObjectType.INSTANCE, "Epoch time in milliseconds when the instance was created");
+		metricsExporter.createStreamsMetric("startTime", StreamsObjectType.INSTANCE, "Epoch time in milliseconds when the instance was started");
     	metricsExporter.createStreamsMetric("status", StreamsObjectType.INSTANCE, "Instance status, 1: running, .5: partially up, 0: stopped, failed, unknown");
     	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
     	metricsExporter.createStreamsMetric("jobCount", StreamsObjectType.INSTANCE, "Number of jobs currently deployed into the streams instance");

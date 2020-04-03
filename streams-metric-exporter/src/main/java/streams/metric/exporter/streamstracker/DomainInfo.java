@@ -43,7 +43,7 @@ public class DomainInfo {
     private String name = null;
     private String status = DomainMXBean.Status.UNKNOWN.toString();
     private String fullProductVersion = null;
-    private String creationTime = null;
+	private Long creationTime = null;
     private String creationUser = null;
     private String externalResourceManager = null;
     private int highAvailabilityCount = 0;
@@ -63,7 +63,7 @@ public class DomainInfo {
     	try {
 	    	setStatus(bean.getStatus().toString());
 	    	setFullProductVersion(bean.getActiveVersion().getFullProductVersion());
-	    	setCreationTime(bean.getCreationTime());
+			setCreationTime(bean.getCreationTime());
 	    	setCreationUser(bean.getCreationUser());
 	    	setExternalResourceManager(bean.getExternalResourceManager());
 	    	setHighAvailabilityCount(bean.getHighAvailabilityCount());
@@ -101,14 +101,12 @@ public class DomainInfo {
 		this.fullProductVersion = fullProductVersion;
 	}
 
-	public String getCreationTime() {
+	public Long getCreationTime() {
 		return creationTime;
 	}
 
 	public void setCreationTime(long creationTime) {
-		Date date = new Date(creationTime);
-		Format format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-		this.creationTime = format.format(date);
+		this.creationTime = creationTime;
 	}
 
 	public String getCreationUser() {

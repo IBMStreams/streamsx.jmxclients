@@ -18,8 +18,6 @@ package streams.metric.exporter.rest.serializers;
 
 import java.io.IOException;
 
-import java.math.BigInteger;
-
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -65,26 +63,22 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 			// throw new IOException(e);
 			// }
 
-			jgen.writeBooleanField("jobMapAvailable", sit.jobsAvailable());
-			jgen.writeBooleanField("jobMetricsAvailable", sit.metricsAvailable());
 			jgen.writeStringField("instanceResourceMetricsLastUpdateTime",
 					convertTime(sit.getInstanceResourceMetricsLastUpdated()));
-			jgen.writeBooleanField("jobSnapshotsAvailable", sit.snapshotsAvailable());
 
-			if (sit.jobsAvailable()) {
-				jgen.writeArrayFieldStart("jobNameIndex");
+			jgen.writeArrayFieldStart("jobNameIndex");
 
-				Iterator<Map.Entry<String, String>> it = sit.getCurrentJobNameIndex().entrySet().iterator();
+			Iterator<Map.Entry<String, String>> it = sit.getCurrentJobNameIndex().entrySet().iterator();
 
-				while (it.hasNext()) {
-					Map.Entry<String, String> entry = it.next();
-					jgen.writeStartObject();
-					jgen.writeStringField("key", entry.getKey().toString());
-					jgen.writeStringField("value", entry.getValue().toString());
-					jgen.writeEndObject();
-				}
-				jgen.writeEndArray();
+			while (it.hasNext()) {
+				Map.Entry<String, String> entry = it.next();
+				jgen.writeStartObject();
+				jgen.writeStringField("key", entry.getKey().toString());
+				jgen.writeStringField("value", entry.getValue().toString());
+				jgen.writeEndObject();
 			}
+			jgen.writeEndArray();
+			
 
 			jgen.writeEndObject(); // instances
 
