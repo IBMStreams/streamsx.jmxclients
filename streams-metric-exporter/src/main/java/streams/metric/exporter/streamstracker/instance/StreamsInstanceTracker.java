@@ -28,11 +28,6 @@ import java.text.SimpleDateFormat;
 import java.io.IOException;
 import java.lang.reflect.UndeclaredThrowableException;
 
-import javax.management.Notification;
-import javax.management.AttributeChangeNotification;
-import javax.management.NotificationFilterSupport;
-import javax.management.ObjectName;
-import javax.management.NotificationListener;
 import javax.management.InstanceNotFoundException;
 
 import org.slf4j.Logger;
@@ -41,7 +36,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.apache.commons.lang.time.StopWatch;
-import com.ibm.streams.management.ObjectNameBuilder;
 import com.ibm.streams.management.instance.InstanceMXBean;
 import com.ibm.streams.management.resource.ResourceMXBean;
 
@@ -60,7 +54,6 @@ import streams.metric.exporter.streamstracker.job.JobMap;
 import streams.metric.exporter.streamstracker.metrics.AllJobMetrics;
 import streams.metric.exporter.streamstracker.snapshots.AllJobSnapshots;
 import com.ibm.streams.management.Metric;
-import com.ibm.streams.management.Notifications;
 
 /*
  * StreamsInstanceTracker
@@ -466,7 +459,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
      * Add Job to job map
      ***********************************************************/
     private synchronized void addJobToMap(String jobid, String jobname, String jobSnapshot) {
-        InstanceMXBean instance = null;
         LOGGER.debug("AddJobToMap({})...", jobid);
 
         JobDetails jd = new JobDetails(this, jobid, jobname);

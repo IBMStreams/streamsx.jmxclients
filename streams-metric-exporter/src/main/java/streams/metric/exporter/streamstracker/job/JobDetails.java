@@ -29,7 +29,6 @@ import org.json.simple.parser.ParseException;
 import com.ibm.streams.management.job.JobMXBean;
 import com.ibm.streams.management.job.PeMXBean;
 
-import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
@@ -40,8 +39,8 @@ import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
 public class JobDetails {
 	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
 
-	private StreamsInstanceTracker monitor;
-	private ServiceConfig config = null;
+	//private StreamsInstanceTracker monitor;
+	//private ServiceConfig config = null;
 	private String domain = null;
 	private String streamsInstanceName;
 	private String instance = null;
@@ -49,7 +48,7 @@ public class JobDetails {
 	private String status = null;
 	private String health = null;
 	private String jobname = null;
-	private long submitTime = 0;
+	//private long submitTime = 0;
 
 	private String jobSnapshot = null;
 	private String jobMetrics = null;
@@ -65,40 +64,11 @@ public class JobDetails {
 	/* Future: Make this pluggable, add Elasticsearch exporter */
 	private MetricsExporter metricsExporter = PrometheusMetricsExporter.getInstance();
 
-/*
-	private JobMXBean jobBean;
-	//private JobMXBean.Status status;
-	// private String jobResolvedMetrics = null;
-	private Date lastMetricsRefresh = null;
-	private Date lastMetricsFailure = null;
-	private boolean lastMetricsRefreshFailed = false;
-	
-	private Date lastSnapshotRefresh = null;
-	private Date lastSnapshotFailure = null;
-	private boolean lastSnapshotRefreshFailed = false;
-
-	private String adlFile = null;
-	private String applicationName = null;
-	private String applicationPath = null;
-	private String applicationScope = null;
-	private String applicationVersion = null;
-	private String dataPath = null;
-	//private JobMXBean.Health health = JobMXBean.Health.UNKNOWN;
-	private String jobGroup = null;
-	private String outputPath = null;
-	private String startedByUser = null;
-*/
-
-	// Control over complete refresh of job required before next refresh
-	//private boolean jobTopologyRefreshRequired = false;
-
-
-
 	
 	public JobDetails(StreamsInstanceTracker monitor, String jobid, String jobname) {
 		LOGGER.debug("jobDetails constructor: jobid {}, jobname {}",jobid,jobname);
-		this.monitor = monitor;
-		this.config = monitor.getConfig();
+		//this.monitor = monitor;
+		//this.config = monitor.getConfig();
 
 		this.domain = monitor.getDomainName();
 		this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
