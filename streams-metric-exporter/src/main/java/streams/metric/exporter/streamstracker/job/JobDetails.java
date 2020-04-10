@@ -27,6 +27,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ibm.streams.management.job.JobMXBean;
+import com.ibm.streams.management.job.PeMXBean;
 
 import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.metrics.MetricsExporter;
@@ -162,15 +163,16 @@ public class JobDetails {
 
 				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
 				
-				// Metrics to create
-				long launchCount = 0;
-				
 				/* PE Loop */
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
 
 					String peid = (String)pe.get("id");
 					String resource = (String)pe.get("resource");
+					String pestatus = (String)pe.get("status");
+					String pehealth = (String)pe.get("health");
+					long launchCount = (long)pe.get("launchCount");
+
 
 					// Capture peInfo for metrics
 					HashMap<String, String> peInfo = new HashMap<String, String>();
@@ -181,9 +183,22 @@ public class JobDetails {
 
 					mapOperatorKindAndPortNames(pe);
 
-					
-					launchCount = (long)pe.get("launchCount");
-					
+					metricsExporter.getStreamsMetric("status",
+							StreamsObjectType.PE,
+							this.domain,
+							instance,
+							jobname,
+							resource,
+							peid).set(getPEStatusAsMetric(pestatus));	
+
+					metricsExporter.getStreamsMetric("health",
+							StreamsObjectType.PE,
+							this.domain,
+							instance,
+							jobname,
+							resource,
+							peid).set(getPEHealthAsMetric(pehealth));	
+							
 					metricsExporter.getStreamsMetric("launchCount",
 							StreamsObjectType.PE,
 							this.domain,
@@ -647,10 +662,43 @@ public class JobDetails {
     	default:
     		value = 0;
 		}
-		LOGGER.debug("getHealthAsMetric(" + health + ") = " + value);
     	return value;
     }
 
+    private double getPEStatusAsMetric(String status) {
+    	double value = 0;
+    	switch (PeMXBean.Status.fromString(status)) {
+    	case RUNNING :
+    		value = 1;
+    		break;
+    	case STARTING:
+		case CONSTRUCTED:
+		case RESTARTING:
+		case STOPPING:
+		case SUBMITTED:
+            value = 0.5;
+            break;
+    	default:
+    		value = 0;
+    	}
+    	return value;
+	}    
+	
+    private double getPEHealthAsMetric(String health) {
+    	double value = 0;
+    	switch (PeMXBean.Health.fromString(health)) {
+    	case HEALTHY :
+    		value = 1;
+    		break;
+    	case PARTIALLY_HEALTHY:
+    	case PARTIALLY_UNHEALTHY:
+			value = 0.5;
+			break;
+    	default:
+    		value = 0;
+		}
+    	return value;
+    }	
 
 
 }
