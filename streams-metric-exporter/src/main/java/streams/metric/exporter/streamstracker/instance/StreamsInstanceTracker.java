@@ -43,6 +43,7 @@ import org.json.simple.parser.JSONParser;
 import org.apache.commons.lang.time.StopWatch;
 import com.ibm.streams.management.ObjectNameBuilder;
 import com.ibm.streams.management.instance.InstanceMXBean;
+import com.ibm.streams.management.resource.ResourceMXBean;
 
 import streams.metric.exporter.ServiceConfig;
 import streams.metric.exporter.error.StreamsTrackerErrorCode;
@@ -254,23 +255,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                         
                 this.instanceInfo.setInstanceAvailable(true);
             }
-
-            /* TRY WITHOUT NOTIFICATIONS
-            // Setup Notifications (May not need these anymore, but keeping for now)
-            ObjectName instanceObjName = ObjectNameBuilder.instance(domainName, instanceName);
-            NotificationFilterSupport filter = new NotificationFilterSupport();
-            filter.disableAllTypes();
-            filter.enableType(AttributeChangeNotification.ATTRIBUTE_CHANGE);
-            filter.enableType(Notifications.INSTANCE_DELETED);
-
-            // Remove just incase it is already set
-            try {
-                beanSource.getMBeanServerConnection().removeNotificationListener(instanceObjName, this);
-            } catch (Exception e) {
-                // Ignore because we do not care if this fails
-            }
-            beanSource.getMBeanServerConnection().addNotificationListener(instanceObjName, this, filter, null);
-            */
         } catch (UndeclaredThrowableException e) {
             // Sometimes instance issues are burried in UndeclaredThrowableExceptions from the JMX API
             Throwable t = e.getUndeclaredThrowable();
@@ -286,14 +270,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                         + ") when initializing instance, throwing original undeclarable...");
                 throw e;
             }
-        /* If no notifications setion, this exception is not available
-        } catch (InstanceNotFoundException infe) {
-            LOGGER.warn(
-                "Instance '{}' not found when initializing.  Continuing assuming it will be created in the future",
-                this.instanceInfo.getInstanceName());
-            this.instanceInfo.setInstanceExists(false);
-            resetTracker();
-        */
         } catch (MalformedURLException me) {
             resetTracker();
             throw new StreamsTrackerException(
@@ -485,57 +461,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
         }
     }
 
-
-    
-
-    
-    
-    /*****************************************************************************
-     * Instance handleNotification
-     * 
-     * Primary interface to listen for changes to the instance we are monitoring
-     * Only interested in specific notifications so filter was used
-     *****************************************************************************/
-    /*
-    public void handleNotification(Notification notification, Object handback) {
-	    	try {
-	    		String notificationType = notification.getType();
-	    		LOGGER.trace("Streams Instance ({}) Notification: {}; User Data: {}", this.getInstanceInfo().getInstanceName(), notification, notification.getUserData());
-	
-	    		switch (notificationType) {
-	    		case AttributeChangeNotification.ATTRIBUTE_CHANGE:
-	    			AttributeChangeNotification acn = (AttributeChangeNotification) notification;
-	    			String attributeName = acn.getAttributeName();
-	    			if (attributeName.equals("Status")) {
-	    				InstanceMXBean.Status newValue = (InstanceMXBean.Status) acn
-	    						.getNewValue();
-	    				InstanceMXBean.Status oldValue = (InstanceMXBean.Status) acn
-	    						.getOldValue();
-	    				LOGGER.info("Streams Instance ({}) Status Changed from: {} to: {}", this.getInstanceInfo().getInstanceName(), oldValue, newValue);
-	    				this.instanceInfo.setInstanceStatus((InstanceMXBean.Status) acn
-	    						.getNewValue());
-	    				if (newValue.equals(InstanceMXBean.Status.STOPPED)
-	    						|| newValue.equals(InstanceMXBean.Status.FAILED)
-	    						|| newValue.equals(InstanceMXBean.Status.UNKNOWN)) {
-	    					LOGGER.info("Instance ({}) Status reflects not availabe status ({}), instance tracker will reset and reinitialize when instance is available", this.getInstanceInfo().getInstanceName(), newValue);
-	    					this.instanceInfo.setInstanceStartTime(null);
-	    					resetTracker();
-	    					metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
-	    				}
-	    			}
-	    			break;
-		        case Notifications.INSTANCE_DELETED:
-		            LOGGER.debug("Instance ({}) deleted from domain, resetting monitor and waiting for instance to be recreated", this.getInstanceInfo().getInstanceName());
-		            this.instanceInfo.setInstanceExists(false);
-		            resetTracker();
-		            break;
-		        }
-	    	} catch (Exception e) {
-	    		LOGGER.error("Instance ({}) Notification Handler caught exception: {}",this.getInstanceInfo().getInstanceName(),e.toString());
-	    		e.printStackTrace();
-	    	}
-    }
-    */
     
     /***********************************************************
      * Add Job to job map
@@ -811,8 +736,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
 
     
     /* Get Resource Metrics */
-    /* FUTURE: need to be notified of resources coming and going */
-    /* For now, we will quickly just use a delta between this time and last time */
     private synchronized void updateInstanceResourceMetrics() throws StreamsTrackerException {
         verifyInstanceExists();
 
@@ -838,6 +761,22 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
             }
             
             instanceResourceMetricsLastUpdated = System.currentTimeMillis();
+
+
+            // Attempt to get resource status by retrieving each resourceMXBean
+        
+ 
+            Set<String> resourceIDs = instance.getResources();
+            for (String resourceId : resourceIDs) {         
+                ResourceMXBean resource = beanSource.getResourceBean(domainName, resourceId);
+                ResourceMXBean.Status resourceStatus = resource.getStatus(this.instanceInfo.getInstanceName());
+                metricsExporter.getStreamsMetric("status", StreamsObjectType.RESOURCE,
+                this.domainName, this.instanceInfo.getInstanceName(), resourceId).set(getResourceStatusAsMetric(resourceStatus));
+            }
+
+
+
+
         }
         catch (MalformedURLException me) {
             throw new StreamsTrackerException("Invalid JMX URL when retrieving instance bean", me);
@@ -993,6 +932,27 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
     	}
     	return value;
     }
+
+    private double getResourceStatusAsMetric(ResourceMXBean.Status status) {
+    	double value = 0;
+    	switch (status) {
+    	case RUNNING :
+    		value = 1;
+    		break;
+    	case PARTIALLY_FAILED:
+    	case PARTIALLY_RUNNING:
+    	case QUIESCED:
+        case QUIESCING:
+        case RESTARTING:
+        case RESUMING:
+        case STARTING:
+            value = 0.5;
+            break;
+    	default:
+    		value = 0;
+    	}
+    	return value;
+    }        
     
     // Should do whatever necessary to shutdown and close this object
     public void close() {
