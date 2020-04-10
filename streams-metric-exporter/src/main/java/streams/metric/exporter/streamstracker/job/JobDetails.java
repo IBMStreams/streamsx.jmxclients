@@ -158,6 +158,7 @@ public class JobDetails {
 
 				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
 				metricsExporter.getStreamsMetric("health", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
+				metricsExporter.getStreamsMetric("status", StreamsObjectType.JOB, this.domain, instance, jobname).set(getStatusAsMetric(status));
 
 				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
 				
@@ -337,7 +338,9 @@ public class JobDetails {
 		// job snapshot based metrics
 		metricsExporter.createStreamsMetric("submitTime", StreamsObjectType.JOB, "Epoch time in milliseconds when job was submitted");
 		metricsExporter.createStreamsMetric("healthy", StreamsObjectType.JOB, "DEPRECTED: Use helath: Job health, set to 1 of job is healthy else 0");
-		metricsExporter.createStreamsMetric("health", StreamsObjectType.JOB, "Job health, set to 1 of job is healthy else 0");
+		metricsExporter.createStreamsMetric("health", StreamsObjectType.JOB, "Job health, 1: healthy, .5: partially healthy, 0: unhealthy, unknown");
+    	metricsExporter.createStreamsMetric("status", StreamsObjectType.INSTANCE, "Job status, 1: running, .5: cancelling, constructed, 0: canceled, failed, unknown");
+
 		// job calculated metrics
 		metricsExporter.createStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB, "Sum of each pe metric: nCpuMilliseconds");
 		metricsExporter.createStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nResidentMemoryConsumption");
@@ -615,7 +618,22 @@ public class JobDetails {
 		} // end if metrics != null
 	}
 	
-
+    private double getStatusAsMetric(String status) {
+    	double value = 0;
+    	switch (JobMXBean.Status.fromString(status)) {
+    	case RUNNING :
+    		value = 1;
+    		break;
+    	case CANCELING:
+    	case CONSTRUCTED:
+            value = 0.5;
+            break;
+    	default:
+    		value = 0;
+    	}
+    	return value;
+	}    
+	
     private double getHealthAsMetric(String health) {
     	double value = 0;
     	switch (JobMXBean.Health.fromString(health)) {
