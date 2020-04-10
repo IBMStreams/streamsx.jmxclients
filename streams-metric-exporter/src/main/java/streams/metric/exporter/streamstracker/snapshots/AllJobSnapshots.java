@@ -98,7 +98,7 @@ public class AllJobSnapshots {
         this.jmxHttpPort = jmxHttpPort;
         //this.protocol = protocol;
 
-        this.refresh();
+        //this.refresh();
 
     }
 

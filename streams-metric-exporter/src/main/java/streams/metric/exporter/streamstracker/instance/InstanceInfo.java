@@ -14,30 +14,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+
 package streams.metric.exporter.streamstracker.instance;
 
+import java.text.Format;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import com.ibm.streams.management.instance.InstanceMXBean;
 import com.fasterxml.jackson.annotation.JsonGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 /* 
  * InstanceInfo
- * Interface class used to retrieve information from the Monitor
+ * Interface class used to retrieve information from the Tracker
  * Rest server will convert these to proper output format
  * including JSON.
  */
 public class InstanceInfo {
 
     private String instanceName = null;
+    private boolean instanceExists = false;
+    private boolean instanceAvailable = false;
+
     private InstanceMXBean.Status instanceStatus = InstanceMXBean.Status.UNKNOWN;
+    private InstanceMXBean.JobHealthSummary instanceHealth = InstanceMXBean.JobHealthSummary.UNKNOWN;
     private Long instanceStartTime = null;
     private Long instanceCreationTime = null;
 
-    @JsonIgnore
-    private boolean instanceAvailable = false;
 
-    @JsonIgnore
-    private boolean instanceExists = false;
 
     public String getInstanceName() {
         return instanceName;
@@ -59,6 +62,20 @@ public class InstanceInfo {
     public void setInstanceStatus(InstanceMXBean.Status instanceStatus) {
         this.instanceStatus = instanceStatus;
     }
+
+    public InstanceMXBean.JobHealthSummary getInstanceHealth() {
+        return instanceHealth;
+    }
+
+    @JsonGetter("instanceHealth")
+    public String getInstanceHealthString() {
+        return instanceHealth.toString();
+    }
+
+    public void setInstanceHealth(InstanceMXBean.JobHealthSummary instanceHealth) {
+        this.instanceHealth = instanceHealth;
+    }
+
 
     public Long getInstanceStartTime() {
         return instanceStartTime;
@@ -94,4 +111,36 @@ public class InstanceInfo {
     }
     
     public void close(){}
+
+
+    @Override
+    public String toString() {
+        StringBuilder result = new StringBuilder();
+        String newline = System.getProperty("line.separator");
+
+        result.append("Instance: " + getInstanceName()
+                + ", status: " + getInstanceStatusString()
+                + ", health: " + getInstanceHealthString());
+        result.append(newline);
+        result.append("instanceCreationTime: " + convertTime(getInstanceCreationTime())
+                + ", instanceStartTime: " + convertTime(getInstanceStartTime()));
+        result.append(newline);
+        result.append("instanceAvailable:" + isInstanceAvailable());
+        result.append(newline);
+        result.append("instanceExists:" + isInstanceExists());
+        result.append(newline);
+        return result.toString();
+    }
+    
+
+    private String convertTime(Long time) {
+        if (time != null) {
+            Date date = new Date(time);
+            Format format = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
+            return format.format(date);
+        } else {
+            return "null";
+        }
+    }
+
 }

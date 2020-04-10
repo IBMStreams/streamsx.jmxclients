@@ -99,7 +99,7 @@ public class AllJobMetrics {
         this.jmxHttpPort = jmxHttpPort;
         //this.protocol = protocol;
 
-        this.refresh();
+        //this.refresh();
 
     }
 

@@ -157,6 +157,7 @@ public class JobDetails {
 				LOGGER.debug("snapshot Metrics job health: " + health);
 
 				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
+				metricsExporter.getStreamsMetric("health", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
 
 				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
 				
@@ -335,7 +336,8 @@ public class JobDetails {
 		
 		// job snapshot based metrics
 		metricsExporter.createStreamsMetric("submitTime", StreamsObjectType.JOB, "Epoch time in milliseconds when job was submitted");
-		metricsExporter.createStreamsMetric("healthy", StreamsObjectType.JOB, "Job health, set to 1 of job is healthy else 0");
+		metricsExporter.createStreamsMetric("healthy", StreamsObjectType.JOB, "DEPRECTED: Use helath: Job health, set to 1 of job is healthy else 0");
+		metricsExporter.createStreamsMetric("health", StreamsObjectType.JOB, "Job health, set to 1 of job is healthy else 0");
 		// job calculated metrics
 		metricsExporter.createStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB, "Sum of each pe metric: nCpuMilliseconds");
 		metricsExporter.createStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, "Sum of each pe metric: nResidentMemoryConsumption");
