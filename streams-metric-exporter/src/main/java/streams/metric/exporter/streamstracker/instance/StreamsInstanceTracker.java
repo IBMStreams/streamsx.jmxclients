@@ -864,14 +864,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
             return "null";
         }
     }
-
-//    public void printJob(BigInteger jobid) {
-//    	
-//        System.out.println("Job Status: " + jobMap.getJob(jobid).getStatus());
-//        System.out.println("Job Metrics: " + jobMap.getJob(jobid).getJobMetrics());
-//    }
-
-
     
     private void createExportedInstanceMetrics() {
         LOGGER.debug("createExportedInstanceMetrics...");
@@ -879,12 +871,10 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
     	metricsExporter.createStreamsMetric("status", StreamsObjectType.INSTANCE, "Instance status, 1: running, .5: partially up, 0: stopped, failed, unknown");
     	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
     	metricsExporter.createStreamsMetric("health", StreamsObjectType.INSTANCE, "Instance health, 1: healthy, .5: partially healthy, 0: unhealthy, unknown");
-    	//metricsExporter.getStreamsMetric("health", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceHealthAsMetric());
 		metricsExporter.createStreamsMetric("creationTime", StreamsObjectType.INSTANCE, "Epoch time in milliseconds when the instance was created");
     	metricsExporter.getStreamsMetric("creationTime", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(instanceInfo.getInstanceCreationTime());
 		metricsExporter.createStreamsMetric("startTime", StreamsObjectType.INSTANCE, "Epoch time in milliseconds when the instance was started");
     	metricsExporter.createStreamsMetric("jobCount", StreamsObjectType.INSTANCE, "Number of jobs currently deployed into the streams instance");
-    	//metricsExporter.getStreamsMetric("jobCount", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(0);
     }
     
     private void removeExportedInstanceMetrics() {
