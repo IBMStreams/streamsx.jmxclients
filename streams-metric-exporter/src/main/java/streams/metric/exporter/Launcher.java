@@ -71,6 +71,8 @@ public class Launcher {
 	public Launcher(ServiceConfig config) {
 		
 		this.config = config;
+		LOGGER.debug("************************************");
+		LOGGER.debug("****** Create JMX Connection Pool...");
 		connectionPool = new JmxConnectionPool(config.getJmxUrl(), config.getX509Cert(), config.getUser(),
 				config.getPassword(), config.getSslOption(), retryInitialConnection);
 
@@ -130,7 +132,8 @@ public class Launcher {
 	}
 
 	private boolean startRestServer() {
-		LOGGER.debug("Creating and starting HTTP Server...");
+		LOGGER.debug("*******************************************");
+		LOGGER.debug("****** Creating and starting HTTP Server...");
 		try {
 			restServer = new RestServer(config.getHost(), config.getPort(), config.getWebPath(),
 					config.getServerProtocol(), config.getServerKeystore(), config.getServerKeystorePwd());
@@ -148,6 +151,8 @@ public class Launcher {
 	// fixed.
 	public boolean checkValidJMXConnection() {
 		boolean success = true;
+		LOGGER.debug("*********************************");
+		LOGGER.debug("****** checkValidJMXConnection..."); 
 		LOGGER.debug("Connecting to JMX Server {}...", new Object[] { config.getJmxUrl() });
 		try {
 			@SuppressWarnings("unused")
@@ -161,7 +166,8 @@ public class Launcher {
 	}
 
 	private boolean startStreamsDomainTracker() {
-		LOGGER.debug("Creating and starting Streams Domain Tracker...");
+		LOGGER.debug("***********************************************");
+		LOGGER.debug("****** Creating and starting Streams Tracker...");
 		StopWatch sw = null;
 		if (LOGGER.isDebugEnabled()) {
 			sw = new StopWatch();
@@ -306,9 +312,14 @@ public class Launcher {
 			System.out.println("  Check JMX url and connection credentials");
 		}
 		
+		System.out.println("*******************************");
 		System.out.println("Streams Metric Exporter STARTED");
+		System.out.println("*******************************");
+
 		if (!consoleLogging) {
+			LOGGER.info("*******************************");
 			LOGGER.info("Streams Metric Exporter STARTED");
+			LOGGER.info("*******************************");
 		}
 	}
 }

@@ -204,7 +204,7 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
      **************************************************************************************/
 
     private void setInstanceInfo() throws StreamsTrackerException {
-        LOGGER.debug("setInstanceInfo()");
+        LOGGER.trace("setInstanceInfo()");
 
         // Refresh the InstanceInfo from the bean also ensures we still have JMX connection
         MXBeanSource beanSource = null;
@@ -241,11 +241,13 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                 resetTracker();
                 return;
             } else {
-                LOGGER.info("Streams Instance '{}' found, Status: {}",
+                if (!this.instanceInfo.isInstanceAvailable()) {
+                    // Since wasn't available before log now available
+                    LOGGER.info("Streams Instance '{}' found, Status: {}",
                     new Object[] {
                         this.instanceInfo.getInstanceName(),
                         this.instanceInfo.getInstanceStatus() });
-                        
+                    }
                 this.instanceInfo.setInstanceAvailable(true);
             }
         } catch (UndeclaredThrowableException e) {
@@ -324,9 +326,7 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
      *****************************************************************/
     public synchronized void refresh() throws StreamsTrackerException {
         LOGGER.debug("** INSTANCE Refresh: {}",this.getInstanceInfo().getInstanceName());
-		LOGGER.trace("    current state: isInstanceAvailable: {}",this.instanceInfo.isInstanceAvailable());
-
-        LOGGER.debug("** INSTANCE INFO: " + this.getInstanceInfo().toString());
+        LOGGER.trace("** INSTANCE INFO: " + this.getInstanceInfo().toString());
         StopWatch totaltimer = null;
         StopWatch stopwatch = null;
         LinkedHashMap<String, Long> timers = null;
@@ -362,11 +362,8 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
             }
         }
 
-        LOGGER.debug("** INSTANCE INFO AFTER setInstanceInfo: " + this.getInstanceInfo().toString());
-
-
         if (instanceInfo.isInstanceAvailable()) {
-            LOGGER.debug("Instance available, updating exported instance metrics");
+            LOGGER.trace("Instance available, updating exported instance metrics");
             metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE,
                 this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
             metricsExporter.getStreamsMetric("health", StreamsObjectType.INSTANCE,
@@ -445,9 +442,8 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
         if (jobMap != null) {
             Set<String> currentJobIds = new HashSet<String>(jobMap.getJobIds());
 
-            LOGGER.debug("refreshAllJobs currentJobIds.size() = " + currentJobIds.size());
+            LOGGER.debug("Refresh All Jobs, number of jobs: {}", currentJobIds.size());
             for (String jobId : currentJobIds) {
-                LOGGER.debug("Calling refresh for JobId({}).",jobId);
                 JobDetails jd = jobMap.getJob(jobId);
                 jd.refresh(jd.getJobSnapshot(),jd.getJobMetrics());
             }
@@ -459,7 +455,7 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
      * Add Job to job map
      ***********************************************************/
     private synchronized void addJobToMap(String jobid, String jobname, String jobSnapshot) {
-        LOGGER.debug("AddJobToMap({})...", jobid);
+        LOGGER.trace("AddJobToMap({})...", jobid);
 
         JobDetails jd = new JobDetails(this, jobid, jobname);
         jd.setJobSnapshot(jobSnapshot);
@@ -474,7 +470,7 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
      ***********************************************************/
 
     private synchronized void removeJobFromMap(String jobid) {
-        LOGGER.debug("removeJobFromMap({})...", jobid);
+        LOGGER.trace("removeJobFromMap({})...", jobid);
 
         jobMap.removeJobFromMap(jobid);
 
@@ -495,11 +491,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
         // Current Job IDs for use in determine missing jobs or jobs that need to be removed
         Set<String> currentJobIds = null;
         
-        LOGGER.trace("** updateAllJobSnapshots Start timer...");
-        StopWatch sw = new StopWatch();
-        sw.reset();
-        sw.start();
-        
         if (this.allJobSnapshots != null) {
             // Refresh Snapshots if requested
             if (refreshFromServer) {
@@ -510,9 +501,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                             + e.getLocalizedMessage());
                     resetTracker();
                 }
-                sw.split();
-                LOGGER.trace("** updateAllJobSnapshots refresh from server split time: " + sw.getSplitTime());
-                sw.unsplit();
             }
 
             if (allJobSnapshots.isLastSnapshotRefreshFailed()) {
@@ -548,17 +536,16 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                                 currentJobIds.remove(jobId);
 
                             } else {
-                                LOGGER.warn("Received Snapsbhot for jobId({}) that is not found in the current jobArray, adding to job Map",
-                                        jobId);
+                                LOGGER.info("Adding new job({}): {}", jobId, jobname);
                                 addJobToMap(jobId,jobname,jobObject.toString());
                             }
                         }
                         
                         // Are there any jobs in the map that we did not get snapshots for?  Remove them
                         if (!currentJobIds.isEmpty()) {
-                                LOGGER.warn("There are jobs in the job map that we did not receive a snapshot for, removing them...");
+                                LOGGER.trace("There are jobs in the job map that we did not receive a snapshot for, removing them...");
                                 for (String jobId : currentJobIds) {
-                                    LOGGER.warn("JobId({}) was not in the list of snapshots, removing from job Map.",jobId);
+                                    LOGGER.warn("Removing JobId({})",jobId);
                                     removeJobFromMap(jobId);
                                 }
                         }
@@ -571,15 +558,11 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                     }
                 }
             }
-            sw.stop();
-            LOGGER.trace("** updateAllJobSnapshots time total (includes parsing) (milliseconds): " + sw.getTime());
         } else {
             LOGGER.error("Attempted to update snapshots but did not have an allJobSnapshots object available");
         }
 
-
-        LOGGER.trace("Exited");
-
+        LOGGER.trace("Exit updateAllJobSnapshots");
     }    
     
     /********************************************************************************
@@ -592,11 +575,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
         LOGGER.trace("***** Entered updateAllJobMetrics, refreshFromServer {}",
                 refreshFromServer);
         
-        LOGGER.trace("** updateAllJobMetrics Start timer...");
-        StopWatch sw = new StopWatch();
-        sw.reset();
-        sw.start();
-        
         // Refresh Metrics if requested
         if (this.allJobMetrics != null) {
             if (refreshFromServer) {
@@ -607,9 +585,6 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                             + e.getLocalizedMessage());
                     resetTracker();
                 }
-                sw.split();
-                LOGGER.trace("** updateAllJobMetrics refresh from server split time: " + sw.getSplitTime());
-                sw.unsplit();
             }
 
             if (allJobMetrics.isLastMetricsRefreshFailed()) {
@@ -648,14 +623,11 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
                     }
                 }
             }
-            sw.stop();
-            LOGGER.trace("** updateAllJobMetrics time total (includes parsing) (milliseconds): " + sw.getTime());
         } else {
             LOGGER.error("Attempted to update metrics but did not have an allJobMetrics object available");
         }
 
-
-        LOGGER.trace("Exited");
+        LOGGER.trace("Exit updateAllJobMetrics");
 
     }
     
@@ -866,8 +838,8 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
     }
     
     private void createExportedInstanceMetrics() {
-        LOGGER.debug("createExportedInstanceMetrics...");
-        LOGGER.debug("  INSTANCE INFO: " + this.getInstanceInfo().toString());
+        LOGGER.trace("createExportedInstanceMetrics...");
+        LOGGER.trace("  INSTANCE INFO: " + this.getInstanceInfo().toString());
     	metricsExporter.createStreamsMetric("status", StreamsObjectType.INSTANCE, "Instance status, 1: running, .5: partially up, 0: stopped, failed, unknown");
     	metricsExporter.getStreamsMetric("status", StreamsObjectType.INSTANCE, this.domainName, this.instanceInfo.getInstanceName()).set(getInstanceStatusAsMetric());
     	metricsExporter.createStreamsMetric("health", StreamsObjectType.INSTANCE, "Instance health, 1: healthy, .5: partially healthy, 0: unhealthy, unknown");

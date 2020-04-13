@@ -66,7 +66,7 @@ public class JobDetails {
 
 	
 	public JobDetails(StreamsInstanceTracker monitor, String jobid, String jobname) {
-		LOGGER.debug("jobDetails constructor: jobid {}, jobname {}",jobid,jobname);
+		LOGGER.trace("jobDetails constructor: jobid {}, jobname {}",jobid,jobname);
 		//this.monitor = monitor;
 		//this.config = monitor.getConfig();
 
@@ -84,7 +84,7 @@ public class JobDetails {
 	
 	// Called by Instance to pass in snapshot and metrics to update exported metrics
 	public void refresh(String jobSnapshot, String jobMetrics) {
-		LOGGER.debug("Job refresh");
+		LOGGER.trace("refresh job: {}", this.jobname);
 
 		// Remove old metrics in case things moved around and new labels for things like resource are required
 		this.removeExportedMetrics();
@@ -99,7 +99,7 @@ public class JobDetails {
 
 	// Create Mappings for Metric Lookup and Snapshot based metrics
 	private void processSnapshot(String jobSnapshot) {
-		LOGGER.debug("processSnapshot");
+		LOGGER.trace("processSnapshot job: {}", this.jobname);
 
 		// clear maps
 		peInfoMap.clear();
@@ -125,8 +125,6 @@ public class JobDetails {
 				this.jobname = jobname;
 
 				metricsExporter.getStreamsMetric("submitTime", StreamsObjectType.JOB, this.domain, instance, jobname).set(submitTime);
-				LOGGER.debug("snapshot Metrics job health: " + health);
-
 				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
 				metricsExporter.getStreamsMetric("health", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
 				metricsExporter.getStreamsMetric("status", StreamsObjectType.JOB, this.domain, instance, jobname).set(getStatusAsMetric(status));
@@ -187,15 +185,6 @@ public class JobDetails {
 	public void close() {
 		removeExportedMetrics();
 	}
-
-	//public BigInteger getJobid() {
-	//	return jobid;
-	//}
-
-	//public void setJobid(BigInteger jobid) {
-	//	this.jobid = jobid;
-	//}
-
 
 	public String getJobMetrics() {
 		return this.jobMetrics;
@@ -314,7 +303,7 @@ public class JobDetails {
 	}
 
 	private void createExportedMetrics() {
-		LOGGER.trace("createExportedMetrics");
+		LOGGER.trace("createExportedMetrics job: {}", this.jobname);
 		// Create our own metrics that will be aggregates of Streams metrics
 	    // PE, PE InputPort, PE OutputPort, PE Output Port Connection,
 		// Operator, Operator InputPort, and Operator OutputPort metrics
@@ -340,23 +329,15 @@ public class JobDetails {
 	private void removeExportedMetrics() {
 		// When this job is removed, remove all metrics for this job
 		// (really its the specific instance of the metric for the streams objects of this job)
-		LOGGER.trace("removeExportedMetrics()");
+		LOGGER.trace("removeExportedMetrics job: {}", this.jobname);
 		metricsExporter.removeAllChildStreamsMetrics(this.domain, this.streamsInstanceName,this.jobname);
 	}
 
 
 	private void processMetrics(String jobMetrics) {
-		/* Use this.jobMetrics to update the exported metrics */
-		/* Some will be auto created, others we will control and aggregate */
-		/* Specifically, we aggregate PE metrics to the job level */
-		/* As the purpose of this is application metrics, PE level are not */
-		/* understandable by operators, and future versions of streams */
-		/* may create/remove pes automatically, and that would drive */
-		/* a metric graphing tool crazy */
+		LOGGER.trace("processMetrics job: {}", this.jobname);
 		
-		/* Use SimpleJSON, it tests out pretty fast and easy to use */
 		if (jobMetrics != null) {
-
 			JSONParser parser = new JSONParser();
 			try {
 				JSONObject metricsObject = (JSONObject) parser.parse(this.jobMetrics);
@@ -366,8 +347,7 @@ public class JobDetails {
 				long ncpu = 0, nrmc = 0, nmc = 0;
 				long numconnections = 0, totalcongestion = 0, curcongestion = 0;
 				long maxcongestion = 0 , avgcongestion = 0, mincongestion = 999;
-				LOGGER.debug("Metrics, job status: " + this.getStatus());
-				LOGGER.debug("Metrics, job helath: " + this.getHealth());
+
 				// PE Loop 
 				for (int i = 0; i < peArray.size(); i++) {
 					JSONObject pe = (JSONObject) peArray.get(i);
@@ -376,18 +356,13 @@ public class JobDetails {
 					// Get info from peInfoMap
 					Map<String,String> peInfo = peInfoMap.get(peid);
 
-					String status = peInfo.get("status");
 					String health = peInfo.get("health");
 					String resource = peInfo.get("resource");
-
-					LOGGER.debug("Metrics, pe: " + peid + " resource: " + resource);
-					LOGGER.debug("Metrics, pe: " + peid + " status: " + status);
-					LOGGER.debug("Metrics, pe: " + peid + " health: " + health);
 
 					// If the PE is not healthy, then its resource may not be correct while it is being
 					// relocated, and we cannot create / update those metrics
 					if (!health.equalsIgnoreCase("healthy")) {
-						LOGGER.info("Metrics, pe: " + peid + " is NOT healthy, NOT setting metrics");
+						LOGGER.info("Job ({}: {}) Metrics, pe: " + peid + " is NOT healthy, NOT setting metrics",this.jobid,this.jobname);
 						continue; // skip to next pe in loop
 					}
 
@@ -398,7 +373,6 @@ public class JobDetails {
 						String metricName = (String)metric.get("name");
 						switch (metricName) {
 						case "nCpuMilliseconds":
-							LOGGER.debug("Metrics, pe: " + peid + " resource: " + resource + " nCpuMilliseconds: " + metric.get("value"));
 							ncpu += (long)metric.get("value");
 							break;
 						case "nResidentMemoryConsumption":
@@ -426,7 +400,6 @@ public class JobDetails {
 						for (int m = 0; m < metricsArray.size(); m++) {
 							JSONObject metric = (JSONObject) metricsArray.get(m);
 							String metricName = (String)metric.get("name");
-//							System.out.println("PE INPUT PORT METRIC: " + metricName);
 							metricsExporter.getStreamsMetric(metricName,
 									StreamsObjectType.PE_INPUTPORT,
 									this.domain,
@@ -448,7 +421,6 @@ public class JobDetails {
 						for (int m = 0; m < metricsArray.size(); m++) {
 							JSONObject metric = (JSONObject) metricsArray.get(m);
 							String metricName = (String)metric.get("name");
-//							System.out.println("PE OUTPUT PORT METRIC: " + metricName);
 							metricsExporter.getStreamsMetric(metricName,
 									StreamsObjectType.PE_OUTPUTPORT,
 									this.domain,
@@ -494,24 +466,16 @@ public class JobDetails {
 					JSONArray operatorArray = (JSONArray)pe.get("operators");
 					for (int op = 0; op < operatorArray.size(); op++) {
 						JSONObject operator = (JSONObject) operatorArray.get(op);
-						//System.out.println(operator.toString());
 						String operatorName = (String)operator.get("name");
 						String operatorKind = this.operatorKindMap.get(operatorName);
-//						System.out.println("OPERATOR NAME: " + operatorName);
 						JSONArray opMetricsArray = (JSONArray) operator.get("metrics");
 
 						/* Operator Metrics Loop, these are non-standard metrics */
 						for (int om = 0; om < opMetricsArray.size(); om++) {
 							JSONObject metric = (JSONObject) opMetricsArray.get(om);
 							String operatorMetricName = (String)metric.get("name");
-//							System.out.println("OPERATOR METRIC: " + operatorMetricName);
 							switch (operatorMetricName) {
 							default:
-//								System.out.println("About to set " + operatorMetricName +
-//										" using " + this.streamsInstanceName +
-//										", " + name +
-//										", " + operatorName +
-//										" to: " + metric.get("value"));
 								metricsExporter.getStreamsMetric(operatorMetricName,
 										StreamsObjectType.OPERATOR,
 										this.domain,
@@ -529,10 +493,8 @@ public class JobDetails {
 						JSONArray opipArray = (JSONArray) operator.get("inputPorts");
 						for (int opip = 0; opip < opipArray.size(); opip++) {
 							JSONObject inputPort = (JSONObject)opipArray.get(opip);
-							//System.out.println("INPUTPORT: " + inputPort.toString());
 							Long indexWithinOperator = (Long)inputPort.get("indexWithinOperator");
 							String inputPortName = this.operatorInputPortNames.get(operatorName).get(indexWithinOperator);
-							//System.out.println("INPUTPORTNAME: " + inputPortName);
 							JSONArray ipMetrics = (JSONArray)inputPort.get("metrics");
 							for (int opipm = 0; opipm < ipMetrics.size(); opipm++) {
 								JSONObject metric = (JSONObject) ipMetrics.get(opipm);
@@ -558,10 +520,8 @@ public class JobDetails {
 						JSONArray opopArray = (JSONArray) operator.get("outputPorts");
 						for (int opop = 0; opop < opopArray.size(); opop++) {
 							JSONObject outputPort = (JSONObject)opopArray.get(opop);
-							//System.out.println("OUTPUTPORT: " + outputPort.toString());
 							Long indexWithinOperator = (Long)outputPort.get("indexWithinOperator");
 							String outputPortName = this.operatorOutputPortNames.get(operatorName).get(indexWithinOperator);
-							//System.out.println("OUTPUTPORTNAME: " + outputPortName);
 							JSONArray opMetrics = (JSONArray)outputPort.get("metrics");
 							for (int opopm = 0; opopm < opMetrics.size(); opopm++) {
 								JSONObject metric = (JSONObject) opMetrics.get(opopm);
