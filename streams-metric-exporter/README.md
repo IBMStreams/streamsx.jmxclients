@@ -1,18 +1,14 @@
 # streams-metric-exporter
 
-This application provides an interface to the IBM Streams - Stream Processing System for the purposes of retrieving status and metrics of an IBM Streams domain, instances, jobs, and resources.
+Prometheus Metrics Exporter for IBM Streams version 4.x.
 
-This version provides 2 HTTP/HTTPS interfaces:
-* Prometheus: HTTP/Text endpoint in Prometheus metrics format.
-* REST: Multiple endpoints returning json.
+IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pulls) that is capable of providing status of the Streams instance, deployed streaming application (jobs), and cluster resources.  In addition, metrics are available via the Streams JMX Service.
 
-IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pulls) that is capable of providing status of the Streams instance, deployed streaming application (jobs), and cluster resources.  In addition, metrics are available via the Streams JMX Server.
-
-The service supports user-defined custom metrics that are found with Streams jobs.  These custom metrics do not have to be predefined within the Streams Metric Exporter.  They are automatically discovered and made available as Prometheus metrics and in the REST JSON.
+The service supports user-defined custom metrics found in Streams analytic jobs.  These custom metrics do not have to be predefined within the Streams Metric Exporter.  They are automatically discovered and made available as Prometheus metrics.
 
 The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.<br>
-The original use case for this application was as a Streams Application Metrics exporter.  It is not meant to monitor the internal system services of IBM Streams.  It does, however, provide metrics and status of domains, instances, and resources which do give a operations view of the health of your system.<br>
-This application is **optimized** for better performance over per-job metric scraping approaches.  The metrics and status are pulled from IBM Streams for all job metrics and status (via the JMX Server HTTP callbacks). The pulls from IBM STreams can be performed whenever a rest endpoint is hit (on-demand) or scheduled to be pulled and cached with a configurable interval.  Users can use the REST endpoints (including Prometheus endpoint) to get metrics and status of specific jobs, thus providing granular access to the information without sacrificing performance and impacting the services of IBM Streams.
+
+This application is **optimized** for better performance over per-job metric scraping approaches.  The metrics and snapshots are pulled from IBM Streams for all jobs at the same time. The pulls from IBM Streams can be performed whenever the rest endpoint (/metrics) is requested or scheduled to be pulled and cached with a configurable interval (``--refresh``).
 
 The service can be configured with periodic refresh (refresh rate > 0) or on-demand refresh (refresh rate == 0) when the HTTP/HTTPS endpoints are accessed.
 
@@ -130,7 +126,7 @@ Usage: streams-metric-exporter [options]
     -r, --refresh
       Refresh rate of metrics in seconds or 0 for no automatic refresh
       Environment Variable: STREAMS_EXPORTER_REFRESHRATE
-      Default: 10
+      Default: 0
     --serverkeystore
       Java keystore containing server certificate and key to identify server side of this application
       Environment Variable: 
@@ -229,15 +225,15 @@ When the Streams domain is running inside of Kubernetes, and the Streams metric 
 ## Endpoint
 
 ```bash
-/prometheus
+/metrics or /prometheus
 ```
 ## prometheus.yml
-This file configures how prometheus will scrape the streams-metric-exporter.  By default, the metrics are cached and retrieved every 10 seconds.  If you desire for the exporter to work as a "proper" prometheus exporter, set the refresh rate (--refresh) to 0, which causes refreshes to be manual and performed whenever an end point is accessed (the /prometheus endpoint for example).
+This file configures how prometheus will scrape the streams-metric-exporter.
 
 ```yml
   - job_name: "ibmstreams"
-    scrape_interval: "15s"
-    metrics_path: "/prometheus"
+    scrape_interval: "10s"
+    metrics_path: "/metrics"
     static_configs:
     - targets: ['localhost:25500']
 ```
@@ -321,7 +317,7 @@ streams_operator_ip_nTuplesProcessed{domainname="StreamsDomain",instancename="St
 streams_pe_op_connection_congestionFactor{domainname="StreamsDomain",instancename="StreamsInstance",jobname="MultiPEJob",resource="streamsqse",peid="1",index="0",connectionid="o0p1i0p0",} 0.0
 ```
 
-# Grafana Examples
+# Grafana Sample Dashboards
 See [dashboards directory](dashboards/README.md) for more information.
 
 ![Grafana Example](images/IBMStreamsDomainDashboard.png)
@@ -332,8 +328,6 @@ The easiest way to try out the Streams Metric Exporter is to run it using Docker
 
 The versions of Prometheus and Grafana specified in the docker-compose.yml file are those that were used for testing.
 
-The current version uses Docker 5.0 and its new provisioning capabilities to create the initial datasource pointing to prometheus and initial general purpose dashboards for Streams domains and instances.
-
 ## Prerequisites
 
 * Compiled version of Streams Metric Exporter (executable-streams-metric-exporter.jar)
@@ -342,8 +336,8 @@ The current version uses Docker 5.0 and its new provisioning capabilities to cre
 * Docker Compose (version 1.9.0-5 with .yml file format 2 used in development)
 * Access to Dockerhub or local repository with Images:
   * ibmjava:sfj-alpine (or any 1.8 version)
-  * prom/prometheus (2.1.0 used in development)
-  * grafana/grafana (5.0.4 used in development)
+  * prom/prometheus (2.x or higher)
+  * grafana/grafana (5.x or higher)
 
 ## Setup environment
 
@@ -392,8 +386,10 @@ http://localhost:9090
 ```
 
 
-# Cached REST endpoints
-The original version of streams-metric-exporter provided REST endpoints that returned json information.  The REST endpoints are still available in this version.  The reason to use these REST endpoints over those available directly from IBM Streams is that by default the auto-refresh is used, and these endpoints only retrieve from the metrics cached in the streams-metric-exporter.  Beware, however, if you turn auto-refresh off (--refresh 0) then each of these access points will cause the metrics to be pulled from the Streams JMX Server.
+# REST endpoints
+
+## /metrics (or /prometheus)
+Retrieve the prometheus format of the metrics
 
 ## /domain
 Retrieve information about the domain being monitored
@@ -472,56 +468,6 @@ Retrieves resources and specific metrics about them
 }
 ```
 
-## /instances/{instancename}/joblist
-List of job names and ids along with links to details about the job
-
-`curl http://localhost:25500/joblist`
-
-```json
-{
-  "total": 1,
-  "jobs": [
-    {
-      "snapshotnow": "http://localhost:25500/instances/StreamsInstance/jobs/0/snapshotnow",
-      "name": "MultiPEJob",
-      "id": 0,
-      "metrics": "http://localhost:25500/instances/StreamsInstance/jobs/0/metrics",
-      "jobInfo": "http://localhost:25500/instances/StreamsInstance/jobs/0",
-      "snapshot": "http://localhost:25500/instances/StreamsInstance/jobs/0/snapshot"
-    }
-  ]
-}
-```
-
-## /instances/{instancename}/jobs/{jobid}/status
-Status of a single job
-
-`curl http://localhost:25500/instances/StreamsInstance/jobs/0/status`
-
-```json
-{
-    "status": "running"
-}
-```
-
-## /instances/{instancename}/jobs/{jobid}/health
-Health of a single job
-
-
-## /instances/{instancename}/jobs/{jobid}/metrics
-Metrics of a single job
-
-## /instances/{instancename}/jobs/{jobid}/snapshots
-Snapshot of a single job
-
-## /instances/{instancename}/jobs
-Array of all jobs in the instance along with job information and the metrics for each job
-
-
-
-## /instances/{instancename}/jobs/{jobid}
-Job information and metrics for a single job
-
 ## /instances/{instancename}/metrics
 Retrieves all metrics for the selected instance
 
@@ -535,101 +481,6 @@ The Provides a complete overview of the streams-metric-exporter server.  Not rec
 Displays JSON view of the configuration values the program is using.<br>
 **Note:** passwords are displayed as "(hidden)" if they were specified
 
+## /version
+Displays the version of the application
 
-# Passthrough REST Endpoints
-These endpoints are not cached, rather, they are passed through directly to the Streams JMX Server API
-
-## instances/{instancename}/jobs/{jobid}/snapshotnow
-
-Calls the snapshot() jmx method on the specified job
-
-### Parameters:
-
-depth : depth of job topology to return (default: 1)
-
-static: include static job attributes in addition to dynamic attributes (default: true)
-
-`curl http://localhost:25500/instances/StreamsInstance/jobs/0/snapshot`
-
-`curl http://localhost:25500/instances/StreamsInstance/jobs/0/snapshot?depth=2&static=false`
-
-`curl http://localhost:25500/instances/StreamsInstande/jobs/0/snapshot?depth=2&statuc=true`
-
-```json
-{
-
-    "applicationVersion": "4211",
-    "instance": "StreamsInstance",
-    "submitParameters": [ ],
-    "startedBy": "streamsadmin",
-    "health": "healthy",
-    "resources": [
-        {
-            "id": "streamsqse.localdomain"
-        }
-    ],
-    "jobGroup": "default",
-    "dataPath": "/home/streamsadmin/git/streams/spl/SimpleJob/-a",
-    "adlFile": "output/SimpleJob.adl",
-    "submitTime": 1506945170000,
-    "applicationPath": "toolkits/SimpleJob",
-    "checkpointPath": "/home/streamsadmin/git/streams/spl/SimpleJob/-a/ckpt",
-    "outputPath": "output",
-    "domain": "StreamsDomain",
-    "name": "SimpleJob_0",
-    "id": "0",
-    "applicationName": "SimpleJob",
-    "status": "running",
-    "applicationScope": "Default",
-    "pes": [
-        {
-            "launchCount": 1,
-            "restartable": true,
-            "resource": "streamsqse.localdomain",
-            "health": "healthy",
-            "relocatable": true,
-            "tracingLevel": "error",
-            "optionalConnections": "connected",
-            "resourceTags": [ ],
-            "pendingTracingLevel": null,
-            "indexWithinJob": 0,
-            "statusReason": "none",
-            "processId": "5951",
-            "operators": [
-                {
-                    "indexWithinJob": 2,
-                    "name": "FunctorStream",
-                    "operatorKind": "spl.relational::Functor"
-                },
-                {
-                    "indexWithinJob": 0,
-                    "name": "BeaconStream",
-                    "operatorKind": "spl.utility::Beacon"
-                },
-                {
-                    "indexWithinJob": 1,
-                    "name": "FilterStream",
-                    "operatorKind": "spl.relational::Filter"
-                },
-                {
-                    "indexWithinJob": 3,
-                    "name": "SinkStream",
-                    "operatorKind": "spl.relational::Functor"
-                },
-                {
-                    "indexWithinJob": 4,
-                    "name": "Sink",
-                    "operatorKind": "spl.utility::Custom"
-                }
-            ],
-            "requiredConnections": "connected",
-            "outputPorts": [ ],
-            "inputPorts": [ ],
-            "id": "0",
-            "osCapabilities": [ ],
-            "status": "running"
-        }
-    ]
-
-}
-```
