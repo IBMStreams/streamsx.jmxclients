@@ -6,4 +6,4 @@
 #    ifconfig eth0 
 #    Replace the localhost with the ip address returned
 JMXHOST=localhost
-java -jar target/executable-streams-metric-exporter.jar -j service:jmx:jmxmp://${JMXHOST}:9975 -d StreamsDomain -i StreamsInstance -u streamsadmin -r 10 -p 25500 -h 0.0.0.0
+java -jar target/executable-streams-metric-exporter.jar -j service:jmx:jmxmp://${JMXHOST}:9975 -d StreamsDomain -i StreamsInstance -u streamsadmin -p 25500 -h 0.0.0.0

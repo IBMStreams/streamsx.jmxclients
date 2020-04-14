@@ -15,9 +15,9 @@
   },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
-  "id": 4,
-  "iteration": 1584563614033,
+  "graphTooltip": 1,
+  "id": 3,
+  "iteration": 1586893356083,
   "links": [
     {
       "$$hashKey": "object:69944",
@@ -31,17 +31,430 @@
   ],
   "panels": [
     {
-      "columns": [],
+      "columns": [
+        {
+          "$$hashKey": "object:547",
+          "text": "Current",
+          "value": "current"
+        }
+      ],
       "datasource": "Prometheus",
-      "fontSize": "90%",
+      "filterNull": true,
+      "fontSize": "80%",
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 2,
+      "hideTimeOverride": true,
+      "id": 33,
+      "links": [],
+      "maxPerRow": 3,
       "pageSize": null,
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": 5,
+        "desc": false
+      },
+      "styles": [
+        {
+          "$$hashKey": "object:549",
+          "alias": "Status",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #A",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:683",
+              "text": "RUNNING",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:727",
+              "text": "PARTIALLY_RUNNING",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:764",
+              "text": "NOT RUNNING",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:150905",
+          "alias": "Resource Id",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "resource",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:267874",
+          "alias": "CPU Speed",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [],
+          "type": "number",
+          "unit": "hertz"
+        },
+        {
+          "$$hashKey": "object:1278",
+          "alias": "1m CPU Utilization",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #C",
+          "thresholds": [],
+          "type": "number",
+          "unit": "percent"
+        },
+        {
+          "$$hashKey": "object:1756",
+          "alias": "1m Load Average",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #D",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:3854",
+          "alias": "# Processors",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #E",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:4951",
+          "alias": "Memory Total",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #F",
+          "thresholds": [],
+          "type": "number",
+          "unit": "decbytes"
+        },
+        {
+          "$$hashKey": "object:5628",
+          "alias": "Memory Free",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #G",
+          "thresholds": [],
+          "type": "number",
+          "unit": "decbytes"
+        },
+        {
+          "$$hashKey": "object:5965",
+          "alias": "Memory Utilization",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #H",
+          "thresholds": [],
+          "type": "number",
+          "unit": "percent"
+        },
+        {
+          "$$hashKey": "object:7286",
+          "alias": "Network Speed",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #I",
+          "thresholds": [],
+          "type": "number",
+          "unit": "MBs"
+        },
+        {
+          "$$hashKey": "object:7805",
+          "alias": "1m Network Utilization",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #J",
+          "thresholds": [],
+          "type": "number",
+          "unit": "deckbytes"
+        },
+        {
+          "$$hashKey": "object:60054",
+          "alias": "PE Count",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #K",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:550",
+          "alias": "Resource Id",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "streams_resource_status{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "",
+          "metric": "stream_job_healthy",
+          "refId": "A",
+          "step": 1
+        },
+        {
+          "expr": "streams_resource_cpuSpeed{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "streams_resource_cpuUtilization{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
+        },
+        {
+          "expr": "(streams_resource_loadAverage{resource=~\"$resource\"}/100) - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "D"
+        },
+        {
+          "expr": "streams_resource_nProcessors{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "E"
+        },
+        {
+          "expr": "streams_resource_memoryTotal{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "F"
+        },
+        {
+          "expr": "streams_resource_memoryFree{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "hide": true,
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "G"
+        },
+        {
+          "expr": "streams_resource_memoryUtilization{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "H"
+        },
+        {
+          "expr": "streams_resource_networkSpeed{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "I"
+        },
+        {
+          "expr": "streams_resource_networkUtilization{resource=~\"$resource\"} - 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "J"
+        },
+        {
+          "expr": "count(count by (resource,peid) (streams_pe_health{resource=~\"$resource\"})) by (resource)",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "K"
+        }
+      ],
+      "timeFrom": "1s",
+      "timeShift": null,
+      "title": "Resource Summary",
+      "transform": "table",
+      "type": "table"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 29,
+      "panels": [],
+      "repeat": "resource",
+      "scopedVars": {
+        "resource": {
+          "selected": false,
+          "text": "aws01.ec2.internal",
+          "value": "aws01.ec2.internal"
+        }
+      },
+      "title": "$resource",
+      "type": "row"
+    },
+    {
+      "columns": [],
+      "datasource": "Prometheus",
+      "fontSize": "80%",
+      "gridPos": {
+        "h": 5,
+        "w": 14,
+        "x": 0,
+        "y": 6
+      },
+      "id": 24,
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "v",
+      "scopedVars": {
+        "resource": {
+          "selected": false,
+          "text": "aws01.ec2.internal",
+          "value": "aws01.ec2.internal"
+        }
+      },
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -50,15 +463,15 @@
       "styles": [
         {
           "$$hashKey": "object:69687",
-          "alias": "Time",
+          "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "pattern": "Time",
-          "type": "hidden"
+          "pattern": "instancename",
+          "type": "string"
         },
         {
           "$$hashKey": "object:69720",
-          "alias": "",
+          "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -69,14 +482,14 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "domainname",
+          "pattern": "jobname",
           "thresholds": [],
-          "type": "hidden",
+          "type": "string",
           "unit": "short"
         },
         {
           "$$hashKey": "object:69733",
-          "alias": "",
+          "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -87,14 +500,14 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "instance",
+          "pattern": "peid",
           "thresholds": [],
-          "type": "hidden",
+          "type": "string",
           "unit": "short"
         },
         {
           "$$hashKey": "object:69746",
-          "alias": "",
+          "alias": "Resource",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -105,16 +518,16 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "job",
+          "pattern": "resource",
           "thresholds": [],
-          "type": "hidden",
+          "type": "string",
           "unit": "short"
         },
         {
           "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
-          "colorMode": "cell",
+          "colorMode": "value",
           "colors": [
             "rgba(50, 172, 45, 0.97)",
             "rgba(237, 129, 40, 0.89)",
@@ -123,7 +536,7 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 0,
           "mappingType": 1,
-          "pattern": "Value",
+          "pattern": "Value #A",
           "thresholds": [
             "2",
             "4"
@@ -133,6 +546,82 @@
         },
         {
           "$$hashKey": "object:70580",
+          "alias": "PE Status",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:160747",
+              "text": "RUNNING",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:160749",
+              "text": "STARTING or STOPPING",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:160751",
+              "text": "FAILED or CANCELLED",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:160753",
+          "alias": "PE Health",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #C",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:160777",
+              "text": "HEALTHY",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:160779",
+              "text": "PARTIALLY_UNHEALTHY",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:160781",
+              "text": "UNHEALTHY",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -144,7 +633,7 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
-          "pattern": "__name__",
+          "pattern": "/.*/",
           "thresholds": [],
           "type": "hidden",
           "unit": "short"
@@ -152,19 +641,34 @@
       ],
       "targets": [
         {
-          "expr": "streams_pe_launchCount{resource=~\"$resource\"}",
+          "expr": "streams_pe_launchCount{resource=~\"$resource\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "launchcount",
+          "refId": "A"
+        },
+        {
+          "expr": "streams_pe_status{resource=~\"$resource\"} + 0",
           "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
-          "refId": "A"
+          "refId": "B"
+        },
+        {
+          "expr": "streams_pe_health{resource=~\"$resource\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
         }
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "PE Launch Count List",
+      "title": "PE Status",
       "transform": "table",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -177,108 +681,8 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 5,
-        "w": 10,
-        "x": 0,
-        "y": 6
-      },
-      "hiddenSeries": false,
-      "id": 11,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "repeat": "resource",
-      "repeatDirection": "v",
-      "scopedVars": {
-        "resource": {
-          "selected": false,
-          "text": "aws01.ec2.internal",
-          "value": "aws01.ec2.internal"
-        }
-      },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "streams_pe_launchCount{resource=~\"$resource\"}",
-          "interval": "",
-          "legendFormat": "{{jobname}} peid: {{peid}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "PE Launch Count on $resource",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:71151",
-          "decimals": -2,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "$$hashKey": "object:71152",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 5,
-        "w": 9,
-        "x": 10,
+        "w": 4,
+        "x": 14,
         "y": 6
       },
       "hiddenSeries": false,
@@ -290,7 +694,7 @@
         "hideZero": true,
         "max": false,
         "min": false,
-        "show": true,
+        "show": false,
         "total": false,
         "values": false
       },
@@ -304,7 +708,7 @@
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
-      "repeat": "resource",
+      "repeat": null,
       "repeatDirection": "v",
       "scopedVars": {
         "resource": {
@@ -319,7 +723,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(streams_pe_nCpuMilliseconds{resource=~\"$resource\"}[5m])",
+          "expr": "rate(streams_pe_nCpuMilliseconds{resource=~\"$resource\"}[2m])",
           "interval": "",
           "legendFormat": "{{jobname}} peid: {{peid}}",
           "refId": "A"
@@ -329,7 +733,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Streams PE CPU Milliseconds Rate on $resource",
+      "title": "PE CPU Milliseconds Rate",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -373,8 +777,8 @@
       "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
-        "w": 5,
-        "x": 19,
+        "w": 3,
+        "x": 18,
         "y": 6
       },
       "id": 4,
@@ -382,7 +786,7 @@
       "options": {
         "fieldOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "defaults": {
             "mappings": [
@@ -415,8 +819,8 @@
                 }
               ]
             },
-            "title": "[[resource]]",
-            "unit": "none"
+            "title": "",
+            "unit": "percent"
           },
           "overrides": [],
           "values": false
@@ -426,7 +830,7 @@
         "showThresholdMarkers": true
       },
       "pluginVersion": "6.7.0-beta1",
-      "repeat": "resource",
+      "repeat": null,
       "repeatDirection": "v",
       "scopedVars": {
         "resource": {
@@ -438,6 +842,7 @@
       "targets": [
         {
           "expr": "streams_resource_cpuUtilization{resource=~\"$resource\"}",
+          "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -445,48 +850,103 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "$resource Cpu Utilization",
+      "title": "1m Cpu Utilization",
       "type": "gauge"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": null,
-      "fill": 1,
-      "fillGradient": 0,
+      "cacheTimeout": null,
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
-        "w": 10,
+        "w": 3,
+        "x": 21,
+        "y": 6
+      },
+      "id": 38,
+      "links": [],
+      "options": {
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "defaults": {
+            "mappings": [
+              {
+                "$$hashKey": "object:70712",
+                "id": 0,
+                "op": "=",
+                "text": "N/A",
+                "type": 1,
+                "value": "null"
+              }
+            ],
+            "max": 100,
+            "min": 0,
+            "nullValueMode": "connected",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "orange",
+                  "value": 50
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "title": "",
+            "unit": "percent"
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "horizontal",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "6.7.0-beta1",
+      "repeatDirection": "v",
+      "scopedVars": {
+        "resource": {
+          "selected": false,
+          "text": "aws01.ec2.internal",
+          "value": "aws01.ec2.internal"
+        }
+      },
+      "targets": [
+        {
+          "expr": "streams_resource_memoryUtilization{resource=~\"$resource\"}",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Memory Utilization",
+      "type": "gauge"
+    },
+    {
+      "collapsed": false,
+      "datasource": null,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
         "x": 0,
         "y": 11
       },
-      "hiddenSeries": false,
-      "id": 12,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
+      "id": 39,
+      "panels": [],
       "repeat": null,
-      "repeatDirection": "v",
-      "repeatIteration": 1584563614033,
-      "repeatPanelId": 11,
+      "repeatIteration": 1586893356083,
+      "repeatPanelId": 29,
       "scopedVars": {
         "resource": {
           "selected": false,
@@ -494,61 +954,248 @@
           "value": "aws02.ec2.internal"
         }
       },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "streams_pe_launchCount{resource=~\"$resource\"}",
-          "interval": "",
-          "legendFormat": "{{jobname}} peid: {{peid}}",
-          "refId": "A"
+      "title": "$resource",
+      "type": "row"
+    },
+    {
+      "columns": [],
+      "datasource": "Prometheus",
+      "fontSize": "80%",
+      "gridPos": {
+        "h": 5,
+        "w": 14,
+        "x": 0,
+        "y": 12
+      },
+      "id": 40,
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "v",
+      "repeatIteration": 1586893356083,
+      "repeatPanelId": 24,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "resource": {
+          "selected": false,
+          "text": "aws02.ec2.internal",
+          "value": "aws02.ec2.internal"
         }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "PE Launch Count on $resource",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
       },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
       },
-      "yaxes": [
+      "styles": [
         {
-          "$$hashKey": "object:71151",
-          "decimals": -2,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
+          "$$hashKey": "object:69687",
+          "alias": "Instance",
+          "align": "auto",
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "instancename",
+          "type": "string"
         },
         {
-          "$$hashKey": "object:71152",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "$$hashKey": "object:69720",
+          "alias": "Job Name",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "jobname",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:69733",
+          "alias": "PE Id",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "peid",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:69746",
+          "alias": "Resource",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "resource",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:70385",
+          "alias": "Launch Count",
+          "align": "auto",
+          "colorMode": "value",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #A",
+          "thresholds": [
+            "2",
+            "4"
+          ],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:70580",
+          "alias": "PE Status",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:160747",
+              "text": "RUNNING",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:160749",
+              "text": "STARTING or STOPPING",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:160751",
+              "text": "FAILED or CANCELLED",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:160753",
+          "alias": "PE Health",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #C",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:160777",
+              "text": "HEALTHY",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:160779",
+              "text": "PARTIALLY_UNHEALTHY",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:160781",
+              "text": "UNHEALTHY",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:160372",
+          "alias": "",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "targets": [
+        {
+          "expr": "streams_pe_launchCount{resource=~\"$resource\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "launchcount",
+          "refId": "A"
+        },
+        {
+          "expr": "streams_pe_status{resource=~\"$resource\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "streams_pe_health{resource=~\"$resource\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "PE Status",
+      "transform": "table",
+      "type": "table"
     },
     {
       "aliasColors": {},
@@ -560,12 +1207,12 @@
       "fillGradient": 0,
       "gridPos": {
         "h": 5,
-        "w": 9,
-        "x": 10,
-        "y": 11
+        "w": 4,
+        "x": 14,
+        "y": 12
       },
       "hiddenSeries": false,
-      "id": 13,
+      "id": 41,
       "legend": {
         "avg": false,
         "current": false,
@@ -573,7 +1220,7 @@
         "hideZero": true,
         "max": false,
         "min": false,
-        "show": true,
+        "show": false,
         "total": false,
         "values": false
       },
@@ -589,8 +1236,9 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1584563614033,
+      "repeatIteration": 1586893356083,
       "repeatPanelId": 7,
+      "repeatedByRow": true,
       "scopedVars": {
         "resource": {
           "selected": false,
@@ -604,7 +1252,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "rate(streams_pe_nCpuMilliseconds{resource=~\"$resource\"}[5m])",
+          "expr": "rate(streams_pe_nCpuMilliseconds{resource=~\"$resource\"}[2m])",
           "interval": "",
           "legendFormat": "{{jobname}} peid: {{peid}}",
           "refId": "A"
@@ -614,7 +1262,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Streams PE CPU Milliseconds Rate on $resource",
+      "title": "PE CPU Milliseconds Rate",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -658,16 +1306,16 @@
       "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
-        "w": 5,
-        "x": 19,
-        "y": 11
+        "w": 3,
+        "x": 18,
+        "y": 12
       },
-      "id": 14,
+      "id": 42,
       "links": [],
       "options": {
         "fieldOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "defaults": {
             "mappings": [
@@ -700,8 +1348,8 @@
                 }
               ]
             },
-            "title": "[[resource]]",
-            "unit": "none"
+            "title": "",
+            "unit": "percent"
           },
           "overrides": [],
           "values": false
@@ -713,8 +1361,9 @@
       "pluginVersion": "6.7.0-beta1",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1584563614033,
+      "repeatIteration": 1586893356083,
       "repeatPanelId": 4,
+      "repeatedByRow": true,
       "scopedVars": {
         "resource": {
           "selected": false,
@@ -725,6 +1374,7 @@
       "targets": [
         {
           "expr": "streams_resource_cpuUtilization{resource=~\"$resource\"}",
+          "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "A"
@@ -732,10 +1382,94 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "$resource Cpu Utilization",
+      "title": "1m Cpu Utilization",
+      "type": "gauge"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 21,
+        "y": 12
+      },
+      "id": 43,
+      "links": [],
+      "options": {
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "defaults": {
+            "mappings": [
+              {
+                "$$hashKey": "object:70712",
+                "id": 0,
+                "op": "=",
+                "text": "N/A",
+                "type": 1,
+                "value": "null"
+              }
+            ],
+            "max": 100,
+            "min": 0,
+            "nullValueMode": "connected",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "orange",
+                  "value": 50
+                },
+                {
+                  "color": "red",
+                  "value": 80
+                }
+              ]
+            },
+            "title": "",
+            "unit": "percent"
+          },
+          "overrides": [],
+          "values": false
+        },
+        "orientation": "horizontal",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "pluginVersion": "6.7.0-beta1",
+      "repeatDirection": "v",
+      "repeatIteration": 1586893356083,
+      "repeatPanelId": 38,
+      "repeatedByRow": true,
+      "scopedVars": {
+        "resource": {
+          "selected": false,
+          "text": "aws02.ec2.internal",
+          "value": "aws02.ec2.internal"
+        }
+      },
+      "targets": [
+        {
+          "expr": "streams_resource_memoryUtilization{resource=~\"$resource\"}",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Memory Utilization",
       "type": "gauge"
     }
   ],
+  "refresh": "5s",
   "schemaVersion": 22,
   "style": "dark",
   "tags": [],
@@ -795,5 +1529,5 @@
   "variables": {
     "list": []
   },
-  "version": 1
+  "version": 18
 }

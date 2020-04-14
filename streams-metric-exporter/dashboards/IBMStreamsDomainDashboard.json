@@ -17,7 +17,7 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 1,
-  "iteration": 1584560716853,
+  "iteration": 1586893279771,
   "links": [
     {
       "$$hashKey": "object:68146",
@@ -32,15 +32,17 @@
   "panels": [
     {
       "cacheTimeout": null,
-      "colorBackground": true,
+      "colorBackground": false,
       "colorValue": false,
       "colors": [
-        "rgba(245, 54, 54, 0.9)",
+        "#d44a3a",
         "rgba(237, 129, 40, 0.89)",
-        "rgba(50, 172, 45, 0.97)"
+        "#299c46"
       ],
-      "datasource": "Prometheus",
-      "format": "none",
+      "datasource": null,
+      "decimals": null,
+      "description": "",
+      "format": "dateTimeAsIso",
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
@@ -49,22 +51,23 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 2,
-        "w": 24,
+        "h": 3,
+        "w": 4,
         "x": 0,
         "y": 0
       },
-      "hideTimeOverride": true,
-      "id": 11,
+      "id": 17,
       "interval": null,
       "links": [],
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:145132",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:145133",
           "name": "range to text",
           "value": 2
         }
@@ -74,7 +77,7 @@
       "nullText": null,
       "postfix": "",
       "postfixFontSize": "50%",
-      "prefix": "Streams Domain ($__name) Status: ",
+      "prefix": "",
       "prefixFontSize": "50%",
       "rangeMaps": [
         {
@@ -87,61 +90,382 @@
         "fillColor": "rgba(31, 118, 189, 0.18)",
         "full": false,
         "lineColor": "rgb(31, 120, 193)",
-        "show": false
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "domainname",
+      "targets": [
+        {
+          "expr": "streams_domain_status + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Domain Name",
+      "type": "singlestat",
+      "valueFontSize": "50%",
+      "valueMaps": [],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": true,
+      "colorValue": false,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": null,
+      "description": "",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 21,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "$$hashKey": "object:145132",
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "$$hashKey": "object:145133",
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
       },
       "tableColumn": "",
       "targets": [
         {
           "expr": "streams_domain_status",
           "format": "time_series",
-          "intervalFactor": 1,
-          "legendFormat": "{{domainname}}",
-          "refId": "A",
-          "step": 1
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
         }
       ],
       "thresholds": ".5,1",
-      "timeFrom": "1s",
-      "title": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Status",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
         {
+          "$$hashKey": "object:145135",
           "op": "=",
-          "text": "0",
-          "value": "null"
-        },
-        {
-          "op": "=",
-          "text": "Stopped, Failed, or Unknown",
-          "value": "0"
-        },
-        {
-          "op": "=",
-          "text": "Partially Failed, Partially Running, Starting, or Stopping",
-          "value": "0.5"
-        },
-        {
-          "op": "=",
-          "text": "Running",
+          "text": "RUNNING",
           "value": "1"
+        },
+        {
+          "$$hashKey": "object:145259",
+          "op": "=",
+          "text": "PARTIALLY RUNNING",
+          "value": ".5"
+        },
+        {
+          "$$hashKey": "object:145261",
+          "op": "=",
+          "text": "STOPPED",
+          "value": "0"
         }
       ],
+      "valueName": "first"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": null,
+      "decimals": null,
+      "description": "",
+      "format": "dateTimeAsIso",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 8,
+        "y": 0
+      },
+      "id": 19,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "$$hashKey": "object:145132",
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "$$hashKey": "object:145133",
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "streams_domain_startTime + 0",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Started",
+      "type": "singlestat",
+      "valueFontSize": "50%",
+      "valueMaps": [],
       "valueName": "current"
     },
     {
-      "content": "# IBM Streams Prometheus Metrics Exporter",
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
       "datasource": null,
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 0,
-        "y": 2
+      "decimals": 1,
+      "description": "",
+      "format": "s",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
       },
-      "id": 8,
-      "mode": "markdown",
-      "title": "Panel Title",
-      "type": "text"
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 11,
+        "y": 0
+      },
+      "id": 23,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "$$hashKey": "object:145132",
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "$$hashKey": "object:145133",
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "time() - (streams_domain_startTime/1000)",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Up Time",
+      "type": "singlestat",
+      "valueFontSize": "50%",
+      "valueMaps": [],
+      "valueName": "current"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#d44a3a",
+        "rgba(237, 129, 40, 0.89)",
+        "#299c46"
+      ],
+      "datasource": null,
+      "description": "",
+      "format": "dateTimeAsIso",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 14,
+        "y": 0
+      },
+      "id": 25,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "$$hashKey": "object:145132",
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "$$hashKey": "object:145133",
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "",
+      "targets": [
+        {
+          "expr": "streams_domain_creationTime",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Created",
+      "type": "singlestat",
+      "valueFontSize": "50%",
+      "valueMaps": [],
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
@@ -162,10 +486,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 5,
+        "h": 3,
         "w": 3,
-        "x": 4,
-        "y": 2
+        "x": 18,
+        "y": 0
       },
       "hideTimeOverride": true,
       "id": 14,
@@ -207,6 +531,8 @@
         {
           "expr": "sum(streams_domain_instanceCount)",
           "format": "time_series",
+          "instant": true,
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "",
           "metric": "streams_instance_jobcount",
@@ -216,7 +542,7 @@
       ],
       "thresholds": "",
       "timeFrom": "10s",
-      "title": "Total Instance Count",
+      "title": "Instance Count",
       "type": "singlestat",
       "valueFontSize": "70%",
       "valueMaps": [
@@ -247,10 +573,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 5,
+        "h": 3,
         "w": 3,
-        "x": 7,
-        "y": 2
+        "x": 21,
+        "y": 0
       },
       "hideTimeOverride": true,
       "id": 6,
@@ -292,6 +618,8 @@
         {
           "expr": "sum(streams_instance_jobCount{instancename=~\"$instancename\"})",
           "format": "time_series",
+          "instant": true,
+          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "",
           "metric": "streams_instance_jobcount",
@@ -316,18 +644,20 @@
     {
       "columns": [
         {
+          "$$hashKey": "object:1020619",
           "text": "Current",
           "value": "current"
         }
       ],
       "datasource": "Prometheus",
+      "description": "",
       "filterNull": true,
       "fontSize": "80%",
       "gridPos": {
         "h": 5,
         "w": 6,
-        "x": 10,
-        "y": 2
+        "x": 0,
+        "y": 3
       },
       "hideTimeOverride": true,
       "id": 9,
@@ -342,6 +672,8 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:1020621",
+          "alias": "Status",
           "align": "auto",
           "colorMode": "row",
           "colors": [
@@ -349,16 +681,35 @@
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
-          "decimals": 0,
+          "decimals": 1,
+          "mappingType": 1,
           "pattern": "Current",
           "thresholds": [
             ".5",
             "1"
           ],
-          "type": "number",
-          "unit": "short"
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:171949",
+              "text": "RUNNING",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:171979",
+              "text": "PARTIALLY RUNNING",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:172016",
+              "text": "STOPPED",
+              "value": "0"
+            }
+          ]
         },
         {
+          "$$hashKey": "object:1020622",
           "alias": "Streams Instance Name",
           "align": "auto",
           "colorMode": null,
@@ -389,13 +740,198 @@
       ],
       "timeFrom": "1s",
       "timeShift": null,
-      "title": "Selected Instance Health",
+      "title": "Instance Status",
       "transform": "timeseries_aggregations",
+      "type": "table"
+    },
+    {
+      "columns": [],
+      "datasource": null,
+      "fontSize": "80%",
+      "gridPos": {
+        "h": 5,
+        "w": 9,
+        "x": 6,
+        "y": 3
+      },
+      "id": 27,
+      "pageSize": null,
+      "showHeader": true,
+      "sort": {
+        "col": 0,
+        "desc": true
+      },
+      "styles": [
+        {
+          "$$hashKey": "object:232494",
+          "alias": "Submit Time",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #A",
+          "thresholds": [],
+          "type": "date",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:234040",
+          "alias": "Health",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "preserveFormat": false,
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:139356",
+              "text": "HEALTHY",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:139542",
+              "text": "PARTIALLY HEALTHY",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:139567",
+              "text": "UNHEALTHY",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:237043",
+          "alias": "Job Name",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "link": true,
+          "linkTargetBlank": true,
+          "linkTooltip": "",
+          "linkUrl": "/d/a4lGWzjZz/ibm-streams-job-dashboard?var-jobname=${__cell}",
+          "mappingType": 1,
+          "pattern": "jobname",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:138969",
+          "alias": "Status",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 1,
+          "mappingType": 1,
+          "pattern": "Value #C",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:139212",
+              "text": "RUNNING",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:139237",
+              "text": "CANCELING",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:139285",
+              "text": "FAILED or UNKNOWN",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:232194",
+          "alias": "",
+          "align": "left",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "decimals": 2,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "hidden",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "expr": "streams_job_submitTime + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "A"
+        },
+        {
+          "expr": "streams_job_health + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "B"
+        },
+        {
+          "expr": "streams_job_status + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Job Status",
+      "transform": "table",
       "type": "table"
     },
     {
       "columns": [
         {
+          "$$hashKey": "object:547",
           "text": "Current",
           "value": "current"
         }
@@ -405,41 +941,102 @@
       "fontSize": "80%",
       "gridPos": {
         "h": 5,
-        "w": 8,
-        "x": 16,
-        "y": 2
+        "w": 9,
+        "x": 15,
+        "y": 3
       },
       "hideTimeOverride": true,
-      "id": 13,
+      "id": 29,
       "links": [],
       "maxPerRow": 3,
       "pageSize": null,
       "scroll": true,
       "showHeader": true,
       "sort": {
-        "col": 0,
-        "desc": true
+        "col": 1,
+        "desc": false
       },
       "styles": [
         {
+          "$$hashKey": "object:549",
+          "alias": "Status",
           "align": "auto",
-          "colorMode": "row",
+          "colorMode": "cell",
           "colors": [
             "rgba(245, 54, 54, 0.9)",
             "rgba(237, 129, 40, 0.89)",
             "rgba(50, 172, 45, 0.97)"
           ],
           "decimals": 0,
-          "pattern": "Current",
+          "mappingType": 1,
+          "pattern": "Value #A",
           "thresholds": [
             ".5",
             "1"
           ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "$$hashKey": "object:683",
+              "text": "RUNNING",
+              "value": "1"
+            },
+            {
+              "$$hashKey": "object:727",
+              "text": "PARTIALLY_RUNNING",
+              "value": ".5"
+            },
+            {
+              "$$hashKey": "object:764",
+              "text": "NOT RUNNING",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "$$hashKey": "object:150905",
+          "alias": "Resource Id",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "link": true,
+          "linkTargetBlank": true,
+          "linkTooltip": "",
+          "linkUrl": "d/kwXuplXZk/ibm-streams-resource-dashboard?var-resource=${__cell}",
+          "mappingType": 1,
+          "pattern": "resource",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         },
         {
-          "alias": "Job Name",
+          "$$hashKey": "object:80689",
+          "alias": "PE Count",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": null,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "$$hashKey": "object:550",
+          "alias": "Resource Id",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -451,17 +1048,29 @@
           "decimals": 2,
           "pattern": "/.*/",
           "thresholds": [],
-          "type": "number",
+          "type": "hidden",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "expr": "streams_job_healthy{instancename=~\"$instancename\"}",
-          "format": "time_series",
+          "expr": "count(count by (resource,peid) (streams_pe_health{instancename=~\"$instancename\"})) by (resource)",
+          "format": "table",
           "instant": true,
+          "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "{{instancename}}: {{jobname}}",
+          "legendFormat": "",
+          "metric": "stream_job_healthy",
+          "refId": "B",
+          "step": 1
+        },
+        {
+          "expr": "streams_resource_status{instancename=~\"$instancename\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{resource}}",
           "metric": "stream_job_healthy",
           "refId": "A",
           "step": 1
@@ -469,8 +1078,8 @@
       ],
       "timeFrom": "1s",
       "timeShift": null,
-      "title": "Job Health",
-      "transform": "timeseries_aggregations",
+      "title": "Resource Status",
+      "transform": "table",
       "type": "table"
     },
     {
@@ -485,7 +1094,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 7
+        "y": 8
       },
       "hiddenSeries": false,
       "id": 2,
@@ -582,7 +1191,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 7
+        "y": 8
       },
       "hiddenSeries": false,
       "hideTimeOverride": false,
@@ -676,7 +1285,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 13
+        "y": 14
       },
       "hiddenSeries": false,
       "id": 4,
@@ -771,217 +1380,25 @@
       "dashes": false,
       "datasource": "Prometheus",
       "fill": 1,
-      "fillGradient": 10,
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 13
-      },
-      "hiddenSeries": false,
-      "id": 5,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 2,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "rate(streams_operator_ip_nTuplesDropped{instancename=~\"$instancename\"}[10m]) > 0",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{jobname}}.{{operatorname}}.{{inputportname}}",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Dropped Tuples Rate",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:68497",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "$$hashKey": "object:68498",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 19
-      },
-      "hiddenSeries": false,
-      "id": 15,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": true,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "streams_pe_nCpuMilliseconds{instancename=~\"$instancename\"}",
-          "format": "time_series",
-          "hide": false,
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{jobname}}.{{peid}}",
-          "metric": "streams_job_nCpuMilliseconds",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Streams Jobs CPU Milliseconds Rate",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "$$hashKey": "object:68328",
-          "format": "ms",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "$$hashKey": "object:68329",
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "fill": 1,
       "fillGradient": 0,
       "gridPos": {
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 14
       },
       "hiddenSeries": false,
       "id": 10,
       "legend": {
+        "alignAsTable": true,
         "avg": false,
-        "current": false,
+        "current": true,
         "max": false,
         "min": false,
+        "rightSide": true,
         "show": true,
         "total": false,
-        "values": false
+        "values": true
       },
       "lines": true,
       "linewidth": 1,
@@ -1029,7 +1446,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Streams Instance Resource Memory",
+      "title": "Streams Resource Memory",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1045,6 +1462,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:604922",
           "format": "deckbytes",
           "label": null,
           "logBase": 1,
@@ -1053,6 +1471,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:604923",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1067,7 +1486,7 @@
       }
     }
   ],
-  "refresh": "10s",
+  "refresh": "5s",
   "schemaVersion": 22,
   "style": "dark",
   "tags": [],
@@ -1138,5 +1557,5 @@
   "variables": {
     "list": []
   },
-  "version": 3
+  "version": 18
 }

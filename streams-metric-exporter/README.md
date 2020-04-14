@@ -320,7 +320,7 @@ streams_pe_op_connection_congestionFactor{domainname="StreamsDomain",instancenam
 # Grafana Sample Dashboards
 See [dashboards directory](dashboards/README.md) for more information.
 
-![Grafana Example](images/IBMStreamsDomainDashboard.png)
+![Grafana Example](images/IBMStreamsInstanceDashboard.png)
 
 # Running with Docker
 
