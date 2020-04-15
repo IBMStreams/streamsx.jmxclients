@@ -41,8 +41,10 @@ services:
      - 3000:3000
     volumes:
      - grafana_data:/var/lib/grafana
-     - ../grafana:/etc/grafana
+     - ../grafana/grafana.ini:/etc/grafana/grafana.ini
+     - ../grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
      # Uncomment if you want dashboards auto-loaded, but no changes can be made
+     #- ../grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards 
      #- ../dashboards:/streams/sample/dashboards:ro
     network_mode: "bridge"
     links:
