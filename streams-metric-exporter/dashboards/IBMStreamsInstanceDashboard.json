@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 2,
-  "iteration": 1586893320243,
+  "id": 6,
+  "iteration": 1586961818675,
   "links": [
     {
       "asDropdown": true,
@@ -142,10 +142,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:286",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:287",
           "name": "range to text",
           "value": 2
         }
@@ -172,11 +174,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_instance_status{instancename=\"$instancename\"}",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -191,16 +193,19 @@
       "valueFontSize": "50%",
       "valueMaps": [
         {
+          "$$hashKey": "object:289",
           "op": "=",
           "text": "RUNNING",
           "value": "1"
         },
         {
+          "$$hashKey": "object:290",
           "op": "=",
           "text": "PARTIALLY RUNNING",
           "value": ".5"
         },
         {
+          "$$hashKey": "object:291",
           "op": "=",
           "text": "STOPPED",
           "value": "0"
@@ -239,10 +244,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:367",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:368",
           "name": "range to text",
           "value": 2
         }
@@ -269,11 +276,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_instance_health{instancename=\"$instancename\"}",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -288,16 +295,19 @@
       "valueFontSize": "50%",
       "valueMaps": [
         {
+          "$$hashKey": "object:370",
           "op": "=",
           "text": "HEALTHY",
           "value": "1"
         },
         {
+          "$$hashKey": "object:371",
           "op": "=",
           "text": "PARTIALLY HEALTHY",
           "value": ".5"
         },
         {
+          "$$hashKey": "object:372",
           "op": "=",
           "text": "UNHEALTHY",
           "value": "0"
@@ -337,10 +347,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:448",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:449",
           "name": "range to text",
           "value": 2
         }
@@ -367,11 +379,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_instance_startTime{instancename=\"$instancename\"} + 0",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -419,10 +431,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:523",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:524",
           "name": "range to text",
           "value": 2
         }
@@ -449,11 +463,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "time() - (streams_instance_startTime{instancename=\"$instancename\"}/1000)",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -500,10 +514,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:598",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:599",
           "name": "range to text",
           "value": 2
         }
@@ -530,11 +546,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_instance_creationTime{instancename=\"$instancename\"} ",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -581,10 +597,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:676",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:677",
           "name": "range to text",
           "value": 2
         }
@@ -609,11 +627,11 @@
         "lineColor": "rgb(31, 120, 193)",
         "show": true
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_instance_jobCount{instancename=\"$instancename\"}",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "intervalFactor": 2,
@@ -630,6 +648,7 @@
       "valueFontSize": "70%",
       "valueMaps": [
         {
+          "$$hashKey": "object:679",
           "op": "=",
           "text": "0",
           "value": "null"
@@ -668,10 +687,12 @@
       "mappingType": 1,
       "mappingTypes": [
         {
+          "$$hashKey": "object:755",
           "name": "value to text",
           "value": 1
         },
         {
+          "$$hashKey": "object:756",
           "name": "range to text",
           "value": 2
         }
@@ -700,7 +721,7 @@
       "targets": [
         {
           "expr": "count(count by (resource) (streams_resource_status))",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "intervalFactor": 2,
@@ -717,6 +738,7 @@
       "valueFontSize": "70%",
       "valueMaps": [
         {
+          "$$hashKey": "object:758",
           "op": "=",
           "text": "0",
           "value": "null"
@@ -900,6 +922,7 @@
     {
       "columns": [
         {
+          "$$hashKey": "object:1320",
           "text": "Current",
           "value": "current"
         }
@@ -926,6 +949,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:1324",
           "alias": "Status",
           "align": "auto",
           "colorMode": "cell",
@@ -945,20 +969,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:1362",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:1363",
               "text": "PARTIALLY_RUNNING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:1364",
               "text": "NOT RUNNING",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:1325",
           "alias": "Resource Id",
           "align": "auto",
           "colorMode": null,
@@ -980,6 +1008,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:1326",
           "alias": "PE Count",
           "align": "auto",
           "colorMode": null,
@@ -997,6 +1026,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:1327",
           "alias": "Resource Id",
           "align": "auto",
           "colorMode": null,
@@ -1031,7 +1061,7 @@
           "instant": true,
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "{{resource}}",
+          "legendFormat": "",
           "metric": "stream_job_healthy",
           "refId": "A",
           "step": 1
@@ -1735,5 +1765,5 @@
   "variables": {
     "list": []
   },
-  "version": 26
+  "version": 3
 }

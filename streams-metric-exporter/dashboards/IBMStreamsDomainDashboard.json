@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 1,
-  "iteration": 1586893279771,
+  "id": 5,
+  "iteration": 1586961168093,
   "links": [
     {
       "$$hashKey": "object:68146",
@@ -177,11 +177,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_domain_status",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -280,11 +280,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_domain_startTime + 0",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -364,11 +364,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "time() - (streams_domain_startTime/1000)",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -447,11 +447,11 @@
         "ymax": null,
         "ymin": null
       },
-      "tableColumn": "",
+      "tableColumn": "Value",
       "targets": [
         {
           "expr": "streams_domain_creationTime",
-          "format": "time_series",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -1557,5 +1557,5 @@
   "variables": {
     "list": []
   },
-  "version": 18
+  "version": 2
 }

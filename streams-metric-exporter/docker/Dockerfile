@@ -1,9 +1,9 @@
 FROM ibmjava:sfj-alpine
-ARG APP_VERSION=1.3.1
+ARG APP_VERSION=4.0.0
 LABEL VERSION=${APP_VERSION} \
 AUTHOR="Brian M. Williams" \
 MAINTAINER="bmwilli@us.ibm.com" \
-DESCRIPTION="IBM Streams Prometheus Metric Exporter" \
+DESCRIPTION="IBM Streams Prometheus Metric Exporter for Streams v4.x with Domains" \
 RUN="docker run [-it] --env-file <my-env-file> bmwilli1/streams-metric-exporter" \
 source="https://github.com/IBMStreams/streamsx.jmxclients"
 EXPOSE 25500

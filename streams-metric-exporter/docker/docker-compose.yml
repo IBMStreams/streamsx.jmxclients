@@ -13,25 +13,26 @@ services:
   streamsexporter:
     env_file:
       - .env
-    build: 
-      context: ..
-      dockerfile: docker/Dockerfile
+    # Use build or image, image pulls from Dockerhub, build is for local build
+    image: bmwilli1/streams-metric-exporter:4.0.0
+    #build: 
+      #context: ..
+      #dockerfile: docker/Dockerfile
     ports:
      - 25500:25500
-    environment:
-      - STREAMS_DOMAIN_ID
   prometheus:
-    image: "prom/prometheus:v2.1.0"
+    image: "prom/prometheus:v2.17.1"
     ports:
      - 9090:9090
     volumes:
-     - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
      - prometheus_data:/prometheus
+     - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
   grafana:
-    image: "grafana/grafana:5.0.4"
+    image: "grafana/grafana:6.7.2"
     ports:
      - 3000:3000
     volumes:
-     - ../grafana:/etc/grafana
-     - ../dashboards:/streams/sample/dashboards:ro
      - grafana_data:/var/lib/grafana
+     - ../grafana:/etc/grafana
+     # Uncomment if you want dashboards auto-loaded, but no changes can be made
+     #- ../dashboards:/streams/sample/dashboards:ro
