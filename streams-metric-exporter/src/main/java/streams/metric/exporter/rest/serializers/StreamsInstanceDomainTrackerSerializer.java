@@ -18,8 +18,6 @@ package streams.metric.exporter.rest.serializers;
 
 import java.io.IOException;
 
-import java.math.BigInteger;
-
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Map;
@@ -34,7 +32,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 import streams.metric.exporter.streamstracker.instance.InstanceInfo;
 import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
-import streams.metric.exporter.streamstracker.job.JobInfo;
 
 /**
  * Serializes a StreamsInstanceJobMonitor instance to JSON.
@@ -66,61 +63,22 @@ public class StreamsInstanceDomainTrackerSerializer extends JsonSerializer<Strea
 			// throw new IOException(e);
 			// }
 
-			jgen.writeBooleanField("jobMapAvailable", sit.jobsAvailable());
-			jgen.writeBooleanField("jobMetricsAvailable", sit.metricsAvailable());
 			jgen.writeStringField("instanceResourceMetricsLastUpdateTime",
 					convertTime(sit.getInstanceResourceMetricsLastUpdated()));
-			jgen.writeBooleanField("jobSnapshotsAvailable", sit.snapshotsAvailable());
 
-			if (sit.jobsAvailable()) {
-				jgen.writeArrayFieldStart("jobNameIndex");
+			jgen.writeArrayFieldStart("jobNameIndex");
 
-				Iterator<Map.Entry<String, BigInteger>> it = sit.getCurrentJobNameIndex().entrySet().iterator();
+			Iterator<Map.Entry<String, String>> it = sit.getCurrentJobNameIndex().entrySet().iterator();
 
-				while (it.hasNext()) {
-					Map.Entry<String, BigInteger> entry = it.next();
-					jgen.writeStartObject();
-					jgen.writeStringField("key", entry.getKey().toString());
-					jgen.writeStringField("value", entry.getValue().toString());
-					jgen.writeEndObject();
-				}
-				jgen.writeEndArray();
+			while (it.hasNext()) {
+				Map.Entry<String, String> entry = it.next();
+				jgen.writeStartObject();
+				jgen.writeStringField("key", entry.getKey().toString());
+				jgen.writeStringField("value", entry.getValue().toString());
+				jgen.writeEndObject();
 			}
-
-			if (sit.metricsAvailable()) {
-				Iterator<Map.Entry<BigInteger, JobInfo>> it = sit.getCurrentJobMap().entrySet().iterator();
-				jgen.writeNumberField("jobCount", sit.getCurrentJobMap().size());
-				jgen.writeArrayFieldStart("jobMap");
-				while (it.hasNext()) {
-					Map.Entry<BigInteger, JobInfo> entry = it.next();
-					// jgen.writeObjectFieldStart("mapEntry");
-					jgen.writeStartObject();
-					jgen.writeObjectFieldStart("jobInfo");
-
-					jgen.writeStringField("id", entry.getValue().getId().toString());
-					jgen.writeStringField("status", entry.getValue().getStatus().toString());
-					jgen.writeStringField("applicationName", entry.getValue().getApplicationName());
-					jgen.writeFieldName("metrics");
-					String jobMetrics = entry.getValue().getJobMetrics();
-					if (jobMetrics != null) {
-						jgen.writeRawValue(jobMetrics);
-					} else {
-						jgen.writeNull();
-					}
-					jgen.writeFieldName("snapshot");
-					String jobSnapshot = entry.getValue().getJobSnapshot();
-					if (jobSnapshot != null) {
-						jgen.writeRawValue(entry.getValue().getJobSnapshot());
-					} else {
-						jgen.writeNull();
-					}
-
-					jgen.writeEndObject();
-					jgen.writeEndObject();
-				}
-
-				jgen.writeEndArray();
-			}
+			jgen.writeEndArray();
+			
 
 			jgen.writeEndObject(); // instances
 

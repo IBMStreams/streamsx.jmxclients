@@ -232,8 +232,8 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * Unexpected exceptions should be thrown
      *****************************************************************/
     public synchronized void refresh() {
-        LOGGER.debug("*** DOMAIN Refresh: {}",this.domainName);
-		LOGGER.trace("    current state: isDomainAvailable: {}",this.isDomainAvailable());
+        LOGGER.debug("* DOMAIN Refresh: {}",this.domainName);
+		LOGGER.trace("  current state: isDomainAvailable: {}",this.isDomainAvailable());
 		
 		StopWatch outerwatch = null;
         StopWatch stopwatch = null;
@@ -245,7 +245,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
         }
 		
         try {
-        		//*** REFRESH LOGIC ***
+        	//*** REFRESH LOGIC ***
             
             if (LOGGER.isDebugEnabled()) {
             		outerwatch.reset();
@@ -254,7 +254,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
                 stopwatch.start();
             }
             
-        		// If previously marked unavailable, re-initialize it
+        	// If previously marked unavailable, re-initialize it
             if (!this.isDomainAvailable()) {
             	LOGGER.trace("*** Calling initStreamsDomain()");
                 initStreamsDomain(false);
@@ -268,16 +268,20 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
                 stopwatch.start();
             }
             
-            // Any refresh we need to do to Domain?  
-            // Not at the moment, notifications 
+            // Any refresh we need to do to Domain? 
+            updateExportedDomainMetrics();
             
             
             // Refresh Instances
+            LOGGER.trace("Loop over instances we are tracking...");
             Iterator<Map.Entry<String, StreamsInstanceTracker>> iit = this.getInstanceTrackerMap().entrySet().iterator();
             while (iit.hasNext()) {
-            		Map.Entry<String, StreamsInstanceTracker> InstanceEntry = iit.next();
+                    Map.Entry<String, StreamsInstanceTracker> InstanceEntry = iit.next();
+                    
+                    LOGGER.trace("Retrieved StreamsInstanceTracker for instance: {}",InstanceEntry.getKey());
             		StreamsInstanceTracker sit = InstanceEntry.getValue();    
-            		
+                    
+                    LOGGER.trace("  Calling refresh on instance");
             		sit.refresh();
             		
             		if (LOGGER.isDebugEnabled()) {
@@ -287,6 +291,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             			stopwatch.start();
             		}
             }
+            LOGGER.trace("Instance loop done");
             
             if (LOGGER.isDebugEnabled()) {
             		outerwatch.stop();
@@ -358,6 +363,7 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
             LOGGER.info("Streams Domain '{}' found, Status: {}",
                     new Object[] { domainBean.getName(), domainBean.getStatus() });
             if (domainBean.getStatus() != DomainMXBean.Status.RUNNING) {
+                    LOGGER.debug("Domain not RUNNING, resetting Domain Tracker");
             		resetDomainTracker();
             		LOGGER.info("Waiting for domain status to be RUNNING");
             		return;
@@ -444,19 +450,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
     public synchronized void resetDomainTracker() {
         this.setDomainAvailable(false);
         domainInfo.close();
-//        this.jobsAvailable = false;
-//        this.metricsAvailable = false;
-//        this.snapshotsAvailable = false;
-        // Set Metrics Failure on metrics Object
-//        if (this.allJobMetrics != null) {
-//        	this.allJobMetrics.setLastMetricsFailure(new Date());
-//        	this.allJobMetrics.setLastMetricsRefreshFailed(true);
-//        }
-//        // Set Snapshot Failure on metrics Object
-//        if (this.allJobSnapshots != null) {
-//        	this.allJobSnapshots.setLastSnapshotFailure(new Date());
-//        	this.allJobSnapshots.setLastSnapshotRefreshFailed(true);
-//        }
         removeExportedDomainMetrics();
         createExportedDomainMetrics();
     }
@@ -607,7 +600,6 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
 							this.domainName,
                             instanceName,
                             this.isAutoRefresh(),
-							this.protocol,
 							this.config);
 					
 					this.instanceTrackerMap.addInstanceTrackerToMap(instanceName, newInstanceTracker);
@@ -652,34 +644,47 @@ public class StreamsDomainTracker implements NotificationListener, MXBeanSourceP
      * DOMAIN METRICS
      *********************************/
     private void createExportedDomainMetrics() {
-	    	metricsExporter.createStreamsMetric("status", StreamsObjectType.DOMAIN, "Domain status, 1: running, .5: starting, stopping, 0: stopped, removing, unknown");
-	    	metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
-	    	metricsExporter.createStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, "Number of instances currently created in the streams domain");
-	    	metricsExporter.getStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getInstances().size());
+        LOGGER.debug("createExportedDomainMetrics()");
+        metricsExporter.createStreamsMetric("startTime", StreamsObjectType.DOMAIN, "Epoch time in milliseconds when the domain was started");
+        metricsExporter.createStreamsMetric("creationTime", StreamsObjectType.DOMAIN, "Epoch time in milliseconds when the domain was created");
+        metricsExporter.createStreamsMetric("status", StreamsObjectType.DOMAIN, "Domain status, 1: running, .5: starting, stopping, 0: stopped, removing, unknown");
+        metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
+	    metricsExporter.createStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, "Number of instances currently created in the streams domain");
     }
     
     private void removeExportedDomainMetrics() {
+        LOGGER.debug("removeExportedDomainMetrics()");
 		metricsExporter.removeAllChildStreamsMetrics(this.domainName);
     }
 
     private void updateExportedDomainMetrics() {
-        metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
-        metricsExporter.getStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getInstances().size());
+        if (this.isDomainAvailable()) {
+            if (this.domainInfo.getStartTime() != null) {
+                metricsExporter.getStreamsMetric("startTime", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getStartTime());
+            }
+            if (this.domainInfo.getCreationTime() != null) {
+                metricsExporter.getStreamsMetric("creationTime", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getCreationTime());
+            }
+            metricsExporter.getStreamsMetric("status", StreamsObjectType.DOMAIN, this.domainName).set(getDomainStatusAsMetric());
+            metricsExporter.getStreamsMetric("instanceCount", StreamsObjectType.DOMAIN, this.domainName).set(this.domainInfo.getInstances().size());
+        }
     }
     
     private double getDomainStatusAsMetric() {
-	    	double value = 0;
-	    	switch (this.domainInfo.getStatus()) {
-		    	case "running" :
-		    		value = 1;
-		    		break;
-		    	case "starting":
-		    	case "stopping":
-		    		value = 0.5;
-		    		break;
-		    	default:
-		    		value = 0;
-	    	}
+            double value = 0;
+            if (this.isDomainAvailable()) {
+                switch (this.domainInfo.getStatus()) {
+                    case "running" :
+                        value = 1;
+                        break;
+                    case "starting":
+                    case "stopping":
+                        value = 0.5;
+                        break;
+                    default:
+                        value = 0;
+                }
+            }
 	    	return value;
     }
     

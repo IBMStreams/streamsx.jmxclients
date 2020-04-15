@@ -98,7 +98,7 @@ public class AllJobSnapshots {
         this.jmxHttpPort = jmxHttpPort;
         //this.protocol = protocol;
 
-        this.refresh();
+        //this.refresh();
 
     }
 
@@ -143,7 +143,7 @@ public class AllJobSnapshots {
             // handle that here, not suyre about snapshotJobs.
             //
             try {
-                uri = instance.snapshotJobs(null,1,false);
+                uri = instance.snapshotJobs(null,99,true);
             } catch (UndeclaredThrowableException e) {
                 LOGGER.trace("* Handling snapshotJobs UndeclaredThrowableException and unwrapping it");
                 Throwable t = e.getUndeclaredThrowable();
