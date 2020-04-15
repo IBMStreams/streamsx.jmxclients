@@ -1,8 +1,8 @@
 # Streams Metric Exporter Sample Dashboards for Grafana
 
-These were created using Grafana version 4.6.2 Docker Image
+These were created using Grafana version 6+ Docker Image
 
-These dashboard files can also be pointed to by a Grafana 5 dashboard provisioning file.
+These Dashboards are meant to be imported via the Grafana GUI
 
 The dashboards included are just samples.  The Streams Metric Exporter solution captures all of the metrics in Prometheus, thus allowing dashboards to be created that focus on different aspects of IBM Streams and different users.  Possibilities include:
 
@@ -21,46 +21,41 @@ The dashboards included are just samples.  The Streams Metric Exporter solution 
 
 This dashboard provides a simple example of using IBM Streams prometheus metrics in a general case, meaning, the dashboard is not tailored to any specific analytic solution or IBM Streams job. 
 
-The dashboard provides an overview of the IBM Streams Domain you point it at.  It will show the number of instances in the domain and their status. 
+The dashboard provides an overview of the IBM Streams Domain which has an instance of the steams-metric-exporter running.
 
-There is a multi-select template at the top to allow a subset of the instances to be selected.
+There is a multi-select template at the top to allow a subset of the instances to be selected If you configure streams-metric-exporter to export multiple instances or have multiple streams-metric-exporters feeding the same prometheus database.
 
 Metrics used include:
 * streams_domain_status
+* streams_domain_startTime
+* streams_domain_creationTime
 * streams_domain_instanceCount
 * streams_instance_status
 * streams_instance_jobCount
+* streams_resource_status
 * streams_resource_memoryTotal
-* streams_job_healthy
+* streams_resource_memoryFree
 * streams_job_nCpuMilliseconds
-* streams_job_nMemoryResidentConsumption
+* streams_job_nResidentMemoryConsumption
+* streams_job_submitTime
+* streams_job_status
+* streams_job_health
 * streams_job_max_congestionFactor
-* streams_operator_ip_nTuplesDropped
+* streams_pe_health
 
 ## IBM Streams Instance Dashboard
 
-![IBMStreamsInstanceDashboardExample](../images/IBMStreamsInstanceDashboard.png)
+![IBMStreamsInstanceDashboard](../images/IBMStreamsInstanceDashboard.png)
 
-This dashboard focuses more on the details of IBM Streams jobs, including Processing Element and Operator metrics.  In addition, PE Launch Count is included.  This is a good candidate for alerting when/if PE's are restarting.
+This dashboard focuses more on the details of an IBM Streams Instance and the currently running jobs.
 
 The dashboard uses templates allowing the selection of a single IBM Streams instance and a multi-select for Job Name.
 
-Metrics used include:
-* streams_instance_status
-* streams_instance_jobCount
-* streams_job_pecount
-* streams_pe_nCpuMilliseconds
-* streams_pe_op_connection_congestionFactor
-* streams_pe_nResidentMemoryConsumption
-* streams_pe_ip_nTuplesProcessed
-* streams_pe_ip_nTupleBytesProcessed
-* streams_pe_op_nTuplesSubmitted
-* streams_pe_op_nTupleBytesSubmitted
-* streams_operator_ip_nTuplesProcessed
-* streams_pe_launchCount
+## IBM Streams Job Dashboard
 
+![IBMStreamsJobDashboard](../images/IBMStreamsJobDashboard.png)
 
-| Filename | Description     |
-| :------------- | :------------- |
-| IBMStreamsDomainDashboard.json | Use GUI Dashboard Import dialogue box.<br>Allows you to select the datasource name in the import dialogue
-| IBMStreamsInstanceDashboard.json | Use GUI Dashboard Import dialogue box.<br>Allows you to select the datasource name in the import dialogue
+## IBM Streams Resource Dashboard
+
+![IBMStreamsResourceDashboard](../images/IBMStreamsResourceDashboard.png)
+

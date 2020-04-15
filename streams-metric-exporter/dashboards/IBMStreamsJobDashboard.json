@@ -2,7 +2,7 @@
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:22496",
+        "$$hashKey": "object:181",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -16,10 +16,11 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 1,
-  "id": 6,
-  "iteration": 1586961818675,
+  "id": 9,
+  "iteration": 1586893341648,
   "links": [
     {
+      "$$hashKey": "object:1080",
       "asDropdown": true,
       "icon": "external link",
       "keepTime": true,
@@ -31,17 +32,15 @@
   "panels": [
     {
       "cacheTimeout": null,
-      "colorBackground": false,
+      "colorBackground": true,
       "colorValue": false,
       "colors": [
-        "#d44a3a",
+        "rgba(245, 54, 54, 0.9)",
         "rgba(237, 129, 40, 0.89)",
-        "#299c46"
+        "rgba(50, 172, 45, 0.97)"
       ],
-      "datasource": null,
-      "decimals": null,
-      "description": "",
-      "format": "dateTimeAsIso",
+      "datasource": "Prometheus",
+      "format": "none",
       "gauge": {
         "maxValue": 100,
         "minValue": 0,
@@ -50,12 +49,13 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 3,
-        "w": 4,
+        "h": 1,
+        "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 27,
+      "hideTimeOverride": true,
+      "id": 11,
       "interval": null,
       "links": [],
       "mappingType": 1,
@@ -74,7 +74,7 @@
       "nullText": null,
       "postfix": "",
       "postfixFontSize": "50%",
-      "prefix": "",
+      "prefix": "Streams Instance ($instancename) Status: ",
       "prefixFontSize": "50%",
       "rangeMaps": [
         {
@@ -87,483 +87,47 @@
         "fillColor": "rgba(31, 118, 189, 0.18)",
         "full": false,
         "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
+        "show": false
       },
-      "tableColumn": "instancename",
-      "targets": [
-        {
-          "expr": "streams_instance_status{instancename=\"$instancename\"} + 0",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Instance Name",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": null,
-      "description": "",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 4,
-        "y": 0
-      },
-      "id": 21,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "$$hashKey": "object:286",
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "$$hashKey": "object:287",
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "Value",
+      "tableColumn": "",
       "targets": [
         {
           "expr": "streams_instance_status{instancename=\"$instancename\"}",
-          "format": "table",
+          "format": "time_series",
           "instant": true,
-          "interval": "",
+          "intervalFactor": 1,
           "legendFormat": "",
-          "refId": "A"
+          "refId": "A",
+          "step": 1
         }
       ],
       "thresholds": ".5,1",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Status",
+      "timeFrom": "1s",
+      "title": "",
       "type": "singlestat",
       "valueFontSize": "50%",
       "valueMaps": [
         {
-          "$$hashKey": "object:289",
           "op": "=",
-          "text": "RUNNING",
-          "value": "1"
+          "text": "0",
+          "value": "null"
         },
         {
-          "$$hashKey": "object:290",
           "op": "=",
-          "text": "PARTIALLY RUNNING",
-          "value": ".5"
-        },
-        {
-          "$$hashKey": "object:291",
-          "op": "=",
-          "text": "STOPPED",
+          "text": "Stopped, Failed, or Unknown",
           "value": "0"
-        }
-      ],
-      "valueName": "first"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": true,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": null,
-      "description": "",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 6,
-        "y": 0
-      },
-      "id": 22,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "$$hashKey": "object:367",
-          "name": "value to text",
-          "value": 1
         },
         {
-          "$$hashKey": "object:368",
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "Value",
-      "targets": [
-        {
-          "expr": "streams_instance_health{instancename=\"$instancename\"}",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "thresholds": ".5,1",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Health",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [
-        {
-          "$$hashKey": "object:370",
           "op": "=",
-          "text": "HEALTHY",
+          "text": "Partially Failed, Partially Running, Starting, or Stopping",
+          "value": "0.5"
+        },
+        {
+          "op": "=",
+          "text": "Running",
           "value": "1"
-        },
-        {
-          "$$hashKey": "object:371",
-          "op": "=",
-          "text": "PARTIALLY HEALTHY",
-          "value": ".5"
-        },
-        {
-          "$$hashKey": "object:372",
-          "op": "=",
-          "text": "UNHEALTHY",
-          "value": "0"
         }
       ],
-      "valueName": "first"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": null,
-      "decimals": null,
-      "description": "",
-      "format": "dateTimeAsIso",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 8,
-        "y": 0
-      },
-      "id": 24,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "$$hashKey": "object:448",
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "$$hashKey": "object:449",
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "Value",
-      "targets": [
-        {
-          "expr": "streams_instance_startTime{instancename=\"$instancename\"} + 0",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Started",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": null,
-      "decimals": 1,
-      "description": "",
-      "format": "s",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 10,
-        "y": 0
-      },
-      "id": 28,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "$$hashKey": "object:523",
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "$$hashKey": "object:524",
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "Value",
-      "targets": [
-        {
-          "expr": "time() - (streams_instance_startTime{instancename=\"$instancename\"}/1000)",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Up Time",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#d44a3a",
-        "rgba(237, 129, 40, 0.89)",
-        "#299c46"
-      ],
-      "datasource": null,
-      "description": "",
-      "format": "dateTimeAsIso",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 2,
-        "x": 12,
-        "y": 0
-      },
-      "id": 23,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "$$hashKey": "object:598",
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "$$hashKey": "object:599",
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "50%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "Value",
-      "targets": [
-        {
-          "expr": "streams_instance_creationTime{instancename=\"$instancename\"} ",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "legendFormat": "",
-          "refId": "A"
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Created",
-      "type": "singlestat",
-      "valueFontSize": "50%",
-      "valueMaps": [],
       "valueName": "current"
     },
     {
@@ -585,10 +149,10 @@
         "thresholdMarkers": true
       },
       "gridPos": {
-        "h": 3,
-        "w": 5,
-        "x": 14,
-        "y": 0
+        "h": 5,
+        "w": 2,
+        "x": 0,
+        "y": 1
       },
       "hideTimeOverride": true,
       "id": 6,
@@ -597,102 +161,10 @@
       "mappingType": 1,
       "mappingTypes": [
         {
-          "$$hashKey": "object:676",
           "name": "value to text",
           "value": 1
         },
         {
-          "$$hashKey": "object:677",
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "postfix": " ",
-      "postfixFontSize": "50%",
-      "prefix": "",
-      "prefixFontSize": "80%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": true
-      },
-      "tableColumn": "Value",
-      "targets": [
-        {
-          "expr": "streams_instance_jobCount{instancename=\"$instancename\"}",
-          "format": "table",
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "",
-          "metric": "streams_instance_jobcount",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": "",
-      "timeFrom": "10s",
-      "title": "Job Count",
-      "type": "singlestat",
-      "valueFontSize": "70%",
-      "valueMaps": [
-        {
-          "$$hashKey": "object:679",
-          "op": "=",
-          "text": "0",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": true,
-      "colors": [
-        "rgba(50, 172, 45, 0.97)",
-        "rgba(237, 129, 40, 0.89)",
-        "rgba(245, 54, 54, 0.9)"
-      ],
-      "datasource": "Prometheus",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 3,
-        "w": 5,
-        "x": 19,
-        "y": 0
-      },
-      "hideTimeOverride": true,
-      "id": 29,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "$$hashKey": "object:755",
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "$$hashKey": "object:756",
           "name": "range to text",
           "value": 2
         }
@@ -720,10 +192,9 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "count(count by (resource) (streams_resource_status))",
-          "format": "table",
+          "expr": "streams_instance_jobCount{instancename=\"$instancename\"}",
+          "format": "time_series",
           "instant": true,
-          "interval": "",
           "intervalFactor": 2,
           "legendFormat": "",
           "metric": "streams_instance_jobcount",
@@ -733,12 +204,11 @@
       ],
       "thresholds": "",
       "timeFrom": "10s",
-      "title": "Resource Count",
+      "title": "Job Count",
       "type": "singlestat",
       "valueFontSize": "70%",
       "valueMaps": [
         {
-          "$$hashKey": "object:758",
           "op": "=",
           "text": "0",
           "value": "null"
@@ -751,12 +221,12 @@
       "datasource": null,
       "fontSize": "80%",
       "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 3
+        "h": 5,
+        "w": 10,
+        "x": 2,
+        "y": 1
       },
-      "id": 32,
+      "id": 19,
       "pageSize": null,
       "showHeader": true,
       "sort": {
@@ -827,10 +297,6 @@
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
-          "link": true,
-          "linkTargetBlank": true,
-          "linkTooltip": "",
-          "linkUrl": "/d/a4lGWzjZz/ibm-streams-job-dashboard?var-jobname=${__cell}",
           "mappingType": 1,
           "pattern": "jobname",
           "thresholds": [],
@@ -872,6 +338,40 @@
           ]
         },
         {
+          "alias": "PE Count",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": null,
+          "mappingType": 1,
+          "pattern": "Value #D",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "Operator Count",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #E",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        },
+        {
           "alias": "",
           "align": "left",
           "colorMode": null,
@@ -897,12 +397,20 @@
           "refId": "A"
         },
         {
-          "expr": "streams_job_status{instancename=\"$instancename\",jobname=~\"$jobname\"} + 0",
+          "expr": "count by (jobname) (streams_operator_relativeOperatorCost{instancename=\"$instancename\",jobname=~\"$jobname\"} + 0)",
           "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "",
-          "refId": "C"
+          "refId": "E"
+        },
+        {
+          "expr": " count by (jobname) (streams_pe_status{instancename=\"$instancename\",jobname=~\"$jobname\"} + 0)",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "D"
         },
         {
           "expr": "streams_job_health{instancename=\"$instancename\",jobname=~\"$jobname\"} + 0",
@@ -911,6 +419,14 @@
           "interval": "",
           "legendFormat": "",
           "refId": "B"
+        },
+        {
+          "expr": "streams_job_status{instancename=\"$instancename\",jobname=~\"$jobname\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
         }
       ],
       "timeFrom": null,
@@ -920,74 +436,32 @@
       "type": "table"
     },
     {
-      "columns": [
-        {
-          "$$hashKey": "object:1320",
-          "text": "Current",
-          "value": "current"
-        }
-      ],
+      "columns": [],
       "datasource": "Prometheus",
-      "filterNull": true,
       "fontSize": "80%",
       "gridPos": {
-        "h": 6,
+        "h": 5,
         "w": 12,
         "x": 12,
-        "y": 3
+        "y": 1
       },
-      "hideTimeOverride": true,
-      "id": 30,
-      "links": [],
-      "maxPerRow": 3,
+      "id": 21,
       "pageSize": null,
-      "scroll": true,
       "showHeader": true,
       "sort": {
-        "col": 1,
+        "col": 2,
         "desc": false
       },
       "styles": [
         {
-          "$$hashKey": "object:1324",
-          "alias": "Status",
+          "alias": "Instance",
           "align": "auto",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "decimals": 0,
-          "mappingType": 1,
-          "pattern": "Value #A",
-          "thresholds": [
-            ".5",
-            "1"
-          ],
-          "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "$$hashKey": "object:1362",
-              "text": "RUNNING",
-              "value": "1"
-            },
-            {
-              "$$hashKey": "object:1363",
-              "text": "PARTIALLY_RUNNING",
-              "value": ".5"
-            },
-            {
-              "$$hashKey": "object:1364",
-              "text": "NOT RUNNING",
-              "value": "0"
-            }
-          ]
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "pattern": "instancename",
+          "type": "hidden"
         },
         {
-          "$$hashKey": "object:1325",
-          "alias": "Resource Id",
+          "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -997,19 +471,136 @@
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
-          "link": true,
-          "linkTargetBlank": true,
-          "linkTooltip": "",
-          "linkUrl": "d/kwXuplXZk/ibm-streams-resource-dashboard?var-resource=${__cell}",
           "mappingType": 1,
-          "pattern": "resource",
+          "pattern": "jobname",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "PE Id",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "peid",
           "thresholds": [],
           "type": "number",
           "unit": "short"
         },
         {
-          "$$hashKey": "object:1326",
-          "alias": "PE Count",
+          "alias": "Resource",
+          "align": "auto",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "resource",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short"
+        },
+        {
+          "alias": "Launch Count",
+          "align": "auto",
+          "colorMode": "value",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 0,
+          "mappingType": 1,
+          "pattern": "Value #A",
+          "thresholds": [
+            "2",
+            "4"
+          ],
+          "type": "number",
+          "unit": "short"
+        },
+        {
+          "alias": "PE Status",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #B",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "RUNNING",
+              "value": "1"
+            },
+            {
+              "text": "STARTING or STOPPING",
+              "value": ".5"
+            },
+            {
+              "text": "FAILED or CANCELLED",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "alias": "PE Health",
+          "align": "auto",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Value #C",
+          "thresholds": [
+            ".5",
+            "1"
+          ],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "HEALTHY",
+              "value": "1"
+            },
+            {
+              "text": "PARTIALLY_UNHEALTHY",
+              "value": ".5"
+            },
+            {
+              "text": "UNHEALTHY",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "alias": "Op Count",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -1020,14 +611,13 @@
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": null,
           "mappingType": 1,
-          "pattern": "Value #B",
+          "pattern": "Value #D",
           "thresholds": [],
           "type": "number",
           "unit": "short"
         },
         {
-          "$$hashKey": "object:1327",
-          "alias": "Resource Id",
+          "alias": "",
           "align": "auto",
           "colorMode": null,
           "colors": [
@@ -1037,6 +627,7 @@
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
+          "mappingType": 1,
           "pattern": "/.*/",
           "thresholds": [],
           "type": "hidden",
@@ -1045,33 +636,402 @@
       ],
       "targets": [
         {
-          "expr": "count(count by (resource,peid) (streams_pe_health{instancename=~\"$instancename\"})) by (resource)",
+          "expr": "count by (jobname,peid) (streams_operator_relativeOperatorCost{instancename=~\"$instancename\",jobname=~\"$jobname\"}) + 0",
           "format": "table",
           "instant": true,
           "interval": "",
-          "intervalFactor": 2,
           "legendFormat": "",
-          "metric": "stream_job_healthy",
-          "refId": "B",
-          "step": 1
+          "refId": "D"
         },
         {
-          "expr": "streams_resource_status{instancename=~\"$instancename\"} + 0",
+          "expr": "streams_pe_launchCount{instancename=~\"$instancename\",jobname=~\"$jobname\"} + 0",
           "format": "table",
           "instant": true,
           "interval": "",
-          "intervalFactor": 2,
+          "legendFormat": "launchcount",
+          "refId": "A"
+        },
+        {
+          "expr": "streams_pe_status{instancename=~\"$instancename\",jobname=~\"$jobname\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
           "legendFormat": "",
-          "metric": "stream_job_healthy",
-          "refId": "A",
-          "step": 1
+          "refId": "B"
+        },
+        {
+          "expr": "streams_pe_health{instancename=~\"$instancename\",jobname=~\"$jobname\"} + 0",
+          "format": "table",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "",
+          "refId": "C"
         }
       ],
-      "timeFrom": "1s",
+      "timeFrom": null,
       "timeShift": null,
-      "title": "Resource Status",
+      "title": "PE Status",
       "transform": "table",
       "type": "table"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (jobname, operatorname) (rate(streams_operator_op_nTuplesSubmitted{instancename=~\"$instancename\",jobname=~\"$jobname\",operatorname=~\".*(?:[Bb]eacon|[Ss]ource|[Ss]can|[R]ead).*\"}[2m]))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{jobname}}: {{operatorname}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Tuples Submitted Rate by Operator (Source Operators)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:16108",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:16109",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": false,
+        "show": true,
+        "sort": "current",
+        "sortDesc": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (jobname, operatorname) (rate(streams_operator_ip_nTuplesProcessed{instancename=~\"$instancename\",jobname=~\"$jobname\",operatorname=~\".*(?:[Ss]ink|[Ww]rite|[Oo]ut).*\"}[2m]))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{jobname}}: {{operatorname}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Tuples Processed Rate by Operator (Sink Operators)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "$$hashKey": "object:16191",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        },
+        {
+          "$$hashKey": "object:16192",
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 14
+      },
+      "id": 23,
+      "options": {
+        "displayMode": "lcd",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "defaults": {
+            "mappings": [],
+            "max": 100,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "#EAB839",
+                  "value": 75
+                },
+                {
+                  "color": "red",
+                  "value": 90
+                }
+              ]
+            },
+            "title": "${__series.name}",
+            "unit": "percent"
+          },
+          "limit": 10,
+          "overrides": [],
+          "values": true
+        },
+        "orientation": "horizontal",
+        "showUnfilled": true
+      },
+      "pluginVersion": "6.7.0-beta1",
+      "targets": [
+        {
+          "expr": "sort_desc((sum(streams_operator_relativeOperatorCost{instancename=~\"$instancename\",jobname=~\"$jobname\"}) by (jobname, operatorname))) ",
+          "instant": true,
+          "interval": "",
+          "legendFormat": "{{jobname}}: {{operatorname}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Relative Operator Cost  (top 10)",
+      "type": "bargauge"
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 14
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "alignAsTable": true,
+        "avg": false,
+        "current": true,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null as zero",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "streams_pe_op_connection_congestionFactor{instancename=~\"$instancename\",jobname=~\"$jobname\"} > 0",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "{{jobname}}, peid:{{peid}}",
+          "metric": "streams_job_max_congestionFactor",
+          "refId": "A",
+          "step": 2
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "gt",
+          "value": 80,
+          "yaxis": "left"
+        }
+      ],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "PE Congestion",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "percent",
+          "label": "",
+          "logBase": 1,
+          "max": "100",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": "0",
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
       "aliasColors": {},
@@ -1085,7 +1045,7 @@
         "h": 5,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 19
       },
       "hiddenSeries": false,
       "id": 2,
@@ -1119,12 +1079,12 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (jobname) (rate(streams_pe_nCpuMilliseconds{instancename=~\"$instancename\",jobname=~\"$jobname\"}[5m]))",
+          "expr": "sum by (jobname,peid) (rate(streams_pe_nCpuMilliseconds{instancename=~\"$instancename\",jobname=~\"$jobname\"}[2m]))",
           "format": "time_series",
           "hide": false,
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "{{jobname}} ",
+          "legendFormat": "{{jobname}}, peid: {{peid}}",
           "metric": "streams_job_nCpuMilliseconds",
           "refId": "A",
           "step": 2
@@ -1134,7 +1094,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Job CPU Milliseconds Rate",
+      "title": "Streams PE CPU Milliseconds Rate",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1183,7 +1143,7 @@
         "h": 5,
         "w": 12,
         "x": 12,
-        "y": 9
+        "y": 19
       },
       "hiddenSeries": false,
       "hideTimeOverride": false,
@@ -1192,10 +1152,14 @@
         "alignAsTable": true,
         "avg": false,
         "current": true,
+        "hideEmpty": false,
+        "hideZero": false,
         "max": false,
         "min": false,
         "rightSide": true,
         "show": true,
+        "sort": "current",
+        "sortDesc": true,
         "total": false,
         "values": true
       },
@@ -1216,11 +1180,11 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (jobname) (streams_pe_nResidentMemoryConsumption{instancename=~\"$instancename\",jobname=~\"$jobname\"})",
+          "expr": "sum by (jobname, peid) (streams_pe_nResidentMemoryConsumption{instancename=~\"$instancename\",jobname=~\"$jobname\"})",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "{{jobname}}",
+          "legendFormat": "{{jobname}}, peid: {{peid}}",
           "metric": "",
           "refId": "A",
           "step": 2
@@ -1230,7 +1194,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Job Resident Memory",
+      "title": "PE Resident Memory",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1266,409 +1230,9 @@
         "align": false,
         "alignLevel": null
       }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "decimals": null,
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 14
-      },
-      "hiddenSeries": false,
-      "id": 33,
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": null,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum by (jobname) (streams_operator_ip_nTuplesQueued{instancename=~\"$instancename\",jobname=~\"$jobname\"}) > 0",
-          "format": "time_series",
-          "hide": false,
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{jobname}}",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Job Tuples Queued > 0",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "decimals": 2,
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 12,
-        "y": 14
-      },
-      "hiddenSeries": false,
-      "id": 12,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": true,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "sideWidth": null,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum by (jobname) (rate (streams_operator_ip_nTuplesDropped{instancename=~\"$instancename\",jobname=~\"$jobname\"}[2m])) > 0",
-          "format": "time_series",
-          "hide": false,
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{jobname}}",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Job Tuple Drop Rate > 0",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": false
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 0,
-        "y": 19
-      },
-      "hiddenSeries": false,
-      "id": 4,
-      "interval": "",
-      "legend": {
-        "alignAsTable": true,
-        "avg": true,
-        "current": true,
-        "max": true,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": true
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "max by (jobname) (streams_pe_op_connection_congestionFactor{instancename=~\"$instancename\",jobname=~\"$jobname\"})",
-          "format": "time_series",
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{jobname}}",
-          "metric": "streams_job_max_congestionFactor",
-          "refId": "A",
-          "step": 2
-        }
-      ],
-      "thresholds": [
-        {
-          "colorMode": "critical",
-          "fill": true,
-          "line": true,
-          "op": "gt",
-          "value": 80,
-          "yaxis": "left"
-        }
-      ],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Job Congestion Factor",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "percent",
-          "label": "",
-          "logBase": 1,
-          "max": "100",
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 5,
-        "w": 12,
-        "x": 12,
-        "y": 19
-      },
-      "hiddenSeries": false,
-      "id": 14,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "hideEmpty": true,
-        "hideZero": true,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "links": [],
-      "nullPointMode": "null as zero",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 5,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "sum by (jobname) (delta(streams_pe_op_nBrokenConnections{instancename=~\"$instancename\",jobname=~\"$jobname\"}[1m]))",
-          "format": "time_series",
-          "hide": false,
-          "interval": "",
-          "intervalFactor": 2,
-          "legendFormat": "{{jobname}}",
-          "refId": "B",
-          "step": 2
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Job PE Broken Connections 1 Minute Delta",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": "0",
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
     }
   ],
-  "refresh": "5s",
+  "refresh": "10s",
   "schemaVersion": 22,
   "style": "dark",
   "tags": [],
@@ -1727,6 +1291,15 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "datasource": "Prometheus",
+        "filters": [],
+        "hide": 0,
+        "label": "",
+        "name": "Filters",
+        "skipUrlSync": false,
+        "type": "adhoc"
       }
     ]
   },
@@ -1760,10 +1333,10 @@
     ]
   },
   "timezone": "browser",
-  "title": "IBM Streams Instance Dashboard",
-  "uid": "InstanceDashboard",
+  "title": "IBM Streams Job Dashboard",
+  "uid": "a4lGWzjZz",
   "variables": {
     "list": []
   },
-  "version": 3
+  "version": 4
 }

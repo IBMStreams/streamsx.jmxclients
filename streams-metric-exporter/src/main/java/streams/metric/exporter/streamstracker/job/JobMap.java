@@ -16,10 +16,7 @@
 
 package streams.metric.exporter.streamstracker.job;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -46,12 +43,11 @@ public class JobMap {
 	 * JOB MAP and INDEXES
 	 **************************************/
 	/* Job Map Info */
-	private ConcurrentSkipListMap<BigInteger, JobDetails> jobDetailsMap = new ConcurrentSkipListMap<BigInteger, JobDetails>();
-	private ConcurrentSkipListMap<String, BigInteger> jobNameIndex = new ConcurrentSkipListMap<String, BigInteger>();
+	// <jobid,jobdetails>
+	private ConcurrentSkipListMap<String, JobDetails> jobDetailsMap = new ConcurrentSkipListMap<String, JobDetails>();
+	// <jobname, jobid>
+	private ConcurrentSkipListMap<String, String> jobNameIndex = new ConcurrentSkipListMap<String, String>();
 
-	// static final Gauge streams_instance_jobcount = Gauge.build()
-	// .name("streams_instance_jobcount").help("Number of jobs in streams
-	// instance").register();
 
 	public JobMap(String streamsInstanceName) {
 		LOGGER.trace("JobMap Initialization");
@@ -61,9 +57,9 @@ public class JobMap {
 	// Clear out the job map
 	public synchronized void clear() {
 		LOGGER.trace("JobMap.clear()");
-		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet().iterator();
+		Iterator<Map.Entry<String, JobDetails>> it = jobDetailsMap.entrySet().iterator();
 		while (it.hasNext()) {
-			Map.Entry<BigInteger, JobDetails> pair = it.next();
+			Map.Entry<String, JobDetails> pair = it.next();
 			JobDetails curInfo = (JobDetails) pair.getValue();
 			curInfo.close();
 		}
@@ -75,75 +71,28 @@ public class JobMap {
 		return jobDetailsMap.size();
 	}
 
-	/* Return a map using jobInfo objects rather than all details */
-	public synchronized Map<BigInteger, JobInfo> getJobMap() {
-		HashMap<BigInteger, JobInfo> m = new HashMap<BigInteger, JobInfo>();
-
-		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet().iterator();
-
-		while (it.hasNext()) {
-			Map.Entry<BigInteger, JobDetails> entry = it.next();
-
-			m.put(entry.getKey(), entry.getValue().getJobInfo());
-		}
-
-		return m;
-	}
-
 	/* Get list of job ids as a set */
-	public synchronized Set<BigInteger> getJobIds() {
+	public synchronized Set<String> getJobIds() {
 		return jobDetailsMap.keySet();
 	}
 
 	/* Return a copy of the job name index */
-	public synchronized Map<String, BigInteger> getCurrentJobNameIndex() {
-		return new HashMap<String, BigInteger>(jobNameIndex);
+	public synchronized Map<String, String> getCurrentJobNameIndex() {
+		return new HashMap<String, String>(jobNameIndex);
 	}
 
 	/* Return job details of a job */
-	public synchronized JobDetails getJob(int jobid) {
-		BigInteger jid = BigInteger.valueOf(jobid);
-
-		return jobDetailsMap.get(jid);
-	}
-
-	/* Return job info of each job in the map */
-	public synchronized ArrayList<JobInfo> getJobInfo() {
-		ArrayList<JobInfo> jia = new ArrayList<JobInfo>();
-
-		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<BigInteger, JobDetails> pair = it.next();
-
-			JobDetails curInfo = (JobDetails) pair.getValue();
-			jia.add(curInfo.getJobInfo());
-		}
-
-		return jia;
-	}
-
-	/* Return job info of a specific job in the map */
-	public synchronized JobInfo getJobInfo(int jobid) {
-		BigInteger jid = BigInteger.valueOf(jobid);
-		JobDetails jd = null;
-		JobInfo ji = null;
-
-		jd = jobDetailsMap.get(jid);
-		if (jd != null) {
-			ji = jd.getJobInfo();
-		}
-
-		return ji;
+	public synchronized JobDetails getJob(String jobid) {
+		return jobDetailsMap.get(jobid);
 	}
 
 	// ** Add Job to job map
-	public synchronized void addJobToMap(BigInteger jobid, JobDetails details) {
-
+	public synchronized void addJobToMap(String jobid, JobDetails details) {
 		jobDetailsMap.put(jobid, details);
-		jobNameIndex.put(details.getName(), jobid);
+		jobNameIndex.put(details.getJobname(), jobid);
 	}
 
-	public synchronized void removeJobFromMap(BigInteger jobid) {
+	public synchronized void removeJobFromMap(String jobid) {
 		// Tell jobDetails handle going away, whatever it needs to do
 		if (jobDetailsMap.containsKey(jobid)) {
 			jobDetailsMap.get(jobid).close();
@@ -153,25 +102,6 @@ public class JobMap {
 		jobNameIndex.values().removeAll(Collections.singleton(jobid));
 	}
 
-	public synchronized void setJobMetricsFailed(Date failureDate) {
-		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<BigInteger, JobDetails> pair = it.next();
-			JobDetails curInfo = (JobDetails) pair.getValue();
-			curInfo.setLastMetricsFailure(failureDate);
-			curInfo.setLastMetricsRefreshFailed(true);
-		}
-	}
-
-	public synchronized void setJobSnapshotFailed(Date failureDate) {
-		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet().iterator();
-		while (it.hasNext()) {
-			Map.Entry<BigInteger, JobDetails> pair = it.next();
-			JobDetails curInfo = (JobDetails) pair.getValue();
-			curInfo.setLastSnapshotFailure(failureDate);
-			curInfo.setLastSnapshotRefreshFailed(true);
-		}
-	}
 
 	@Override
 	public String toString() {
@@ -180,10 +110,10 @@ public class JobMap {
 
 		result.append("All " + jobDetailsMap.size() + " Jobs:");
 		result.append(newline);
-		Iterator<Map.Entry<BigInteger, JobDetails>> it = jobDetailsMap.entrySet().iterator();
+		Iterator<Map.Entry<String, JobDetails>> it = jobDetailsMap.entrySet().iterator();
 
 		while (it.hasNext()) {
-			Map.Entry<BigInteger, JobDetails> pair = it.next();
+			Map.Entry<String, JobDetails> pair = it.next();
 			JobDetails curInfo = (JobDetails) pair.getValue();
 			result.append(curInfo.toString());
 			result.append(newline);
@@ -191,9 +121,9 @@ public class JobMap {
 		result.append(newline);
 		result.append("jobNameIndex:");
 		result.append(newline);
-		Iterator<Map.Entry<String, BigInteger>> jnit = jobNameIndex.entrySet().iterator();
+		Iterator<Map.Entry<String, String>> jnit = jobNameIndex.entrySet().iterator();
 		while (jnit.hasNext()) {
-			Map.Entry<String, BigInteger> pair = jnit.next();
+			Map.Entry<String, String> pair = jnit.next();
 			result.append(pair.getKey() + " : " + pair.getValue());
 			result.append(newline);
 		}

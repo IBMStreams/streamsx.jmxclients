@@ -62,8 +62,6 @@ public class AllJobMetrics {
 
     private void setAllMetrics(String allMetrics) {
         this.allMetrics = allMetrics;
-        LOGGER.debug("allMetrics: ");
-        LOGGER.debug(allMetrics);
     }
 
     public Date getLastMetricsRefresh() {
@@ -101,7 +99,7 @@ public class AllJobMetrics {
         this.jmxHttpPort = jmxHttpPort;
         //this.protocol = protocol;
 
-        this.refresh();
+        //this.refresh();
 
     }
 
