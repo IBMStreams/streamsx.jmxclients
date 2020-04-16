@@ -36,7 +36,7 @@ import io.prometheus.client.CollectorRegistry;
 import streams.metric.exporter.error.StreamsTrackerException;
 import streams.metric.exporter.streamstracker.StreamsDomainTracker;
 
-@Path("/prometheus")
+@Path("/{parameter: metrics|prometheus}")
 public class PrometheusResource {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + PrometheusResource.class.getName());
@@ -55,7 +55,7 @@ public class PrometheusResource {
         StreamsDomainTracker jobTracker = StreamsDomainTracker
                 .getDomainTracker();   
         
-        LOGGER.trace("/prometheus endpoint handler: domainAvailable={}",jobTracker.isDomainAvailable());
+        LOGGER.trace("/metrics endpoint handler: domainAvailable={}",jobTracker.isDomainAvailable());
         
         // Create streams_exporter_metrics_available and streams_exporter_instance_available
         

@@ -20,10 +20,6 @@ import com.ibm.streams.management.domain.DomainMXBean;
 
 import streams.metric.exporter.error.StreamsTrackerException;
 
-import java.text.Format;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,7 +39,8 @@ public class DomainInfo {
     private String name = null;
     private String status = DomainMXBean.Status.UNKNOWN.toString();
     private String fullProductVersion = null;
-    private String creationTime = null;
+	private Long creationTime = null;
+	private Long startTime=null;
     private String creationUser = null;
     private String externalResourceManager = null;
     private int highAvailabilityCount = 0;
@@ -62,8 +59,9 @@ public class DomainInfo {
     public void updateInfo(DomainMXBean bean) throws StreamsTrackerException {
     	try {
 	    	setStatus(bean.getStatus().toString());
-	    	setFullProductVersion(bean.getActiveVersion().getFullProductVersion());
-	    	setCreationTime(bean.getCreationTime());
+			setFullProductVersion(bean.getActiveVersion().getFullProductVersion());
+			setStartTime(bean.getStartTime());
+			setCreationTime(bean.getCreationTime());
 	    	setCreationUser(bean.getCreationUser());
 	    	setExternalResourceManager(bean.getExternalResourceManager());
 	    	setHighAvailabilityCount(bean.getHighAvailabilityCount());
@@ -101,14 +99,20 @@ public class DomainInfo {
 		this.fullProductVersion = fullProductVersion;
 	}
 
-	public String getCreationTime() {
+	public Long getCreationTime() {
 		return creationTime;
 	}
 
 	public void setCreationTime(long creationTime) {
-		Date date = new Date(creationTime);
-		Format format = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
-		this.creationTime = format.format(date);
+		this.creationTime = creationTime;
+	}
+
+	public Long getStartTime() {
+		return startTime;
+	}
+
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
 	}
 
 	public String getCreationUser() {

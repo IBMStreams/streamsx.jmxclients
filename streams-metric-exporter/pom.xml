@@ -22,12 +22,12 @@ under the License.
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>streamsx.jmxclients</groupId>
 	<artifactId>streams-metric-exporter</artifactId>
-	<version>1.3.1</version>
+	<version>4.0.0</version>
 	<packaging>jar</packaging>
 
 	<name>streams-metric-exporter</name>
 	<url>https://github.com/IBMStreams/streamsx.jmxclients</url>
-  <description>IBM Streams Metric Exporter with REST and PROMETHEUS enpoints.</description>
+  <description>IBM Streams Metric Exporter with REST and PROMETHEUS enpoints for Streams 4.x with Domains</description>
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jersey.version>2.26</jersey.version>

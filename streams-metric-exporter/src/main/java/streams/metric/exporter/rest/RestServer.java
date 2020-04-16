@@ -16,8 +16,6 @@
 
 package streams.metric.exporter.rest;
 
-import java.util.Arrays;
-
 import java.io.IOException;
 import java.net.URI;
 
