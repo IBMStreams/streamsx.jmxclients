@@ -206,7 +206,5 @@ public class JobConfigOverlay {
     public String toString() {
         return(toObjectNode().toPrettyString());
     }
-
-    class 
      
 }
