@@ -45,7 +45,7 @@ import streams.metric.exporter.jmx.JmxTrustManager;
 import streams.metric.exporter.jmx.MXBeanSource;
 import streams.metric.exporter.jmx.MXBeanSourceProvider;
 import streams.metric.exporter.rest.RestServer;
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 import java.io.FileInputStream;
 
@@ -65,7 +65,7 @@ public class Launcher {
 
 	private ServiceConfig config = null;
 	@SuppressWarnings("unused")
-	static private StreamsDomainTracker domainTracker = null;
+	static private StreamsInstanceTracker instanceTracker = null;
 	static private RestServer restServer = null;
 
 	public Launcher(ServiceConfig config) {
@@ -165,7 +165,7 @@ public class Launcher {
 		return success;
 	}
 
-	private boolean startStreamsDomainTracker() {
+	private boolean startStreamsInstanceTracker() {
 		LOGGER.debug("***********************************************");
 		LOGGER.debug("****** Creating and starting Streams Tracker...");
 		StopWatch sw = null;
@@ -176,20 +176,20 @@ public class Launcher {
 		}
 
 		try {
-			domainTracker = StreamsDomainTracker.initDomainTracker(jmxContext, config.getDomainName(),
-					config.getInstanceNameSet(), config.getRefreshRateSeconds(), config.getSslOption(), config);
+			instanceTracker = StreamsInstanceTracker.initInstanceTracker(jmxContext, config.getInstanceName(),
+					config.getRefreshRateSeconds(), config.getSslOption(), config);
 		} catch (StreamsTrackerException e) {
 			LOGGER.error(
-					"Error starting StreamsDomainTracker: Could not construct the StreamsDomainTracker: {}", e.getLocalizedMessage());
+					"Error starting StreamsInstanceTracker: Could not construct the StreamsInstanceTracker: {}", e.getLocalizedMessage());
 			return false;
 		}
 
 		if (LOGGER.isDebugEnabled()) {
 			sw.stop();
-			LOGGER.debug("Timing for initial startup of StreamsDomainTracker (milliseconds): " + sw.getTime());
+			LOGGER.debug("Timing for initial startup of StreamsInstanceTracker (milliseconds): " + sw.getTime());
 		}
 
-		LOGGER.debug("...Streams Domain Tracker started.");
+		LOGGER.debug("...Streams Instance Tracker started.");
 		return true;
 	}
 	
@@ -294,7 +294,7 @@ public class Launcher {
 		Launcher launcher = new Launcher(config);
 		if (launcher.checkValidJMXConnection()) {
 			if (launcher.startRestServer()) {
-				if (! launcher.startStreamsDomainTracker()) {
+				if (! launcher.startStreamsInstanceTracker()) {
 					LOGGER.error("Startup of Streams Metric Exporter FAILED, Exiting Program.");
 					System.out.println("Startup of Streams Metric Exporter FAILED, Exiting Program.");
 					restServer.stopServer();

@@ -31,7 +31,7 @@ under the License.
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<jackson.version>2.9.10.3</jackson.version>
-		<streams.version>4.x</streams.version>
+		<streams.version>5.x</streams.version>
 	</properties>
 
 	<dependencies>

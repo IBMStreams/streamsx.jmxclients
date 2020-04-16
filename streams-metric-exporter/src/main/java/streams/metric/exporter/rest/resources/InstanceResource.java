@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 import streams.metric.exporter.streamstracker.metrics.AllJobMetrics;
 import streams.metric.exporter.streamstracker.snapshots.AllJobSnapshots;
 
@@ -43,6 +43,7 @@ public class InstanceResource {
 		this.sit = sit;
 	}
 
+	@Path("instance")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getInstanceTracker() {

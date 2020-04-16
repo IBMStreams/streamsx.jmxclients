@@ -33,21 +33,21 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 
 import streams.metric.exporter.Version;
 import streams.metric.exporter.error.StreamsTrackerException;
-import streams.metric.exporter.rest.serializers.StreamsInstanceDomainTrackerSerializer;
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+import streams.metric.exporter.rest.serializers.StreamsInstanceTrackerSerializer;
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Path("/")
 public class RootResource {
 
-    private SimpleModule domainTrackerModule = new SimpleModule("JobTrackerModule");
+    private SimpleModule instanceTrackerModule = new SimpleModule("InstanceTrackerModule");
 
     @Context
     UriInfo uriInfo;
 
     public RootResource() {
-        domainTrackerModule.addSerializer(StreamsDomainTracker.class, new StreamsInstanceDomainTrackerSerializer());
+        instanceTrackerModule.addSerializer(StreamsInstanceTracker.class, new StreamsInstanceTrackerSerializer());
     }
     
     // Default page
@@ -57,37 +57,15 @@ public class RootResource {
     	return Response.status(Response.Status.OK).entity("try using the /streamsexporter or /prometheus url").build();
     }
 
-    // if Domain does not exist, returns 404
-    @Path("domain")
-    @GET
-    @Produces(MediaType.APPLICATION_JSON)
-    public Response getDomainInfo() throws StreamsTrackerException,
-            WebApplicationException {
-        StreamsDomainTracker domainTracker = StreamsDomainTracker
-                .getDomainTracker();
-
-        return Response.status(200).entity(domainTracker.getDomainInfo())
-                .build();
-    }    
-    
-    // if Instance does not exist, returns 404
-    @Path("instances/")
-    public InstancesResource getInstances() throws StreamsTrackerException, JsonProcessingException,
-            WebApplicationException {   
-    	
-    		return new InstancesResource();
-    		
-    }
-
     @Path("config")
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Response getConfiguration() throws StreamsTrackerException,
             WebApplicationException {
-        StreamsDomainTracker domainTracker = StreamsDomainTracker
-                .getDomainTracker();
+        StreamsInstanceTracker instanceTracker = StreamsInstanceTracker
+                .getInstanceTracker();
 
-        return Response.status(200).entity(domainTracker.getConfig())
+        return Response.status(200).entity(instanceTracker.getConfig())
                 .build();
     }    
 
@@ -114,12 +92,12 @@ public class RootResource {
     public Response jobtracker() throws StreamsTrackerException,
             JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
-        om.registerModule(domainTrackerModule);
-        StreamsDomainTracker domainTracker = StreamsDomainTracker
-                .getDomainTracker();
+        om.registerModule(instanceTrackerModule);
+        StreamsInstanceTracker instanceTracker = StreamsInstanceTracker
+                .getInstanceTracker();
 
-        String domainTrackerJson = om.writeValueAsString(domainTracker);
+        String instanceTrackerJson = om.writeValueAsString(instanceTracker);
         return Response.status(Response.Status.OK)
-                .entity(domainTrackerJson).build();
+                .entity(instanceTrackerJson).build();
     }
 }

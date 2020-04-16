@@ -61,14 +61,8 @@ public class ServiceConfig {
     @Parameter(names = { "-j", "--jmxurl" }, description = Constants.DESC_JMXCONNECT, required = false)
     private String jmxUrl = getEnvDefault(Constants.ENV_JMXCONNECT,Constants.DEFAULT_JMXCONNECT);
 
-    @Parameter(names = { "-d", "--domain" }, description = Constants.DESC_DOMAIN_ID, required = false)
-    private String domainName = getEnvDefault(Constants.ENV_DOMAIN_ID,Constants.DEFAULT_DOMAIN_ID);
-
     @Parameter(names = { "-i", "--instance" }, description = Constants.DESC_INSTANCE_ID, required = false)
     private String instanceName = getEnvDefault(Constants.ENV_INSTANCE_ID,Constants.DEFAULT_INSTANCE_ID);
-    
-    @Parameter(names = { "--instancelist" }, listConverter = InstanceListConverter.class, description = Constants.DESC_INSTANCE_LIST, required = false)
-    private Set<String> instanceList = InstanceListConverter.convertInstanceList(getEnvDefault(Constants.ENV_INSTANCE_LIST,Constants.DEFAULT_INSTANCE_LIST));
     
     @Parameter(names = { "-u", "--user" }, description = Constants.DESC_USERNAME, required = false)
     private String user = getEnvDefault(Constants.ENV_USERNAME,Constants.DEFAULT_USERNAME);
@@ -195,63 +189,13 @@ public class ServiceConfig {
         this.jmxUrl = jmxUrl;
     }
 
-    public String getDomainName() {
-        return domainName;
-    }
-
-    public void setDomainName(String domainName) {
-        this.domainName = domainName;
-    }
-
-    
-    /********************************************
-     * INSTANCE NAME LOGIC
-     * Somewhat complicated because we want
-     * to honor STREAMS_INSTANCE_ID unless
-     * We have specified a list or all
-     ********************************************/
-    
-    /* STREAMS_INSTANCE_ID */
-    public String getInstanceName() {
+        public String getInstanceName() {
     		return instanceName;
     }
     public void setInstanceName(String instanceName) {
     		this.instanceName = instanceName;
     }
     
-    public Set<String> getInstanceList() {
-    		return instanceList;
-    }
-    
-    /* STREAMS_EXPORTER_INSTANCE_LIST */
-    public void setInstanceList(Set<String> instanceList) {
-    		this.instanceList = instanceList;
-    }
-    
-    /* Derived based on precedence */
-    /* Returns empty set if we want all instances */
-    @JsonIgnore
-    public Set<String> getInstanceNameSet() {
-    		HashSet<String> instanceNameSet = new HashSet<String>();
-    		/* If a list is specified or ALL then use it */
-    		if (getInstanceList().size() > 0) {
-    			if ((getInstanceList().size() == 1) && getInstanceList().contains(Constants.DEFAULT_INSTANCE_LIST)) {
-    				// Dont do anything at this time, let STREAMS_INSTANCE_ID be used
-    			} else if ((getInstanceList().size() == 1) && getInstanceList().contains("ALL")) {
-    				return instanceNameSet;  // empty list means all
-    			} else {
-    				return getInstanceList();
-    			}
-    		}
-    			
-    		/* Get from STREAMS_INSTANCE_ID (instanceName) if we get to here */
-    		if ((getInstanceName() != null) && (getInstanceName().length() > 0)) {
-    			instanceNameSet.add(getInstanceName());
-    		}
-    		
-        return instanceNameSet;
-    }
-
     public String getUser() {
         return user;
     }
@@ -381,9 +325,9 @@ public class ServiceConfig {
 			throw new ParameterException(
 					"JMX URL must be specified.  Please use parameter (-j or --jmxUrl) or environment variable: " + Constants.ENV_JMXCONNECT);
 		}
-		if (getDomainName() == null) {
+		if (getInstanceName() == null) {
 			throw new ParameterException(
-					"Streams domain name must be specified.  Please use parameter (-d or --domain) or environment variable: " + Constants.ENV_DOMAIN_ID);
+					"Streams instance name must be specified.  Please use parameter (-i or --instance) or environment variable: " + Constants.ENV_INSTANCE_ID);
 		}
 		if (!ServerProtocolValidator.isValid(serverProtocol)) {
             throw new ParameterException(String.format(Constants.INVALID_SERVER_PROTOCOL, serverProtocol));
@@ -432,20 +376,7 @@ public class ServiceConfig {
         result.append(newline);
         result.append("jmxUrl: " + this.getJmxUrl());
         result.append(newline);
-        result.append("domain: " + this.getDomainName());
-        result.append(newline);
         result.append("instance: " + this.getInstanceName());
-        result.append(newline);
-        result.append("instancelist: " + this.getInstanceList());
-        result.append(newline);
-        result.append("instanceNameSet.size(): " + this.getInstanceNameSet().size());
-        result.append(newline);
-        result.append("instanceNameSet: ");
-        if (this.getInstanceNameSet().size() == 0) {
-        		result.append("<ALL>");
-        } else {
-        		result.append( getInstanceNameSet());
-        }
         result.append(newline);
         result.append("user: " + this.getUser());
         result.append(newline);

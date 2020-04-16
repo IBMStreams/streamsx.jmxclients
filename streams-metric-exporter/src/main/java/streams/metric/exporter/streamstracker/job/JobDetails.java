@@ -32,16 +32,14 @@ import com.ibm.streams.management.job.PeMXBean;
 import streams.metric.exporter.metrics.MetricsExporter;
 import streams.metric.exporter.metrics.MetricsExporter.StreamsObjectType;
 import streams.metric.exporter.prometheus.PrometheusMetricsExporter;
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
-import streams.metric.exporter.streamstracker.instance.StreamsInstanceTracker;
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 /* Job Details including map of port names so metrics can have names for ports rather than just ids */
 public class JobDetails {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
 
 	//private StreamsInstanceTracker monitor;
 	//private ServiceConfig config = null;
-	private String domain = null;
 	private String streamsInstanceName;
 	private String instance = null;
 	private String jobid = null;
@@ -70,7 +68,6 @@ public class JobDetails {
 		//this.monitor = monitor;
 		//this.config = monitor.getConfig();
 
-		this.domain = monitor.getDomainName();
 		this.streamsInstanceName = monitor.getInstanceInfo().getInstanceName();
 
 		setJobid(jobid);
@@ -124,10 +121,10 @@ public class JobDetails {
 				this.health = health;
 				this.jobname = jobname;
 
-				metricsExporter.getStreamsMetric("submitTime", StreamsObjectType.JOB, this.domain, instance, jobname).set(submitTime);
-				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
-				metricsExporter.getStreamsMetric("health", StreamsObjectType.JOB, this.domain, instance, jobname).set(getHealthAsMetric(health));
-				metricsExporter.getStreamsMetric("status", StreamsObjectType.JOB, this.domain, instance, jobname).set(getStatusAsMetric(status));
+				metricsExporter.getStreamsMetric("submitTime", StreamsObjectType.JOB, instance, jobname).set(submitTime);
+				metricsExporter.getStreamsMetric("healthy", StreamsObjectType.JOB, instance, jobname).set(getHealthAsMetric(health));
+				metricsExporter.getStreamsMetric("health", StreamsObjectType.JOB, instance, jobname).set(getHealthAsMetric(health));
+				metricsExporter.getStreamsMetric("status", StreamsObjectType.JOB, instance, jobname).set(getStatusAsMetric(status));
 
 				JSONArray peArray = (JSONArray) snapshotObject.get("pes");
 				
@@ -153,7 +150,6 @@ public class JobDetails {
 
 					metricsExporter.getStreamsMetric("status",
 							StreamsObjectType.PE,
-							this.domain,
 							instance,
 							jobname,
 							resource,
@@ -161,7 +157,6 @@ public class JobDetails {
 
 					metricsExporter.getStreamsMetric("health",
 							StreamsObjectType.PE,
-							this.domain,
 							instance,
 							jobname,
 							resource,
@@ -169,7 +164,6 @@ public class JobDetails {
 							
 					metricsExporter.getStreamsMetric("launchCount",
 							StreamsObjectType.PE,
-							this.domain,
 							instance,
 							jobname,
 							resource,
@@ -330,7 +324,7 @@ public class JobDetails {
 		// When this job is removed, remove all metrics for this job
 		// (really its the specific instance of the metric for the streams objects of this job)
 		LOGGER.trace("removeExportedMetrics job: {}", this.jobname);
-		metricsExporter.removeAllChildStreamsMetrics(this.domain, this.streamsInstanceName,this.jobname);
+		metricsExporter.removeAllChildStreamsMetrics(this.streamsInstanceName,this.jobname);
 	}
 
 
@@ -384,7 +378,6 @@ public class JobDetails {
 						}
 						metricsExporter.getStreamsMetric(metricName,
 								StreamsObjectType.PE,
-								this.domain,
 								this.streamsInstanceName,
 								this.jobname,
 								resource,
@@ -402,7 +395,6 @@ public class JobDetails {
 							String metricName = (String)metric.get("name");
 							metricsExporter.getStreamsMetric(metricName,
 									StreamsObjectType.PE_INPUTPORT,
-									this.domain,
 									this.streamsInstanceName,
 									this.jobname,
 									resource,
@@ -423,7 +415,6 @@ public class JobDetails {
 							String metricName = (String)metric.get("name");
 							metricsExporter.getStreamsMetric(metricName,
 									StreamsObjectType.PE_OUTPUTPORT,
-									this.domain,
 									this.streamsInstanceName,
 									this.jobname,
 									resource,
@@ -451,7 +442,6 @@ public class JobDetails {
 								}
 								metricsExporter.getStreamsMetric(metricName,
 										StreamsObjectType.PE_OUTPUTPORT_CONNECTION,
-										this.domain,
 										this.streamsInstanceName,
 										this.jobname,
 										resource,
@@ -478,7 +468,6 @@ public class JobDetails {
 							default:
 								metricsExporter.getStreamsMetric(operatorMetricName,
 										StreamsObjectType.OPERATOR,
-										this.domain,
 										this.streamsInstanceName,
 										this.jobname,
 										resource,
@@ -503,7 +492,6 @@ public class JobDetails {
 								default:
 									metricsExporter.getStreamsMetric(metricName,
 											StreamsObjectType.OPERATOR_INPUTPORT,
-											this.domain,
 											this.streamsInstanceName,
 											this.jobname,
 											resource,
@@ -530,7 +518,6 @@ public class JobDetails {
 								default:
 									metricsExporter.getStreamsMetric(metricName,
 											StreamsObjectType.OPERATOR_OUTPUTPORT,
-											this.domain,
 											this.streamsInstanceName,
 											this.jobname,
 											resource,
@@ -545,18 +532,18 @@ public class JobDetails {
 						
 					} // End Operator Loop
 				} // End PE Loop
-				metricsExporter.getStreamsMetric("pecount", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, this.jobname).set(peArray.size());
-				metricsExporter.getStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,this.jobname).set(ncpu);
-				metricsExporter.getStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,this.jobname).set(nrmc);
-				metricsExporter.getStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,this.jobname).set(nmc);
+				metricsExporter.getStreamsMetric("pecount", StreamsObjectType.JOB,this.streamsInstanceName, this.jobname).set(peArray.size());
+				metricsExporter.getStreamsMetric("nCpuMilliseconds", StreamsObjectType.JOB,this.streamsInstanceName,this.jobname).set(ncpu);
+				metricsExporter.getStreamsMetric("nResidentMemoryConsumption", StreamsObjectType.JOB, this.streamsInstanceName,this.jobname).set(nrmc);
+				metricsExporter.getStreamsMetric("nMemoryConsumption", StreamsObjectType.JOB,this.streamsInstanceName,this.jobname).set(nmc);
 				if (numconnections > 0)
 					avgcongestion = totalcongestion / numconnections;
 				// else it was initialized to 0;
-				metricsExporter.getStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName, this.jobname).set(totalcongestion);
-				metricsExporter.getStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,this.jobname).set(avgcongestion);
-				metricsExporter.getStreamsMetric("max_congestionFactor", StreamsObjectType.JOB,this.domain,this.streamsInstanceName,this.jobname).set(maxcongestion);
+				metricsExporter.getStreamsMetric("sum_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName, this.jobname).set(totalcongestion);
+				metricsExporter.getStreamsMetric("avg_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName,this.jobname).set(avgcongestion);
+				metricsExporter.getStreamsMetric("max_congestionFactor", StreamsObjectType.JOB,this.streamsInstanceName,this.jobname).set(maxcongestion);
 				if (mincongestion == 999) mincongestion = 0;
-				metricsExporter.getStreamsMetric("min_congestionFactor", StreamsObjectType.JOB,this.domain, this.streamsInstanceName,this.jobname).set(mincongestion);
+				metricsExporter.getStreamsMetric("min_congestionFactor", StreamsObjectType.JOB, this.streamsInstanceName,this.jobname).set(mincongestion);
 			} catch (ParseException e) {
 				throw new IllegalStateException(e);
 			}

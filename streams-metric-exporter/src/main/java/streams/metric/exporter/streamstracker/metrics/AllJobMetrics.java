@@ -38,7 +38,6 @@ public class AllJobMetrics {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + AllJobMetrics.class.getName());
 
-    private String domainName;
     private String instanceName;
     private JmxServiceContext jmxContext;
     // Avaiable to override default http host for large data retrievals
@@ -88,11 +87,10 @@ public class AllJobMetrics {
         this.lastMetricsRefreshFailed = lastMetricsRefreshFailed;
     }
 
-    public AllJobMetrics(JmxServiceContext jmxContext, String domainName,
+    public AllJobMetrics(JmxServiceContext jmxContext,
             String instanceName, String jmxHttpHost, String jmxHttpPort) throws IOException,
             StreamsTrackerException {
 
-        this.domainName = domainName;
         this.instanceName = instanceName;
         this.jmxContext = jmxContext;
         this.jmxHttpHost = jmxHttpHost;
@@ -135,7 +133,7 @@ public class AllJobMetrics {
 
             InstanceMXBean instance = jmxContext.getBeanSourceProvider()
                     .getBeanSource()
-                    .getInstanceBean(this.domainName, this.instanceName);
+                    .getInstanceBean(this.instanceName);
 
             LOGGER.trace("* AllJobMetrics * SnapshotJobMetrics...");
             //
@@ -144,7 +142,8 @@ public class AllJobMetrics {
             // handle that here
             //
             try {
-                uri = instance.snapshotJobMetrics();
+                // Get all jobs, include statistics
+                uri = instance.snapshotJobMetrics(null,true);
             } catch (UndeclaredThrowableException e) {
                 LOGGER.trace("* Handling snapshotJobMetrics UndeclaredThrowableException and unwrapping it");
                 Throwable t = e.getUndeclaredThrowable();

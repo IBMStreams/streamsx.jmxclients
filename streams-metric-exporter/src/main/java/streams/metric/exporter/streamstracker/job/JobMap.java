@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import streams.metric.exporter.streamstracker.StreamsDomainTracker;
+import streams.metric.exporter.streamstracker.StreamsInstanceTracker;
 
 /*
  * JobMap
@@ -35,7 +35,7 @@ import streams.metric.exporter.streamstracker.StreamsDomainTracker;
  * 
  */
 public class JobMap {
-	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsDomainTracker.class.getName());
+	private static final Logger LOGGER = LoggerFactory.getLogger("root." + StreamsInstanceTracker.class.getName());
 
 	@SuppressWarnings("unused")
 	private String streamsInstanceName = null;

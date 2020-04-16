@@ -23,9 +23,7 @@ public class Constants {
 	/* Environment Variables */
 	public static final String
 		ENV_JMXCONNECT = "STREAMS_EXPORTER_JMXCONNECT",
-		ENV_DOMAIN_ID = "STREAMS_DOMAIN_ID",
 		ENV_INSTANCE_ID = "STREAMS_INSTANCE_ID",
-		ENV_INSTANCE_LIST = "STREAMS_EXPORTER_INSTANCE_LIST",
 		ENV_HOST = "STREAMS_EXPORTER_HOST",
 		ENV_PORT = "STREAMS_EXPORTER_PORT",
 		ENV_WEBPATH = "STREAMS_EXPORTER_WEBPATH",
@@ -47,9 +45,7 @@ public class Constants {
 
 	public static final String
 		DEFAULT_JMXCONNECT = null,
-		DEFAULT_DOMAIN_ID = null,
 		DEFAULT_INSTANCE_ID = null,
-		DEFAULT_INSTANCE_LIST = "UNSPECIFIED",
 		DEFAULT_HOST = "0.0.0.0",
 		DEFAULT_PORT = "25500",
 		DEFAULT_WEBPATH = "/",
@@ -74,9 +70,7 @@ public class Constants {
 		DESC_HELP = "Display command line arguments",
 		DESC_VERSION = "Display version information",
 		DESC_JMXCONNECT = "JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975). Supports comma-separated list for failover.\n      Environment Variable: " + ENV_JMXCONNECT,
-		DESC_DOMAIN_ID = "Streams domain name\n      Environment Variable: " + ENV_DOMAIN_ID,
 		DESC_INSTANCE_ID = "Streams instance name.  Only used if Instance List not provided.\n      Environment Variable: " + ENV_INSTANCE_ID,
-		DESC_INSTANCE_LIST = "Comma separated list of 1 or more Streams Instances to monitor ('ALL' for all instances). Default ALL if STREAMS_INSTANCE_ID is not set.\n      Envrionment Variable: " + ENV_INSTANCE_LIST,
 		DESC_HOST = "Listen Host or IP address for this service (e.g. localhost)\n      Environment Variable: " + ENV_HOST,
 		DESC_PORT = "Listen Port for this service\n      Environment Variable: " + ENV_PORT,
 		DESC_WEBPATH = "Base URI prefix (e.g. /someprefix)\n      Environment Variable: " + ENV_WEBPATH,

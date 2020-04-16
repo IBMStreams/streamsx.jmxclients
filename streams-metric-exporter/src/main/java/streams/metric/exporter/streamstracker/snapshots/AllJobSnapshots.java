@@ -38,7 +38,6 @@ public class AllJobSnapshots {
     private static final Logger LOGGER = LoggerFactory.getLogger("root."
             + AllJobSnapshots.class.getName());
 
-    private String domainName;
     private String instanceName;
     private JmxServiceContext jmxContext;
     private String jmxHttpHost;
@@ -87,11 +86,10 @@ public class AllJobSnapshots {
         this.lastSnapshotRefreshFailed = lastSnapshotRefreshFailed;
     }
 
-    public AllJobSnapshots(JmxServiceContext jmxContext, String domainName,
+    public AllJobSnapshots(JmxServiceContext jmxContext,
             String instanceName, String jmxHttpHost, String jmxHttpPort) throws IOException,
             StreamsTrackerException {
 
-        this.domainName = domainName;
         this.instanceName = instanceName;
         this.jmxContext = jmxContext;
         this.jmxHttpHost = jmxHttpHost;
@@ -134,7 +132,7 @@ public class AllJobSnapshots {
 
             InstanceMXBean instance = jmxContext.getBeanSourceProvider()
                     .getBeanSource()
-                    .getInstanceBean(this.domainName, this.instanceName);
+                    .getInstanceBean(this.instanceName);
 
             LOGGER.trace("* AllJobSnapshots * SnapshotJobs...");
             //

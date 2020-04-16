@@ -57,17 +57,16 @@ public abstract class MetricsExporter {
 	}
 	
 	public enum StreamsObjectType {
-		DOMAIN("streams_domain_", new String[] { "domainname" }),
-		INSTANCE("streams_instance_", new String[] { "domainname","instancename" }),
-		RESOURCE("streams_resource_", new String[] { "domainname","instancename", "resource"}),
-		JOB("streams_job_",new String[] { "domainname","instancename", "jobname" }),
-		PE("streams_pe_",new String[] { "domainname", "instancename", "jobname", "resource", "peid"}),
-		PE_INPUTPORT("streams_pe_ip_",new String[] {"domainname","instancename", "jobname", "resource", "peid","index"}),
-		PE_OUTPUTPORT("streams_pe_op_",new String[] {"domainname","instancename","jobname", "resource", "peid","index"}),
-		PE_OUTPUTPORT_CONNECTION("streams_pe_op_connection_",new String[] {"domainname","instancename","jobname","resource","peid","index","connectionid"}),
-		OPERATOR("streams_operator_",new String[] { "domainname","instancename", "jobname", "resource", "peid", "operatorname", "operatorkind" }), 
-		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "domainname","instancename", "jobname", "resource", "peid", "operatorname", "operatorkind", "inputportname" }), 
-		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "domainname","instancename", "jobname", "resource", "peid", "operatorname", "operatorkind", "outputportname" });
+		INSTANCE("streams_instance_", new String[] { "instancename" }),
+		RESOURCE("streams_resource_", new String[] { "instancename", "resource"}),
+		JOB("streams_job_",new String[] { "instancename", "jobname" }),
+		PE("streams_pe_",new String[] { "instancename", "jobname", "resource", "peid"}),
+		PE_INPUTPORT("streams_pe_ip_",new String[] {"instancename", "jobname", "resource", "peid","index"}),
+		PE_OUTPUTPORT("streams_pe_op_",new String[] {"instancename","jobname", "resource", "peid","index"}),
+		PE_OUTPUTPORT_CONNECTION("streams_pe_op_connection_",new String[] {"instancename","jobname","resource","peid","index","connectionid"}),
+		OPERATOR("streams_operator_",new String[] { "instancename", "jobname", "resource", "peid", "operatorname", "operatorkind" }), 
+		OPERATOR_INPUTPORT("streams_operator_ip_",new String[] { "instancename", "jobname", "resource", "peid", "operatorname", "operatorkind", "inputportname" }), 
+		OPERATOR_OUTPUTPORT("streams_operator_op_",new String[] { "instancename", "jobname", "resource", "peid", "operatorname", "operatorkind", "outputportname" });
 
 		private final String metric_prefix;
 		private final String[] labels;
@@ -88,9 +87,6 @@ public abstract class MetricsExporter {
 		public String metricDescriptionPrefix() {
 			String description;
 			switch (this) {
-			case DOMAIN:
-				description = "Streams domain metric";
-				break;
 			case INSTANCE:
 				description = "Streams instance metric";
 				break;
