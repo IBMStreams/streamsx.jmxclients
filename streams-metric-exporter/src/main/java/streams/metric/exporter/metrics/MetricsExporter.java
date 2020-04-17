@@ -60,6 +60,7 @@ public abstract class MetricsExporter {
 		DOMAIN("streams_domain_", new String[] { "domainname" }),
 		INSTANCE("streams_instance_", new String[] { "domainname","instancename" }),
 		RESOURCE("streams_resource_", new String[] { "domainname","instancename", "resource"}),
+		RESOURCE_ROLE("streams_resource_", new String[] { "domainname","instancename", "resource", "role"}),
 		JOB("streams_job_",new String[] { "domainname","instancename", "jobname" }),
 		PE("streams_pe_",new String[] { "domainname", "instancename", "jobname", "resource", "peid"}),
 		PE_INPUTPORT("streams_pe_ip_",new String[] {"domainname","instancename", "jobname", "resource", "peid","index"}),
@@ -96,6 +97,10 @@ public abstract class MetricsExporter {
 				break;
 			case RESOURCE:
 				description = "Streams resource metric";
+				break;
+			case RESOURCE_ROLE:
+				description = "Streams resource role";
+				break;
 			case JOB:
 				description = "Streams job metric";
 				break;
