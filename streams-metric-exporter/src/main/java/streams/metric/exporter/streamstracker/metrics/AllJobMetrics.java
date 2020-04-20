@@ -142,8 +142,8 @@ public class AllJobMetrics {
             // handle that here
             //
             try {
-                // Get all jobs, include statistics
-                uri = instance.snapshotJobMetrics(null,true);
+                // Get all jobs, do not include statistics
+                uri = instance.snapshotJobMetrics(null,false);
             } catch (UndeclaredThrowableException e) {
                 LOGGER.trace("* Handling snapshotJobMetrics UndeclaredThrowableException and unwrapping it");
                 Throwable t = e.getUndeclaredThrowable();

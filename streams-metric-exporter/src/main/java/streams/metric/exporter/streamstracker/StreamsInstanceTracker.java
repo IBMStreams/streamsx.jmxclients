@@ -852,14 +852,25 @@ public class StreamsInstanceTracker implements MXBeanSourceProviderListener {
 
 
             // Attempt to get resource status by retrieving each resourceMXBean
-        
+            // Resource Role is a special type of metric that allows graphs to be limited 
+            // to resources within a role and also allows resources to have multiple roles (e.g. application and service)
  
             Set<String> resourceIDs = instance.getResources();
             for (String resourceId : resourceIDs) {         
                 ResourceMXBean resource = beanSource.getResourceBean(this.instanceName, resourceId);
                 ResourceMXBean.Status resourceStatus = resource.getStatus();
+                boolean isApplicationResource = resource.isApplicationResource();
+                boolean isServiceResource = resource.isServiceResource();
                 metricsExporter.getStreamsMetric("status", StreamsObjectType.RESOURCE,
-                this.instanceInfo.getInstanceName(), resourceId).set(getResourceStatusAsMetric(resourceStatus));
+                    this.instanceInfo.getInstanceName(), resourceId).set(getResourceStatusAsMetric(resourceStatus));
+                if (isApplicationResource) {
+                    metricsExporter.getStreamsMetric("role", StreamsObjectType.RESOURCE_ROLE,
+                        this.instanceInfo.getInstanceName(), resourceId, "application").set(1);
+                }
+                if (isServiceResource) {
+                    metricsExporter.getStreamsMetric("role", StreamsObjectType.RESOURCE_ROLE,
+                        this.instanceInfo.getInstanceName(), resourceId, "service").set(1);
+                }
             }
 
 

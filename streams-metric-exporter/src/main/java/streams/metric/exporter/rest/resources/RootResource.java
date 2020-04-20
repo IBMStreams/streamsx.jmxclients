@@ -57,6 +57,16 @@ public class RootResource {
     	return Response.status(Response.Status.OK).entity("try using the /streamsexporter or /prometheus url").build();
     }
 
+    // if Instance does not exist, returns 404
+    @Path("instance")
+    public InstanceResource getInstance() throws StreamsTrackerException, JsonProcessingException,
+            WebApplicationException {   
+        StreamsInstanceTracker instanceTracker = StreamsInstanceTracker.getInstanceTracker();
+    	return new InstanceResource(instanceTracker);
+    		
+    }
+
+
     @Path("config")
     @GET
     @Produces(MediaType.APPLICATION_JSON)

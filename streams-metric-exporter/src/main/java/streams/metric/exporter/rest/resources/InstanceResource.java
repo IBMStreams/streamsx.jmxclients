@@ -39,11 +39,10 @@ public class InstanceResource {
 
 	private StreamsInstanceTracker sit;
 
-	public InstanceResource(StreamsInstanceTracker sit) {
-		this.sit = sit;
+	public InstanceResource(StreamsInstanceTracker instanceTracker) {
+		sit = instanceTracker;
 	}
 
-	@Path("instance")
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getInstanceTracker() {

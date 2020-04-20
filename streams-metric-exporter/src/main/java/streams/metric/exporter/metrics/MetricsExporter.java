@@ -59,6 +59,7 @@ public abstract class MetricsExporter {
 	public enum StreamsObjectType {
 		INSTANCE("streams_instance_", new String[] { "instancename" }),
 		RESOURCE("streams_resource_", new String[] { "instancename", "resource"}),
+		RESOURCE_ROLE("streams_resource_", new String[] { "instancename", "resource", "role"}),
 		JOB("streams_job_",new String[] { "instancename", "jobname" }),
 		PE("streams_pe_",new String[] { "instancename", "jobname", "resource", "peid"}),
 		PE_INPUTPORT("streams_pe_ip_",new String[] {"instancename", "jobname", "resource", "peid","index"}),
@@ -92,6 +93,10 @@ public abstract class MetricsExporter {
 				break;
 			case RESOURCE:
 				description = "Streams resource metric";
+				break;
+			case RESOURCE_ROLE:
+				description = "Streams resource role";
+				break;
 			case JOB:
 				description = "Streams job metric";
 				break;
