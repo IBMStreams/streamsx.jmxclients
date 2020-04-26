@@ -3,7 +3,7 @@ all: image
 #REPOSITORY=
 #WHOAMI=$(shell whoami)
 WHOAMI=bmwilli1
-IMAGE_VERSION=4.0.0
+IMAGE_VERSION=4.1.0
 IMAGE_NAME=streams-metric-exporter
 FULL_IMAGE_NAME=${WHOAMI}/${IMAGE_NAME}
 DOCKERFILE=Dockerfile

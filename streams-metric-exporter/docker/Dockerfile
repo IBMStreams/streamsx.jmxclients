@@ -1,5 +1,5 @@
 FROM ibmjava:sfj-alpine
-ARG APP_VERSION=4.0.0
+ARG APP_VERSION=4.1.0
 LABEL VERSION=${APP_VERSION} \
 AUTHOR="Brian M. Williams" \
 MAINTAINER="bmwilli@us.ibm.com" \

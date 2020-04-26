@@ -14,7 +14,7 @@ services:
     env_file:
       - .env
     # Use build or image, image pulls from Dockerhub, build is for local build
-    image: bmwilli1/streams-metric-exporter:4.0.0
+    image: bmwilli1/streams-metric-exporter:4.1.0
     #build: 
       #context: ..
       #dockerfile: docker/Dockerfile
