@@ -1,12 +1,14 @@
 # streams-metric-exporter
 
-Prometheus Metrics Exporter for IBM Streams version 4.x.
+Prometheus Metrics Exporter for IBM Streams version 5.x.
 
-IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pulls) that is capable of providing status of the Streams instance, deployed streaming application (jobs), and cluster resources.  In addition, metrics are available via the Streams JMX Service.
+**NOTE:** This version will not work with older Streams versions (e.g. 4.x).
 
-The service supports user-defined custom metrics found in Streams analytic jobs.  These custom metrics do not have to be predefined within the Streams Metric Exporter.  They are automatically discovered and made available as Prometheus metrics.
+**USAGE:** The easiest way to use the streams metric exporter is via Docker Container: https://hub.docker.com/r/bmwilli1/streams-metric-exporter
 
-The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.<br>
+IBM Streams provides a JMX Service (with HTTP GET interface for batch metric pulls) that is capable of providing status of the Streams instance, deployed streaming applications (jobs), and cluster resources.  In addition, user defined custom metrics are available via the Streams JMX Service without any additional configuration.
+
+The primary use-case for this application is as a Prometheus metrics exporter to provide time series displays using Grafana.
 
 This application is **optimized** for better performance over per-job metric scraping approaches.  The metrics and snapshots are pulled from IBM Streams for all jobs at the same time. The pulls from IBM Streams can be performed whenever the rest endpoint (/metrics) is requested or scheduled to be pulled and cached with a configurable interval (``--refresh``).
 
@@ -15,6 +17,7 @@ The service can be configured with periodic refresh (refresh rate > 0) or on-dem
 The REST service supports HTTP and HTTPS with One-way SSL Authentication.
 
 ## Questions
+
 For questions and issues, please contact:
 
 Brian M Williams, IBM<br>
@@ -70,11 +73,9 @@ Location will be: target/streams-metric-exporter-x.x.x-release.tar.gz
 <pre>
 Usage: streams-metric-exporter [options]
   Options:
-    -d, --domain
-      Streams domain name
-      Environment Variable: STREAMS_DOMAIN_ID
     --help
       Display command line arguments
+      Default: false
     -h, --host
       Listen Host or IP address for this service (e.g. localhost)
       Environment Variable: STREAMS_EXPORTER_HOST
@@ -82,33 +83,31 @@ Usage: streams-metric-exporter [options]
     -i, --instance
       Streams instance name.  Only used if Instance List not provided.
       Environment Variable: STREAMS_INSTANCE_ID
-    --instancelist
-      Comma separated list of 1 or more Streams Instances to monitor ('ALL' for all instances). Default ALL if STREAMS_INSTANCE_ID 
-      is not set.
-      Envrionment Variable: STREAMS_EXPORTER_INSTANCE_LIST
-      Default: [UNSPECIFIED]
+      Default: stream1
     --jmxhttphost
-      Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment 
+      Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment
       Variable: STREAMS_EXPORTER_JMX_HTTP_HOST
     --jmxhttpport
-      Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment 
+      Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment
       Variable: STREAMS_EXPORTER_JMX_HTTP_PORT
+      Default: 31819
     --jmxssloption
       SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
-      Environment Variable: 
-      STREAMS_EXPORTER_JMX_SSLOPTION 
-      Default: TLSv1
+      Environment Variable:
+      STREAMS_EXPORTER_JMX_SSLOPTION
+      Default: TLSv1.2
     --jmxtruststore
       Java keystore of certificates/signers to trust from JMX Server
       Environment Variable: STREAMS_EXPORTER_JMX_TRUSTSTORE
     -j, --jmxurl
       JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975). Supports comma-separated list for failover.
-      Environment 
+      Environment
       Variable: STREAMS_EXPORTER_JMXCONNECT
+      Default: service:jmx:jmxmp://10.75.16.206:32399
     --logdir
       Logging direcotry.  If not set or empty log to stdout.
      Environment Variable: STREAMS_EXPORTER_LOGDIR
-      Default: [empty string]
+      Default: 
     -l, --loglevel
       Logging level [ fatal | error | warn | info | debug | trace ]
       Environment Variable: STREAMS_EXPORTER_LOGLEVEL
@@ -119,6 +118,7 @@ Usage: streams-metric-exporter [options]
     --password
       Streams login password. Recommend using environment variable
       Environment Variable: STREAMS_EXPORTER_PASSWORD
+      Default: ou812bmw
     -p, --port
       Listen Port for this service
       Environment Variable: STREAMS_EXPORTER_PORT
@@ -129,24 +129,25 @@ Usage: streams-metric-exporter [options]
       Default: 0
     --serverkeystore
       Java keystore containing server certificate and key to identify server side of this application
-      Environment Variable: 
-      STREAMS_EXPORTER_SERVER_KEYSTORE 
+      Environment Variable:
+      STREAMS_EXPORTER_SERVER_KEYSTORE
     --serverkeystorepwd
       Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
-      Environment Variable: 
-      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD 
+      Environment Variable:
+      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD
     --serverprotocol
       http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
-      Environment 
+      Environment
       Variable: STREAMS_EXPORTER_SERVER_PROTOCOL
       Default: http
     -u, --user
       Streams login username. Use this or X509CERT
       Environment Variable: STREAMS_EXPORTER_USERNAME
+      Default: bmwilli
     -v, --version
       Display version information
       Default: false
-    --webPath, 
+    --webPath,
       Base URI prefix (e.g. /someprefix)
       Environment Variable: STREAMS_EXPORTER_WEBPATH
       Default: /
@@ -158,12 +159,10 @@ Usage: streams-metric-exporter [options]
 # Running the application
 ```
 java -jar target/executable-streams-metric-exporter.jar -j \
-service:jmx:jmxmp://localhost:9975 -d StreamsDomain  \
---instancelist ALL -u streamsadmin
+service:jmx:jmxmp://localhost:9975 -i StreamsInstance -u streamsadmin
 
 password: <enter streamsadmin password>
 ```
-The ``--instancelist`` option allows the specification of 0 or more instances.  If none or chosen or it is set to the value ``ALL`` then all instances metrics will be exported.  In addition, instances are created and removed, the cooresponding metrics will be added and removed.  If, however, you specify a specific list of instances, then any addtional instances that exist in the domain or are created after the application is started WILL NOT be included in the exported set.
 
 # JMX Connection Failover
 The ``-j|--jmxurl`` option accepts a comma separated list of jmx connection urls.<br> 
@@ -218,7 +217,7 @@ Using the `--jmxhttphost` and `--jmxhttpport` arguments or environment variables
 
 Logging at the `debug` level will provide messages showing thge URLs before and after the override.
 
-When the Streams domain is running inside of Kubernetes, and the Streams metric export is running outside of the Kubernetes cluster, Kubernetes Service Objects are used to map external facing hostnames and ports to internal pod hosts (ip address) and ports.  The JMX HTTP Host and Port override arguments can be used to get around this issue.  Provide the Kubernetes external cluster hostname and the NodePort of the service as the arguments for Streams Metric Exporter.
+When Streams metric export is running outside of the Kubernetes/OpenShift cluster hosting Streams, Kubernetes Service Objects and OpenShift routes are used to map external facing hostnames and ports to internal pod hosts (ip address) and ports.  The JMX HTTP Host and Port override arguments can be used to get around this issue.  Provide the Kubernetes external cluster hostname and the NodePort of the service or the OpenShift Route DNS name as the arguments for Streams Metric Exporter.
 
 # Prometheus Integration
 
@@ -322,7 +321,10 @@ See [dashboards directory](dashboards/README.md) for more information.
 
 ![Grafana Example](images/IBMStreamsInstanceDashboard.png)
 
-# Running with Docker
+# Running in OpenShift with Streams in CP4D
+Details Coming Soon...
+
+# Running outside of OpenShift/Kubernetes using Docker
 
 The easiest way to try out the Streams Metric Exporter is to run it using Docker.  Included in this release is a Dockerfile for building the image and a docker-compose.yml file for starting it up with Prometheus and Grafana instances.
 
@@ -391,90 +393,422 @@ http://localhost:9090
 ## /metrics (or /prometheus)
 Retrieve the prometheus format of the metrics
 
-## /domain
-Retrieve information about the domain being monitored
+<details>
+  <summary><code>curl http://localhost:25500/metrics</code></summary>
+<pre>
+# HELP streams_job_healthy DEPRECTED: Use helath: Job health, set to 1 of job is healthy else 0
+# TYPE streams_job_healthy gauge
+streams_job_healthy{instancename="stream1",jobname="HelloWorld_1",} 1.0
+streams_job_healthy{instancename="stream1",jobname="PeriodicRateJob_6",} 1.0
+# HELP streams_resource_memoryFree Streams resource metric: memoryFree
+# TYPE streams_resource_memoryFree gauge
+streams_resource_memoryFree{instancename="stream1",resource="repository-0",} 0.0
+streams_resource_memoryFree{instancename="stream1",resource="security-0",} 0.0
+streams_resource_memoryFree{instancename="stream1",resource="console-0",} 0.0
+streams_resource_memoryFree{instancename="stream1",resource="app-14",} 0.0
+streams_resource_memoryFree{instancename="stream1",resource="management-0",} 0.0
+streams_resource_memoryFree{instancename="stream1",resource="app-1",} 0.0
+# HELP streams_operator_relativeOperatorCost Streams operator metric: relativeOperatorCost
+# TYPE streams_operator_relativeOperatorCost gauge
+streams_operator_relativeOperatorCost{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="DataStream",operatorkind="spl.utility::Beacon",} 100.0
+streams_operator_relativeOperatorCost{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="DataSource",operatorkind="spl.utility::Custom",} 100.0
+streams_operator_relativeOperatorCost{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",} 0.0
+streams_operator_relativeOperatorCost{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",} 0.0
+# HELP streams_job_submitTime Epoch time in milliseconds when job was submitted
+# TYPE streams_job_submitTime gauge
+streams_job_submitTime{instancename="stream1",jobname="HelloWorld_1",} 1.586379252E12
+streams_job_submitTime{instancename="stream1",jobname="PeriodicRateJob_6",} 1.58712268E12
+# HELP streams_pe_nMemoryConsumption Streams pe metric: nMemoryConsumption
+# TYPE streams_pe_nMemoryConsumption gauge
+streams_pe_nMemoryConsumption{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",} 713020.0
+streams_pe_nMemoryConsumption{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",} 565520.0
+# HELP streams_operator_ip_queueSize Streams operator input port metric: queueSize
+# TYPE streams_operator_ip_queueSize gauge
+streams_operator_ip_queueSize{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_queueSize{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_resource_cpuRequest Streams resource metric: cpuRequest
+# TYPE streams_resource_cpuRequest gauge
+streams_resource_cpuRequest{instancename="stream1",resource="repository-0",} 1.0
+streams_resource_cpuRequest{instancename="stream1",resource="security-0",} 2.0
+streams_resource_cpuRequest{instancename="stream1",resource="console-0",} 1.0
+streams_resource_cpuRequest{instancename="stream1",resource="app-14",} 1.0
+streams_resource_cpuRequest{instancename="stream1",resource="management-0",} 2.0
+streams_resource_cpuRequest{instancename="stream1",resource="app-1",} 1.0
+# HELP streams_instance_jobCount Number of jobs currently deployed into the streams instance
+# TYPE streams_instance_jobCount gauge
+streams_instance_jobCount{instancename="stream1",} 2.0
+# HELP streams_job_health Job health, 1: healthy, .5: partially healthy, 0: unhealthy, unknown
+# TYPE streams_job_health gauge
+streams_job_health{instancename="stream1",jobname="HelloWorld_1",} 1.0
+streams_job_health{instancename="stream1",jobname="PeriodicRateJob_6",} 1.0
+# HELP streams_operator_ip_nTuplesProcessed Streams operator input port metric: nTuplesProcessed
+# TYPE streams_operator_ip_nTuplesProcessed gauge
+streams_operator_ip_nTuplesProcessed{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 1.93789224E9
+streams_operator_ip_nTuplesProcessed{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 3081045.0
+# HELP streams_operator_ip_recentMaxItemsQueued Streams operator input port metric: recentMaxItemsQueued
+# TYPE streams_operator_ip_recentMaxItemsQueued gauge
+streams_operator_ip_recentMaxItemsQueued{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_recentMaxItemsQueued{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_resource_cpuUtilization Streams resource metric: cpuUtilization
+# TYPE streams_resource_cpuUtilization gauge
+streams_resource_cpuUtilization{instancename="stream1",resource="repository-0",} 0.0
+streams_resource_cpuUtilization{instancename="stream1",resource="security-0",} 0.0
+streams_resource_cpuUtilization{instancename="stream1",resource="console-0",} 0.0
+streams_resource_cpuUtilization{instancename="stream1",resource="app-14",} 0.0
+streams_resource_cpuUtilization{instancename="stream1",resource="management-0",} 0.0
+streams_resource_cpuUtilization{instancename="stream1",resource="app-1",} 0.0
+# HELP streams_resource_status Streams resource metric: status
+# TYPE streams_resource_status gauge
+streams_resource_status{instancename="stream1",resource="repository-0",} 1.0
+streams_resource_status{instancename="stream1",resource="security-0",} 1.0
+streams_resource_status{instancename="stream1",resource="console-0",} 1.0
+streams_resource_status{instancename="stream1",resource="app-14",} 1.0
+streams_resource_status{instancename="stream1",resource="management-0",} 1.0
+streams_resource_status{instancename="stream1",resource="app-1",} 1.0
+# HELP streams_job_status Streams job metric: status
+# TYPE streams_job_status gauge
+streams_job_status{instancename="stream1",jobname="HelloWorld_1",} 1.0
+streams_job_status{instancename="stream1",jobname="PeriodicRateJob_6",} 1.0
+# HELP streams_job_max_congestionFactor Maximum of all pe connection metric: congestionFactor
+# TYPE streams_job_max_congestionFactor gauge
+streams_job_max_congestionFactor{instancename="stream1",jobname="HelloWorld_1",} 0.0
+streams_job_max_congestionFactor{instancename="stream1",jobname="PeriodicRateJob_6",} 0.0
+# HELP streams_job_min_congestionFactor Minimum of all pe connection metric: congestionFactor
+# TYPE streams_job_min_congestionFactor gauge
+streams_job_min_congestionFactor{instancename="stream1",jobname="HelloWorld_1",} 0.0
+streams_job_min_congestionFactor{instancename="stream1",jobname="PeriodicRateJob_6",} 0.0
+# HELP streams_operator_ip_recentMaxItemsQueuedInterval Streams operator input port metric: recentMaxItemsQueuedInterval
+# TYPE streams_operator_ip_recentMaxItemsQueuedInterval gauge
+streams_operator_ip_recentMaxItemsQueuedInterval{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_recentMaxItemsQueuedInterval{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_resource_memoryLimit Streams resource metric: memoryLimit
+# TYPE streams_resource_memoryLimit gauge
+streams_resource_memoryLimit{instancename="stream1",resource="repository-0",} 2000000.0
+streams_resource_memoryLimit{instancename="stream1",resource="security-0",} 4000000.0
+streams_resource_memoryLimit{instancename="stream1",resource="console-0",} 6000000.0
+streams_resource_memoryLimit{instancename="stream1",resource="app-14",} 2000000.0
+streams_resource_memoryLimit{instancename="stream1",resource="management-0",} 8000000.0
+streams_resource_memoryLimit{instancename="stream1",resource="app-1",} 2000000.0
+# HELP streams_pe_launchCount Streams pe metric: launchCount
+# TYPE streams_pe_launchCount gauge
+streams_pe_launchCount{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",} 1.0
+streams_pe_launchCount{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",} 1.0
+# HELP streams_operator_ip_nFinalPunctsQueued Streams operator input port metric: nFinalPunctsQueued
+# TYPE streams_operator_ip_nFinalPunctsQueued gauge
+streams_operator_ip_nFinalPunctsQueued{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_nFinalPunctsQueued{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_resource_role Streams resource role: role
+# TYPE streams_resource_role gauge
+streams_resource_role{instancename="stream1",resource="repository-0",role="service",} 1.0
+streams_resource_role{instancename="stream1",resource="security-0",role="service",} 1.0
+streams_resource_role{instancename="stream1",resource="console-0",role="service",} 1.0
+streams_resource_role{instancename="stream1",resource="management-0",role="service",} 1.0
+streams_resource_role{instancename="stream1",resource="app-1",role="application",} 1.0
+streams_resource_role{instancename="stream1",resource="app-14",role="application",} 1.0
+# HELP streams_operator_ip_nWindowPunctsQueued Streams operator input port metric: nWindowPunctsQueued
+# TYPE streams_operator_ip_nWindowPunctsQueued gauge
+streams_operator_ip_nWindowPunctsQueued{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_nWindowPunctsQueued{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_instance_status Instance status, 1: running, .5: partially up, 0: stopped, failed, unknown
+# TYPE streams_instance_status gauge
+streams_instance_status{instancename="stream1",} 1.0
+# HELP streams_resource_nProcessors Streams resource metric: nProcessors
+# TYPE streams_resource_nProcessors gauge
+streams_resource_nProcessors{instancename="stream1",resource="repository-0",} 1.0
+streams_resource_nProcessors{instancename="stream1",resource="security-0",} 2.0
+streams_resource_nProcessors{instancename="stream1",resource="console-0",} 1.0
+streams_resource_nProcessors{instancename="stream1",resource="app-14",} 1.0
+streams_resource_nProcessors{instancename="stream1",resource="management-0",} 2.0
+streams_resource_nProcessors{instancename="stream1",resource="app-1",} 1.0
+# HELP streams_operator_ip_nFinalPunctsProcessed Streams operator input port metric: nFinalPunctsProcessed
+# TYPE streams_operator_ip_nFinalPunctsProcessed gauge
+streams_operator_ip_nFinalPunctsProcessed{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_nFinalPunctsProcessed{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_operator_op_nFinalPunctsSubmitted Streams metric: nFinalPunctsSubmitted
+# TYPE streams_operator_op_nFinalPunctsSubmitted gauge
+streams_operator_op_nFinalPunctsSubmitted{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="DataStream",operatorkind="spl.utility::Beacon",outputportname="DataStream",} 0.0
+streams_operator_op_nFinalPunctsSubmitted{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="DataSource",operatorkind="spl.utility::Custom",outputportname="DataSource",} 0.0
+# HELP streams_resource_cpuUsed Streams resource metric: cpuUsed
+# TYPE streams_resource_cpuUsed gauge
+streams_resource_cpuUsed{instancename="stream1",resource="repository-0",} 0.0
+streams_resource_cpuUsed{instancename="stream1",resource="security-0",} 0.0
+streams_resource_cpuUsed{instancename="stream1",resource="console-0",} 0.0
+streams_resource_cpuUsed{instancename="stream1",resource="app-14",} 0.0
+streams_resource_cpuUsed{instancename="stream1",resource="management-0",} 0.0
+streams_resource_cpuUsed{instancename="stream1",resource="app-1",} 0.0
+# HELP streams_job_nMemoryConsumption Sum of each pe metric: nMemoryConsumption
+# TYPE streams_job_nMemoryConsumption gauge
+streams_job_nMemoryConsumption{instancename="stream1",jobname="HelloWorld_1",} 565520.0
+streams_job_nMemoryConsumption{instancename="stream1",jobname="PeriodicRateJob_6",} 713020.0
+# HELP streams_operator_ip_nWindowPunctsProcessed Streams operator input port metric: nWindowPunctsProcessed
+# TYPE streams_operator_ip_nWindowPunctsProcessed gauge
+streams_operator_ip_nWindowPunctsProcessed{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_nWindowPunctsProcessed{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_resource_memoryUtilization Streams resource metric: memoryUtilization
+# TYPE streams_resource_memoryUtilization gauge
+streams_resource_memoryUtilization{instancename="stream1",resource="repository-0",} 0.0
+streams_resource_memoryUtilization{instancename="stream1",resource="security-0",} 0.0
+streams_resource_memoryUtilization{instancename="stream1",resource="console-0",} 0.0
+streams_resource_memoryUtilization{instancename="stream1",resource="app-14",} 0.0
+streams_resource_memoryUtilization{instancename="stream1",resource="management-0",} 0.0
+streams_resource_memoryUtilization{instancename="stream1",resource="app-1",} 0.0
+# HELP streams_resource_cpuLimit Streams resource metric: cpuLimit
+# TYPE streams_resource_cpuLimit gauge
+streams_resource_cpuLimit{instancename="stream1",resource="repository-0",} 1.0
+streams_resource_cpuLimit{instancename="stream1",resource="security-0",} 4.0
+streams_resource_cpuLimit{instancename="stream1",resource="console-0",} 2.0
+streams_resource_cpuLimit{instancename="stream1",resource="app-14",} 2.0
+streams_resource_cpuLimit{instancename="stream1",resource="management-0",} 12.0
+streams_resource_cpuLimit{instancename="stream1",resource="app-1",} 2.0
+# HELP streams_job_nResidentMemoryConsumption Sum of each pe metric: nResidentMemoryConsumption
+# TYPE streams_job_nResidentMemoryConsumption gauge
+streams_job_nResidentMemoryConsumption{instancename="stream1",jobname="HelloWorld_1",} 26300.0
+streams_job_nResidentMemoryConsumption{instancename="stream1",jobname="PeriodicRateJob_6",} 26324.0
+# HELP streams_pe_health Streams pe metric: health
+# TYPE streams_pe_health gauge
+streams_pe_health{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",} 1.0
+streams_pe_health{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",} 1.0
+# HELP streams_job_pecount Number of pes deployed for this job
+# TYPE streams_job_pecount gauge
+streams_job_pecount{instancename="stream1",jobname="HelloWorld_1",} 1.0
+streams_job_pecount{instancename="stream1",jobname="PeriodicRateJob_6",} 1.0
+# HELP streams_job_sum_congestionFactor Sum of each pe metric: congestionFactor (no value used by itself
+# TYPE streams_job_sum_congestionFactor gauge
+streams_job_sum_congestionFactor{instancename="stream1",jobname="HelloWorld_1",} 0.0
+streams_job_sum_congestionFactor{instancename="stream1",jobname="PeriodicRateJob_6",} 0.0
+# HELP streams_instance_health Instance health, 1: healthy, .5: partially healthy, 0: unhealthy, unknown
+# TYPE streams_instance_health gauge
+streams_instance_health{instancename="stream1",} 1.0
+# HELP streams_pe_status Streams pe metric: status
+# TYPE streams_pe_status gauge
+streams_pe_status{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",} 1.0
+streams_pe_status{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",} 1.0
+# HELP streams_resource_memoryTotal Streams resource metric: memoryTotal
+# TYPE streams_resource_memoryTotal gauge
+streams_resource_memoryTotal{instancename="stream1",resource="repository-0",} 2000000.0
+streams_resource_memoryTotal{instancename="stream1",resource="security-0",} 2000000.0
+streams_resource_memoryTotal{instancename="stream1",resource="console-0",} 4000000.0
+streams_resource_memoryTotal{instancename="stream1",resource="app-14",} 1000000.0
+streams_resource_memoryTotal{instancename="stream1",resource="management-0",} 4000000.0
+streams_resource_memoryTotal{instancename="stream1",resource="app-1",} 1000000.0
+# HELP streams_resource_memoryUsed Streams resource metric: memoryUsed
+# TYPE streams_resource_memoryUsed gauge
+streams_resource_memoryUsed{instancename="stream1",resource="repository-0",} 0.0
+streams_resource_memoryUsed{instancename="stream1",resource="security-0",} 0.0
+streams_resource_memoryUsed{instancename="stream1",resource="console-0",} 0.0
+streams_resource_memoryUsed{instancename="stream1",resource="app-14",} 0.0
+streams_resource_memoryUsed{instancename="stream1",resource="management-0",} 0.0
+streams_resource_memoryUsed{instancename="stream1",resource="app-1",} 0.0
+# HELP streams_resource_networkReceive Streams resource metric: networkReceive
+# TYPE streams_resource_networkReceive gauge
+streams_resource_networkReceive{instancename="stream1",resource="repository-0",} 0.0
+streams_resource_networkReceive{instancename="stream1",resource="security-0",} 0.0
+streams_resource_networkReceive{instancename="stream1",resource="console-0",} 0.0
+streams_resource_networkReceive{instancename="stream1",resource="app-14",} 0.0
+streams_resource_networkReceive{instancename="stream1",resource="management-0",} 0.0
+streams_resource_networkReceive{instancename="stream1",resource="app-1",} 0.0
+# HELP streams_operator_ip_nTuplesQueued Streams operator input port metric: nTuplesQueued
+# TYPE streams_operator_ip_nTuplesQueued gauge
+streams_operator_ip_nTuplesQueued{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_nTuplesQueued{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_resource_networkSpeed Streams resource metric: networkSpeed
+# TYPE streams_resource_networkSpeed gauge
+streams_resource_networkSpeed{instancename="stream1",resource="repository-0",} 10000.0
+streams_resource_networkSpeed{instancename="stream1",resource="security-0",} 10000.0
+streams_resource_networkSpeed{instancename="stream1",resource="console-0",} 10000.0
+streams_resource_networkSpeed{instancename="stream1",resource="app-14",} 10000.0
+streams_resource_networkSpeed{instancename="stream1",resource="management-0",} 10000.0
+streams_resource_networkSpeed{instancename="stream1",resource="app-1",} 10000.0
+# HELP streams_operator_ip_nTuplesDropped Streams operator input port metric: nTuplesDropped
+# TYPE streams_operator_ip_nTuplesDropped gauge
+streams_operator_ip_nTuplesDropped{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_nTuplesDropped{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_job_nCpuMilliseconds Sum of each pe metric: nCpuMilliseconds
+# TYPE streams_job_nCpuMilliseconds gauge
+streams_job_nCpuMilliseconds{instancename="stream1",jobname="HelloWorld_1",} 6116370.0
+streams_job_nCpuMilliseconds{instancename="stream1",jobname="PeriodicRateJob_6",} 3.909755E7
+# HELP streams_resource_networkTransmit Streams resource metric: networkTransmit
+# TYPE streams_resource_networkTransmit gauge
+streams_resource_networkTransmit{instancename="stream1",resource="repository-0",} 0.0
+streams_resource_networkTransmit{instancename="stream1",resource="security-0",} 0.0
+streams_resource_networkTransmit{instancename="stream1",resource="console-0",} 0.0
+streams_resource_networkTransmit{instancename="stream1",resource="app-14",} 0.0
+streams_resource_networkTransmit{instancename="stream1",resource="management-0",} 0.0
+streams_resource_networkTransmit{instancename="stream1",resource="app-1",} 0.0
+# HELP streams_operator_op_nWindowPunctsSubmitted Streams metric: nWindowPunctsSubmitted
+# TYPE streams_operator_op_nWindowPunctsSubmitted gauge
+streams_operator_op_nWindowPunctsSubmitted{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="DataStream",operatorkind="spl.utility::Beacon",outputportname="DataStream",} 0.0
+streams_operator_op_nWindowPunctsSubmitted{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="DataSource",operatorkind="spl.utility::Custom",outputportname="DataSource",} 0.0
+# HELP streams_operator_ip_nEnqueueWaits Streams operator input port metric: nEnqueueWaits
+# TYPE streams_operator_ip_nEnqueueWaits gauge
+streams_operator_ip_nEnqueueWaits{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_nEnqueueWaits{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_operator_ip_maxItemsQueued Streams operator input port metric: maxItemsQueued
+# TYPE streams_operator_ip_maxItemsQueued gauge
+streams_operator_ip_maxItemsQueued{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="In",} 0.0
+streams_operator_ip_maxItemsQueued{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="Sink",operatorkind="spl.utility::Custom",inputportname="DataStream",} 0.0
+# HELP streams_pe_nResidentMemoryConsumption Streams pe metric: nResidentMemoryConsumption
+# TYPE streams_pe_nResidentMemoryConsumption gauge
+streams_pe_nResidentMemoryConsumption{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",} 26324.0
+streams_pe_nResidentMemoryConsumption{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",} 26300.0
+# HELP streams_operator_op_nTuplesSubmitted Streams metric: nTuplesSubmitted
+# TYPE streams_operator_op_nTuplesSubmitted gauge
+streams_operator_op_nTuplesSubmitted{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",operatorname="DataStream",operatorkind="spl.utility::Beacon",outputportname="DataStream",} 3081045.0
+streams_operator_op_nTuplesSubmitted{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",operatorname="DataSource",operatorkind="spl.utility::Custom",outputportname="DataSource",} 1.93789224E9
+# HELP streams_instance_startTime Epoch time in milliseconds when the instance was started
+# TYPE streams_instance_startTime gauge
+streams_instance_startTime{instancename="stream1",} 1.586379036E12
+# HELP streams_resource_memoryRequest Streams resource metric: memoryRequest
+# TYPE streams_resource_memoryRequest gauge
+streams_resource_memoryRequest{instancename="stream1",resource="repository-0",} 2000000.0
+streams_resource_memoryRequest{instancename="stream1",resource="security-0",} 2000000.0
+streams_resource_memoryRequest{instancename="stream1",resource="console-0",} 4000000.0
+streams_resource_memoryRequest{instancename="stream1",resource="app-14",} 1000000.0
+streams_resource_memoryRequest{instancename="stream1",resource="management-0",} 4000000.0
+streams_resource_memoryRequest{instancename="stream1",resource="app-1",} 1000000.0
+# HELP streams_job_avg_congestionFactor Average of all pe connection metric: congestionFactor
+# TYPE streams_job_avg_congestionFactor gauge
+streams_job_avg_congestionFactor{instancename="stream1",jobname="HelloWorld_1",} 0.0
+streams_job_avg_congestionFactor{instancename="stream1",jobname="PeriodicRateJob_6",} 0.0
+# HELP streams_pe_nCpuMilliseconds Streams pe metric: nCpuMilliseconds
+# TYPE streams_pe_nCpuMilliseconds gauge
+streams_pe_nCpuMilliseconds{instancename="stream1",jobname="PeriodicRateJob_6",resource="app-14",peid="6",} 3.909755E7
+streams_pe_nCpuMilliseconds{instancename="stream1",jobname="HelloWorld_1",resource="app-1",peid="1",} 6116370.0
+</pre>
+</details>
 
-`curl localhost:25500/domain`
+## /instance
+Retrieve information about the instance being monitored
 
-```json
+<details>
+  <summary><code>curl localhost:25500/instance</code></summary>
+  <pre>
 {
-    "creationTime": "12/11/2017 21:55:55",
-    "creationUser": "streamsadmin",
-    "externalResourceManager": null,
-    "fullProductVersion": "4.2.1.3",
-    "highAvailabilityCount": 1,
-    "instances": [
-        "StreamsInstance",
-        "test1"
-    ],
-    "name": "StreamsDomain",
-    "resources": [
-        "streamshost.localdomain"
-    ],
-    "status": "running"
-}
-```
-## /instances
-Retrieve status of all instances being monitored
-`curl localhost:25500/instances`
-
-```json
-   "instances": [
-        {
-            "instanceName": "StreamsInstance",
-            "instanceStartTime": 1520813342320,
-            "instanceStatus": "running"
-        },
-        {
-            "instanceName": "test1",
-            "instanceStartTime": 1520813432867,
-            "instanceStatus": "running"
-        }
-    ],
-    "total": 2
-}
-```
-## /instances/{instancename}
-Retrieve status of a specific instance being monitored
-
-`curl http://localhost:25500/instances/StreamsInstance`
-
-```json
-{
-
+    "instanceAvailable": true,
+    "instanceExists": true,
+    "instanceHealth": "healthy",
     "instanceName": "StreamsInstance",
-    "instanceStatus": "running",
-    "instanceStartTime": 1506945075968
-
+    "instanceStartTime": 1586379036000,
+    "instanceStatus": "running"
 }
-```
+  </pre>
+</details>
 
-## /instances/{instancename}/resourceMetrics
-Retrieves resources and specific metrics about them
+## /instance/resourceMetrics
+Displays the set of resource metrics retrieved from the Streams JMX Service and used to create Prometheus metrics
 
-`curl http://localhost:25500/instances/StreamsInstance/resourceMetrics`
-
-```json
+<details>
+  <summary><code>curl http://localhost:25500/instance/resourceMetrics</code></summary>
+<pre>
 {
-
-    "streamsqse.localdomain": {
-        "cpuSpeed": 8677,
-        "memoryFree": 385960,
-        "memoryTotal": 3908520,
-        "loadAverage": 0,
-        "nProcessors": 2
+    "app-1": {
+        "cpuLimit": 2,
+        "cpuRequest": 1,
+        "cpuUsed": 0,
+        "cpuUtilization": 0,
+        "memoryFree": 0,
+        "memoryLimit": 2000000,
+        "memoryRequest": 1000000,
+        "memoryTotal": 1000000,
+        "memoryUsed": 0,
+        "memoryUtilization": 0,
+        "nProcessors": 1,
+        "networkReceive": 0,
+        "networkSpeed": 10000,
+        "networkTransmit": 0
+    },
+    "app-14": {
+        "cpuLimit": 2,
+        "cpuRequest": 1,
+        "cpuUsed": 0,
+        "cpuUtilization": 0,
+        "memoryFree": 0,
+        "memoryLimit": 2000000,
+        "memoryRequest": 1000000,
+        "memoryTotal": 1000000,
+        "memoryUsed": 0,
+        "memoryUtilization": 0,
+        "nProcessors": 1,
+        "networkReceive": 0,
+        "networkSpeed": 10000,
+        "networkTransmit": 0
+    },
+    "console-0": {
+        "cpuLimit": 2,
+        "cpuRequest": 1,
+        "cpuUsed": 0,
+        "cpuUtilization": 0,
+        "memoryFree": 0,
+        "memoryLimit": 6000000,
+        "memoryRequest": 4000000,
+        "memoryTotal": 4000000,
+        "memoryUsed": 0,
+        "memoryUtilization": 0,
+        "nProcessors": 1,
+        "networkReceive": 0,
+        "networkSpeed": 10000,
+        "networkTransmit": 0
+    },
+    "management-0": {
+        "cpuLimit": 12,
+        "cpuRequest": 2,
+        "cpuUsed": 0,
+        "cpuUtilization": 0,
+        "memoryFree": 0,
+        "memoryLimit": 8000000,
+        "memoryRequest": 4000000,
+        "memoryTotal": 4000000,
+        "memoryUsed": 0,
+        "memoryUtilization": 0,
+        "nProcessors": 2,
+        "networkReceive": 0,
+        "networkSpeed": 10000,
+        "networkTransmit": 0
+    },
+    "repository-0": {
+        "cpuLimit": 1,
+        "cpuRequest": 1,
+        "cpuUsed": 0,
+        "cpuUtilization": 0,
+        "memoryFree": 0,
+        "memoryLimit": 2000000,
+        "memoryRequest": 2000000,
+        "memoryTotal": 2000000,
+        "memoryUsed": 0,
+        "memoryUtilization": 0,
+        "nProcessors": 1,
+        "networkReceive": 0,
+        "networkSpeed": 10000,
+        "networkTransmit": 0
+    },
+    "security-0": {
+        "cpuLimit": 4,
+        "cpuRequest": 2,
+        "cpuUsed": 0,
+        "cpuUtilization": 0,
+        "memoryFree": 0,
+        "memoryLimit": 4000000,
+        "memoryRequest": 2000000,
+        "memoryTotal": 2000000,
+        "memoryUsed": 0,
+        "memoryUtilization": 0,
+        "nProcessors": 2,
+        "networkReceive": 0,
+        "networkSpeed": 10000,
+        "networkTransmit": 0
     }
-
 }
-```
+</pre>
+</details>
 
-## /instances/{instancename}/metrics
-Retrieves all metrics for the selected instance
+## /instance/metrics
+Retrieves all metrics for the selected instance in json format 
+** DO NOT USE THIS FOR PROMETHEUS METRICS **
 
-## /instances/{instancename}/snapshots
+## /instance/snapshots
 Retrieves all snapshots for the selected instance
 
-## /streamsexporter || /streamsexporter
+## /streamsexporter 
 The Provides a complete overview of the streams-metric-exporter server.  Not recommended for programatic interface, however, a good interface for status of this server
 
 ## /config
