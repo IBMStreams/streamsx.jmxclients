@@ -312,9 +312,9 @@ public class Launcher {
 			System.out.println("  Check JMX url and connection credentials");
 		}
 		
-		System.out.println("*******************************");
+		System.out.println("************************************************************");
 		System.out.println(Version.getImplementationTitle() + " " + Version.getImplementationVersion() + " STARTED");
-		System.out.println("*******************************");
+		System.out.println("************************************************************");
 
 		if (!consoleLogging) {
 			LOGGER.info("************************************************************");
