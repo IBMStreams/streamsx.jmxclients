@@ -312,14 +312,14 @@ public class Launcher {
 			System.out.println("  Check JMX url and connection credentials");
 		}
 		
-		System.out.println("*******************************");
-		System.out.println("Streams Metric Exporter STARTED");
-		System.out.println("*******************************");
+		System.out.println("************************************************************");
+		System.out.println(Version.getImplementationTitle() + " " + Version.getImplementationVersion() + " STARTED");
+		System.out.println("************************************************************");
 
 		if (!consoleLogging) {
-			LOGGER.info("*******************************");
-			LOGGER.info("Streams Metric Exporter STARTED");
-			LOGGER.info("*******************************");
+			LOGGER.info("************************************************************");
+			LOGGER.info(Version.getImplementationTitle() + " " + Version.getImplementationVersion() + " STARTED");
+			LOGGER.info("************************************************************");
 		}
 	}
 }
