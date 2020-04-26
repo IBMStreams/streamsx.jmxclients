@@ -16,8 +16,6 @@
 
 package streams.metric.exporter;
 
-import java.util.HashSet;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.beust.jcommander.JCommander;
@@ -29,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import streams.metric.exporter.cli.ServerProtocolValidator;
-import streams.metric.exporter.cli.InstanceListConverter;
 import streams.metric.exporter.cli.LoglevelValidator;
 import streams.metric.exporter.rest.Protocol;
 import streams.metric.exporter.cli.FileExistsValidator;

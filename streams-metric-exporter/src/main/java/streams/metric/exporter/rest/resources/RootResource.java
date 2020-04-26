@@ -54,7 +54,7 @@ public class RootResource {
     @GET
     @Produces(MediaType.TEXT_PLAIN)
     public Response getRoot() throws WebApplicationException {
-    	return Response.status(Response.Status.OK).entity("try using the /streamsexporter or /prometheus url").build();
+    	return Response.status(Response.Status.OK).entity("try using the /streamsexporter or /metrics url").build();
     }
 
     // if Instance does not exist, returns 404

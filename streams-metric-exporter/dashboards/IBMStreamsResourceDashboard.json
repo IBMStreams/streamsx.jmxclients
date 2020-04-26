@@ -2,7 +2,7 @@
   "annotations": {
     "list": [
       {
-        "$$hashKey": "object:43916",
+        "$$hashKey": "object:69597",
         "builtIn": 1,
         "datasource": "-- Grafana --",
         "enable": true,
@@ -17,9 +17,10 @@
   "gnetId": null,
   "graphTooltip": 1,
   "id": 3,
-  "iteration": 1587157519761,
+  "iteration": 1587141648866,
   "links": [
     {
+      "$$hashKey": "object:69944",
       "asDropdown": true,
       "icon": "external link",
       "keepTime": true,
@@ -32,6 +33,7 @@
     {
       "columns": [
         {
+          "$$hashKey": "object:547",
           "text": "Current",
           "value": "current"
         }
@@ -46,7 +48,7 @@
         "y": 0
       },
       "hideTimeOverride": true,
-      "id": 51,
+      "id": 33,
       "links": [],
       "maxPerRow": 3,
       "pageSize": null,
@@ -58,6 +60,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:549",
           "alias": "Status",
           "align": "auto",
           "colorMode": "cell",
@@ -77,20 +80,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:683",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:727",
               "text": "PARTIALLY_RUNNING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:764",
               "text": "NOT RUNNING",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:150905",
           "alias": "Resource Id",
           "align": "auto",
           "colorMode": null,
@@ -108,6 +115,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:267874",
           "alias": "CPU Speed",
           "align": "auto",
           "colorMode": null,
@@ -125,6 +133,7 @@
           "unit": "hertz"
         },
         {
+          "$$hashKey": "object:1278",
           "alias": "1m CPU Utilization",
           "align": "auto",
           "colorMode": null,
@@ -142,6 +151,7 @@
           "unit": "percent"
         },
         {
+          "$$hashKey": "object:1756",
           "alias": "1m Load Average",
           "align": "auto",
           "colorMode": null,
@@ -159,6 +169,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:3854",
           "alias": "# Processors",
           "align": "auto",
           "colorMode": null,
@@ -176,6 +187,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:4951",
           "alias": "Memory Total",
           "align": "auto",
           "colorMode": null,
@@ -193,6 +205,7 @@
           "unit": "decbytes"
         },
         {
+          "$$hashKey": "object:5628",
           "alias": "Memory Free",
           "align": "auto",
           "colorMode": null,
@@ -210,6 +223,7 @@
           "unit": "decbytes"
         },
         {
+          "$$hashKey": "object:5965",
           "alias": "Memory Utilization",
           "align": "auto",
           "colorMode": null,
@@ -227,6 +241,7 @@
           "unit": "percent"
         },
         {
+          "$$hashKey": "object:7286",
           "alias": "Network Speed",
           "align": "auto",
           "colorMode": null,
@@ -244,6 +259,7 @@
           "unit": "MBs"
         },
         {
+          "$$hashKey": "object:7805",
           "alias": "1m Network Utilization",
           "align": "auto",
           "colorMode": null,
@@ -261,6 +277,7 @@
           "unit": "deckbytes"
         },
         {
+          "$$hashKey": "object:60054",
           "alias": "PE Count",
           "align": "auto",
           "colorMode": null,
@@ -278,6 +295,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:550",
           "alias": "Resource Id",
           "align": "auto",
           "colorMode": null,
@@ -296,19 +314,19 @@
       ],
       "targets": [
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_status{resource=~\"$resource\"}) by (resource) ",
+          "expr": "streams_resource_status{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
           "hide": false,
           "instant": true,
           "interval": "",
-          "intervalFactor": 1,
+          "intervalFactor": 2,
           "legendFormat": "",
           "metric": "stream_job_healthy",
           "refId": "A",
           "step": 1
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_cpuSpeed{resource=~\"$resource\"}) by (resource) ",
+          "expr": "streams_resource_cpuSpeed{resource=~\"$resource\"}  * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -317,25 +335,23 @@
           "refId": "B"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_cpuUtilization{resource=~\"$resource\"}) by (resource)",
+          "expr": "streams_resource_cpuUtilization{resource=~\"$resource\"}  * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "C"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max((streams_resource_loadAverage{resource=~\"$resource\"}/100)) by (resource) ",
+          "expr": "(streams_resource_loadAverage{resource=~\"$resource\"}/100) * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "D"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_nProcessors{resource=~\"$resource\"}) by (resource)",
+          "expr": "streams_resource_nProcessors{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -344,16 +360,15 @@
           "refId": "E"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_memoryTotal{resource=~\"$resource\"}) by (resource)",
+          "expr": "streams_resource_memoryTotal{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "F"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_memoryFree{resource=~\"$resource\"}) by (resource)",
+          "expr": "streams_resource_memoryFree{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -362,36 +377,32 @@
           "refId": "G"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_memoryUtilization{resource=~\"$resource\"}) by (resource)",
+          "expr": "streams_resource_memoryUtilization{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "H"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_networkSpeed{resource=~\"$resource\"}) by (resource)",
+          "expr": "streams_resource_networkSpeed{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "I"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * max(streams_resource_networkUtilization{resource=~\"$resource\"}) by (resource)",
+          "expr": "streams_resource_networkUtilization{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"}",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
           "legendFormat": "",
           "refId": "J"
         },
         {
-          "expr": "max(streams_resource_role{resource=~\"$resource\",role=~\"$role\"}) by (resource) * count(streams_pe_health{resource=~\"$resource\"}) by (resource)",
+          "expr": "count(count by (resource,peid) (streams_pe_health{resource=~\"$resource\"} * on (resource) group_left(role) streams_resource_role{resource=~\"$resource\",role=~\"$role\"} )) by (resource)",
           "format": "table",
-          "hide": false,
           "instant": true,
           "interval": "",
           "legendFormat": "",
@@ -454,6 +465,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:69687",
           "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -461,6 +473,7 @@
           "type": "string"
         },
         {
+          "$$hashKey": "object:69720",
           "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
@@ -478,6 +491,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69733",
           "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
@@ -495,6 +509,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69746",
           "alias": "Resource",
           "align": "auto",
           "colorMode": null,
@@ -512,6 +527,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
           "colorMode": "value",
@@ -532,6 +548,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70580",
           "alias": "PE Status",
           "align": "auto",
           "colorMode": "cell",
@@ -552,20 +569,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160747",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160749",
               "text": "STARTING or STOPPING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160751",
               "text": "FAILED or CANCELLED",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160753",
           "alias": "PE Health",
           "align": "auto",
           "colorMode": "cell",
@@ -586,20 +607,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160777",
               "text": "HEALTHY",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160779",
               "text": "PARTIALLY_UNHEALTHY",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160781",
               "text": "UNHEALTHY",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -727,6 +752,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:70925",
           "format": "ms",
           "label": null,
           "logBase": 1,
@@ -735,6 +761,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:70926",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -767,6 +794,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -847,6 +875,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -916,10 +945,10 @@
         "x": 0,
         "y": 11
       },
-      "id": 52,
+      "id": 39,
       "panels": [],
       "repeat": null,
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 29,
       "scopedVars": {
         "resource": {
@@ -941,11 +970,11 @@
         "x": 0,
         "y": 12
       },
-      "id": 53,
+      "id": 40,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 24,
       "repeatedByRow": true,
       "scopedVars": {
@@ -962,6 +991,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:69687",
           "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -969,6 +999,7 @@
           "type": "string"
         },
         {
+          "$$hashKey": "object:69720",
           "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
@@ -986,6 +1017,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69733",
           "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
@@ -1003,6 +1035,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69746",
           "alias": "Resource",
           "align": "auto",
           "colorMode": null,
@@ -1020,6 +1053,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
           "colorMode": "value",
@@ -1040,6 +1074,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70580",
           "alias": "PE Status",
           "align": "auto",
           "colorMode": "cell",
@@ -1060,20 +1095,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160747",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160749",
               "text": "STARTING or STOPPING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160751",
               "text": "FAILED or CANCELLED",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160753",
           "alias": "PE Health",
           "align": "auto",
           "colorMode": "cell",
@@ -1094,20 +1133,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160777",
               "text": "HEALTHY",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160779",
               "text": "PARTIALLY_UNHEALTHY",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160781",
               "text": "UNHEALTHY",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -1172,7 +1215,7 @@
         "y": 12
       },
       "hiddenSeries": false,
-      "id": 54,
+      "id": 41,
       "legend": {
         "avg": false,
         "current": false,
@@ -1196,7 +1239,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 7,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1238,6 +1281,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:70925",
           "format": "ms",
           "label": null,
           "logBase": 1,
@@ -1246,6 +1290,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:70926",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1268,7 +1313,7 @@
         "x": 18,
         "y": 12
       },
-      "id": 55,
+      "id": 42,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -1278,6 +1323,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -1318,7 +1364,7 @@
       "pluginVersion": "6.7.2",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 4,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1351,7 +1397,7 @@
         "x": 21,
         "y": 12
       },
-      "id": 56,
+      "id": 43,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -1361,6 +1407,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -1400,7 +1447,7 @@
       },
       "pluginVersion": "6.7.2",
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 38,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1433,10 +1480,10 @@
         "x": 0,
         "y": 17
       },
-      "id": 57,
+      "id": 44,
       "panels": [],
       "repeat": null,
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 29,
       "scopedVars": {
         "resource": {
@@ -1458,11 +1505,11 @@
         "x": 0,
         "y": 18
       },
-      "id": 58,
+      "id": 45,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 24,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1479,6 +1526,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:69687",
           "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -1486,6 +1534,7 @@
           "type": "string"
         },
         {
+          "$$hashKey": "object:69720",
           "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
@@ -1503,6 +1552,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69733",
           "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
@@ -1520,6 +1570,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69746",
           "alias": "Resource",
           "align": "auto",
           "colorMode": null,
@@ -1537,6 +1588,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
           "colorMode": "value",
@@ -1557,6 +1609,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70580",
           "alias": "PE Status",
           "align": "auto",
           "colorMode": "cell",
@@ -1577,20 +1630,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160747",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160749",
               "text": "STARTING or STOPPING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160751",
               "text": "FAILED or CANCELLED",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160753",
           "alias": "PE Health",
           "align": "auto",
           "colorMode": "cell",
@@ -1611,20 +1668,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160777",
               "text": "HEALTHY",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160779",
               "text": "PARTIALLY_UNHEALTHY",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160781",
               "text": "UNHEALTHY",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -1689,7 +1750,7 @@
         "y": 18
       },
       "hiddenSeries": false,
-      "id": 59,
+      "id": 46,
       "legend": {
         "avg": false,
         "current": false,
@@ -1713,7 +1774,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 7,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1755,6 +1816,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:70925",
           "format": "ms",
           "label": null,
           "logBase": 1,
@@ -1763,6 +1825,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:70926",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -1785,7 +1848,7 @@
         "x": 18,
         "y": 18
       },
-      "id": 60,
+      "id": 47,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -1795,6 +1858,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -1835,7 +1899,7 @@
       "pluginVersion": "6.7.2",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 4,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1868,7 +1932,7 @@
         "x": 21,
         "y": 18
       },
-      "id": 61,
+      "id": 48,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -1878,6 +1942,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -1917,7 +1982,7 @@
       },
       "pluginVersion": "6.7.2",
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 38,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1950,10 +2015,10 @@
         "x": 0,
         "y": 23
       },
-      "id": 62,
+      "id": 49,
       "panels": [],
       "repeat": null,
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 29,
       "scopedVars": {
         "resource": {
@@ -1975,11 +2040,11 @@
         "x": 0,
         "y": 24
       },
-      "id": 63,
+      "id": 50,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 24,
       "repeatedByRow": true,
       "scopedVars": {
@@ -1996,6 +2061,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:69687",
           "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -2003,6 +2069,7 @@
           "type": "string"
         },
         {
+          "$$hashKey": "object:69720",
           "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
@@ -2020,6 +2087,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69733",
           "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
@@ -2037,6 +2105,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69746",
           "alias": "Resource",
           "align": "auto",
           "colorMode": null,
@@ -2054,6 +2123,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
           "colorMode": "value",
@@ -2074,6 +2144,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70580",
           "alias": "PE Status",
           "align": "auto",
           "colorMode": "cell",
@@ -2094,20 +2165,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160747",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160749",
               "text": "STARTING or STOPPING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160751",
               "text": "FAILED or CANCELLED",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160753",
           "alias": "PE Health",
           "align": "auto",
           "colorMode": "cell",
@@ -2128,20 +2203,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160777",
               "text": "HEALTHY",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160779",
               "text": "PARTIALLY_UNHEALTHY",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160781",
               "text": "UNHEALTHY",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -2206,7 +2285,7 @@
         "y": 24
       },
       "hiddenSeries": false,
-      "id": 64,
+      "id": 51,
       "legend": {
         "avg": false,
         "current": false,
@@ -2230,7 +2309,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 7,
       "repeatedByRow": true,
       "scopedVars": {
@@ -2272,6 +2351,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:70925",
           "format": "ms",
           "label": null,
           "logBase": 1,
@@ -2280,6 +2360,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:70926",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -2302,7 +2383,7 @@
         "x": 18,
         "y": 24
       },
-      "id": 65,
+      "id": 52,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -2312,6 +2393,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -2352,7 +2434,7 @@
       "pluginVersion": "6.7.2",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 4,
       "repeatedByRow": true,
       "scopedVars": {
@@ -2385,7 +2467,7 @@
         "x": 21,
         "y": 24
       },
-      "id": 66,
+      "id": 53,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -2395,6 +2477,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -2434,7 +2517,7 @@
       },
       "pluginVersion": "6.7.2",
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 38,
       "repeatedByRow": true,
       "scopedVars": {
@@ -2467,10 +2550,10 @@
         "x": 0,
         "y": 29
       },
-      "id": 67,
+      "id": 54,
       "panels": [],
       "repeat": null,
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 29,
       "scopedVars": {
         "resource": {
@@ -2492,11 +2575,11 @@
         "x": 0,
         "y": 30
       },
-      "id": 68,
+      "id": 55,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 24,
       "repeatedByRow": true,
       "scopedVars": {
@@ -2513,6 +2596,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:69687",
           "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -2520,6 +2604,7 @@
           "type": "string"
         },
         {
+          "$$hashKey": "object:69720",
           "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
@@ -2537,6 +2622,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69733",
           "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
@@ -2554,6 +2640,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69746",
           "alias": "Resource",
           "align": "auto",
           "colorMode": null,
@@ -2571,6 +2658,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
           "colorMode": "value",
@@ -2591,6 +2679,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70580",
           "alias": "PE Status",
           "align": "auto",
           "colorMode": "cell",
@@ -2611,20 +2700,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160747",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160749",
               "text": "STARTING or STOPPING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160751",
               "text": "FAILED or CANCELLED",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160753",
           "alias": "PE Health",
           "align": "auto",
           "colorMode": "cell",
@@ -2645,20 +2738,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160777",
               "text": "HEALTHY",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160779",
               "text": "PARTIALLY_UNHEALTHY",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160781",
               "text": "UNHEALTHY",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -2723,7 +2820,7 @@
         "y": 30
       },
       "hiddenSeries": false,
-      "id": 69,
+      "id": 56,
       "legend": {
         "avg": false,
         "current": false,
@@ -2747,7 +2844,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 7,
       "repeatedByRow": true,
       "scopedVars": {
@@ -2789,6 +2886,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:70925",
           "format": "ms",
           "label": null,
           "logBase": 1,
@@ -2797,6 +2895,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:70926",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -2819,7 +2918,7 @@
         "x": 18,
         "y": 30
       },
-      "id": 70,
+      "id": 57,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -2829,6 +2928,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -2869,7 +2969,7 @@
       "pluginVersion": "6.7.2",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 4,
       "repeatedByRow": true,
       "scopedVars": {
@@ -2902,7 +3002,7 @@
         "x": 21,
         "y": 30
       },
-      "id": 71,
+      "id": 58,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -2912,6 +3012,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -2951,7 +3052,7 @@
       },
       "pluginVersion": "6.7.2",
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 38,
       "repeatedByRow": true,
       "scopedVars": {
@@ -2984,10 +3085,10 @@
         "x": 0,
         "y": 35
       },
-      "id": 72,
+      "id": 59,
       "panels": [],
       "repeat": null,
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 29,
       "scopedVars": {
         "resource": {
@@ -3009,11 +3110,11 @@
         "x": 0,
         "y": 36
       },
-      "id": 73,
+      "id": 60,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 24,
       "repeatedByRow": true,
       "scopedVars": {
@@ -3030,6 +3131,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:69687",
           "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -3037,6 +3139,7 @@
           "type": "string"
         },
         {
+          "$$hashKey": "object:69720",
           "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
@@ -3054,6 +3157,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69733",
           "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
@@ -3071,6 +3175,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69746",
           "alias": "Resource",
           "align": "auto",
           "colorMode": null,
@@ -3088,6 +3193,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
           "colorMode": "value",
@@ -3108,6 +3214,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70580",
           "alias": "PE Status",
           "align": "auto",
           "colorMode": "cell",
@@ -3128,20 +3235,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160747",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160749",
               "text": "STARTING or STOPPING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160751",
               "text": "FAILED or CANCELLED",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160753",
           "alias": "PE Health",
           "align": "auto",
           "colorMode": "cell",
@@ -3162,20 +3273,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160777",
               "text": "HEALTHY",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160779",
               "text": "PARTIALLY_UNHEALTHY",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160781",
               "text": "UNHEALTHY",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -3240,7 +3355,7 @@
         "y": 36
       },
       "hiddenSeries": false,
-      "id": 74,
+      "id": 61,
       "legend": {
         "avg": false,
         "current": false,
@@ -3264,7 +3379,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 7,
       "repeatedByRow": true,
       "scopedVars": {
@@ -3306,6 +3421,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:70925",
           "format": "ms",
           "label": null,
           "logBase": 1,
@@ -3314,6 +3430,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:70926",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -3336,7 +3453,7 @@
         "x": 18,
         "y": 36
       },
-      "id": 75,
+      "id": 62,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -3346,6 +3463,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -3386,7 +3504,7 @@
       "pluginVersion": "6.7.2",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 4,
       "repeatedByRow": true,
       "scopedVars": {
@@ -3419,7 +3537,7 @@
         "x": 21,
         "y": 36
       },
-      "id": 76,
+      "id": 63,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -3429,6 +3547,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -3468,7 +3587,7 @@
       },
       "pluginVersion": "6.7.2",
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 38,
       "repeatedByRow": true,
       "scopedVars": {
@@ -3501,10 +3620,10 @@
         "x": 0,
         "y": 41
       },
-      "id": 77,
+      "id": 64,
       "panels": [],
       "repeat": null,
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 29,
       "scopedVars": {
         "resource": {
@@ -3526,11 +3645,11 @@
         "x": 0,
         "y": 42
       },
-      "id": 78,
+      "id": 65,
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 24,
       "repeatedByRow": true,
       "scopedVars": {
@@ -3547,6 +3666,7 @@
       },
       "styles": [
         {
+          "$$hashKey": "object:69687",
           "alias": "Instance",
           "align": "auto",
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
@@ -3554,6 +3674,7 @@
           "type": "string"
         },
         {
+          "$$hashKey": "object:69720",
           "alias": "Job Name",
           "align": "auto",
           "colorMode": null,
@@ -3571,6 +3692,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69733",
           "alias": "PE Id",
           "align": "auto",
           "colorMode": null,
@@ -3588,6 +3710,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:69746",
           "alias": "Resource",
           "align": "auto",
           "colorMode": null,
@@ -3605,6 +3728,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70385",
           "alias": "Launch Count",
           "align": "auto",
           "colorMode": "value",
@@ -3625,6 +3749,7 @@
           "unit": "short"
         },
         {
+          "$$hashKey": "object:70580",
           "alias": "PE Status",
           "align": "auto",
           "colorMode": "cell",
@@ -3645,20 +3770,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160747",
               "text": "RUNNING",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160749",
               "text": "STARTING or STOPPING",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160751",
               "text": "FAILED or CANCELLED",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160753",
           "alias": "PE Health",
           "align": "auto",
           "colorMode": "cell",
@@ -3679,20 +3808,24 @@
           "unit": "short",
           "valueMaps": [
             {
+              "$$hashKey": "object:160777",
               "text": "HEALTHY",
               "value": "1"
             },
             {
+              "$$hashKey": "object:160779",
               "text": "PARTIALLY_UNHEALTHY",
               "value": ".5"
             },
             {
+              "$$hashKey": "object:160781",
               "text": "UNHEALTHY",
               "value": "0"
             }
           ]
         },
         {
+          "$$hashKey": "object:160372",
           "alias": "",
           "align": "auto",
           "colorMode": null,
@@ -3757,7 +3890,7 @@
         "y": 42
       },
       "hiddenSeries": false,
-      "id": 79,
+      "id": 66,
       "legend": {
         "avg": false,
         "current": false,
@@ -3781,7 +3914,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 7,
       "repeatedByRow": true,
       "scopedVars": {
@@ -3823,6 +3956,7 @@
       },
       "yaxes": [
         {
+          "$$hashKey": "object:70925",
           "format": "ms",
           "label": null,
           "logBase": 1,
@@ -3831,6 +3965,7 @@
           "show": true
         },
         {
+          "$$hashKey": "object:70926",
           "format": "short",
           "label": null,
           "logBase": 1,
@@ -3853,7 +3988,7 @@
         "x": 18,
         "y": 42
       },
-      "id": 80,
+      "id": 67,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -3863,6 +3998,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -3903,7 +4039,7 @@
       "pluginVersion": "6.7.2",
       "repeat": null,
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 4,
       "repeatedByRow": true,
       "scopedVars": {
@@ -3936,7 +4072,7 @@
         "x": 21,
         "y": 42
       },
-      "id": 81,
+      "id": 68,
       "links": [],
       "options": {
         "fieldOptions": {
@@ -3946,6 +4082,7 @@
           "defaults": {
             "mappings": [
               {
+                "$$hashKey": "object:70712",
                 "id": 0,
                 "op": "=",
                 "text": "N/A",
@@ -3985,7 +4122,7 @@
       },
       "pluginVersion": "6.7.2",
       "repeatDirection": "v",
-      "repeatIteration": 1587157519761,
+      "repeatIteration": 1587141648866,
       "repeatPanelId": 38,
       "repeatedByRow": true,
       "scopedVars": {
@@ -4010,7 +4147,7 @@
       "type": "gauge"
     }
   ],
-  "refresh": "",
+  "refresh": "5s",
   "schemaVersion": 22,
   "style": "dark",
   "tags": [],
@@ -4075,7 +4212,7 @@
     ]
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -4098,5 +4235,5 @@
   "variables": {
     "list": []
   },
-  "version": 5
+  "version": 4
 }
