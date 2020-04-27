@@ -47,10 +47,10 @@ public class ServiceConfig {
     private boolean version;
 
     @Parameter(names = { "-h", "--host" }, description = Constants.DESC_HOST, required = false)
-    private String host = getEnvDefault(Constants.ENV_HOST,"localhost");
+    private String host = getEnvDefault(Constants.ENV_HOST,Constants.DEFAULT_HOST);
     	    
     @Parameter(names = { "-p", "--port" }, description = Constants.DESC_PORT, required = false)
-    private String port = getEnvDefault(Constants.ENV_PORT,"25500");
+    private String port = getEnvDefault(Constants.ENV_PORT,Constants.DEFAULT_PORT);
     
     @Parameter(names = { "--webPath","" }, description = Constants.DESC_WEBPATH, required = false)
     private String webPath = getEnvDefault(Constants.ENV_WEBPATH,Constants.DEFAULT_WEBPATH);
