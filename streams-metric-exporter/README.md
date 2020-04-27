@@ -30,9 +30,10 @@ bmwilli@us.ibm.com
 4. [Logging](#logging)
 5. [Redirecting JMX HTTP URLs](#redirecting-jmx-http-urls)
 6. [Prometheus Integration](#prometheus-integration)
-7. [Running with Docker](#running-with-docker)
-8. [Cached REST endpoints](#cached-rest-endpoints)
-9. [Passthrough REST endpoints](#passthrough-rest-endpoints)
+7. [Running in OpenShift with Cloud Pak for Data](#running-in-openshift-with-cloud-pak-for-data)
+8. [Running with Docker](#running-with-docker)
+9. [Cached REST endpoints](#cached-rest-endpoints)
+10. [Passthrough REST endpoints](#passthrough-rest-endpoints)
 
 # Building the application
 
@@ -321,12 +322,68 @@ See [dashboards directory](dashboards/README.md) for more information.
 
 ![Grafana Example](images/IBMStreamsInstanceDashboard.png)
 
-# Running in OpenShift with Streams in CP4D
-Details Coming Soon...
+# Running in OpenShift with Cloud Pak for Data
 
-# Running outside of OpenShift/Kubernetes using Docker
+IBM Streams 5 is typically run as part of IBM Cloud Pak for Data.  There are many ways to accomplish to goal of running streams-metric-exporter in CP4D.  Below is a simple way to get started, however, in a
+production environment you may want to create a more complex template which hides credentials in secrets.
 
-The easiest way to try out the Streams Metric Exporter is to run it using Docker.  Included in this release is a Dockerfile for building the image and a docker-compose.yml file for starting it up with Prometheus and Grafana instances.
+## Prerequisites
+
+* IBM Cloud Pak for Data (CP4D) (tested with 2.5.0) Instance
+* IBM Streams Add-on installed in CP4D
+* IBM Streams Instance deployed in CP4D
+* CP4D User (e.g. streamsmetricuser) with permissions:
+  * CP4D User Role: minimum privilege of "Access catalog" (e.g. "Developer" role)
+  * CP4D Streams Instance Access minimum "User" role
+
+## Create and run new OpenShift Application
+
+1. Collection information required for streams-metric-exporter environment variables
+
+| Environment Variable | Details |
+| :----------------- | :---------- |
+| **STREAMS_INSTANCE_ID** | Name of Streams Instance provisioned in CP4D (e.g. stream1) |
+| **STREAMS_EXPORTER_JMXCONNECT** | Service JMX endpoint found under "view details" of Streams Instance |
+| **STREAMS_EXPORTER_USERNAME** | Name of CP4D user described in prerequisites |
+| **STREAMS_EXPORTER_PASSWORD** | Password of CP4D user described in prerequisites |
+
+1. Create new OpenShift Project
+
+```bash
+oc new-project streams-metrics
+```
+
+1. Create new Openshift Application from Docker Image
+
+```bash
+oc new-app --bmwilli1/streams-metric-exporter:5.0.0 \
+      -e STREAMS_EXPORTER_JMXCONNECT=service:jmx:jmxmp://stream1-jmx.zen:9975 \
+      -e STREAMS_INSTANCE_ID=stream1 \
+      -e STREAMS_EXPORTER_USERNAME=streamsmetricuser \
+      -e STREAMS_EXPORTER_PASSWORD=passw0rd
+```
+
+1. Expose the new exporter service to test (optional)
+
+```
+oc expose svc/streams-metric-exporter
+```
+
+1. Get the name of the DNS entry created
+
+```
+oc describe route streams-metric-exporter
+```
+
+1. Test via curl
+
+```
+curl streams-metric-exporter-streams-metrics.apps.my.cluster.com/metrics
+```
+
+# Running in Docker
+
+Streams Metric Exporter can be run outside of the kubernetes hosting Streams 5, however, you will need to expose the Streams JMX Service as a NodePort Service object. Included in this release is a docker-compose.yml file for starting it up with Prometheus and Grafana instances.
 
 The versions of Prometheus and Grafana specified in the docker-compose.yml file are those that were used for testing.
 
