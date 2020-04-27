@@ -24,201 +24,78 @@ Brian M Williams, IBM<br>
 bmwilli@us.ibm.com
 
 # Contents
-1. [Building streams-metric-exporter](#building-the-application)
-2. [Command line options](#command-line-options)
-3. [Running streams-metric-exporter](#running-the-application)
-4. [Logging](#logging)
-5. [Redirecting JMX HTTP URLs](#redirecting-jmx-http-urls)
-6. [Prometheus Integration](#prometheus-integration)
-7. [Running in OpenShift with Cloud Pak for Data](#running-in-openshift-with-cloud-pak-for-data)
-8. [Running with Docker](#running-with-docker)
-9. [Cached REST endpoints](#cached-rest-endpoints)
-10. [Passthrough REST endpoints](#passthrough-rest-endpoints)
 
-# Building the application
-
-## Install Dependencies
-This application does NOT need to be compiled on a system with IBM Streams installed.  The lib folder contains two redistributable .jar files from IBM Streams that must be installed into your local maven repository.
-
-There is a Makefile included that will do this installation.
-
-```
-make setup
-```
-
-## Compiling the application
-```
-mvn compile
-```
-
-## Create executable .jar with dependencies included
-```
-mvn package
-```
-or
-```
-make package
-```
-Location will be: target/executable-streams-metric-exporter.jar
-
-## Create packaged binary and supporting files in .tar.gz
-```
-make tar
-```
-Location will be: target/streams-metric-exporter-x.x.x-release.tar.gz
+1. [Running in OpenShift with Cloud Pak for Data](#running-in-openshift-with-cloud-pak-for-data)
+2. [Prometheus Integration](#prometheus-integration)
+3. [Grafana Sample Dashboards](#grafana-sample-dashboards)
+4. [Running from command line](#running-from-command-line)
+5. [Command line options](#command-line-options)
+6. [JMX Connection Failover](#jmx-connection-failover)
+7. [Logging](#logging)
+8. [Redirecting JMX HTTP URLs](#redirecting-jmx-http-urls)
+9. [Running in Docker](#running-in-docker)
+10. [REST endpoints](#rest-endpoints)
+11. [Building streams-metric-exporter](#building-the-application)
 
 
-# Command line options
-`java -jar target/executable-streams-metric-exporter.jar --help`
+# Running in OpenShift with Cloud Pak for Data
 
-<pre>
-Usage: streams-metric-exporter [options]
-  Options:
-    --help
-      Display command line arguments
-      Default: false
-    -h, --host
-      Listen Host or IP address for this service (e.g. localhost)
-      Environment Variable: STREAMS_EXPORTER_HOST
-      Default: localhost
-    -i, --instance
-      Streams instance name.  Only used if Instance List not provided.
-      Environment Variable: STREAMS_INSTANCE_ID
-      Default: stream1
-    --jmxhttphost
-      Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment
-      Variable: STREAMS_EXPORTER_JMX_HTTP_HOST
-    --jmxhttpport
-      Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment
-      Variable: STREAMS_EXPORTER_JMX_HTTP_PORT
-      Default: 31819
-    --jmxssloption
-      SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
-      Environment Variable:
-      STREAMS_EXPORTER_JMX_SSLOPTION
-      Default: TLSv1.2
-    --jmxtruststore
-      Java keystore of certificates/signers to trust from JMX Server
-      Environment Variable: STREAMS_EXPORTER_JMX_TRUSTSTORE
-    -j, --jmxurl
-      JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975). Supports comma-separated list for failover.
-      Environment
-      Variable: STREAMS_EXPORTER_JMXCONNECT
-      Default: service:jmx:jmxmp://10.75.16.206:32399
-    --logdir
-      Logging direcotry.  If not set or empty log to stdout.
-     Environment Variable: STREAMS_EXPORTER_LOGDIR
-      Default: 
-    -l, --loglevel
-      Logging level [ fatal | error | warn | info | debug | trace ]
-      Environment Variable: STREAMS_EXPORTER_LOGLEVEL
-      Default: info
-    --noconsole
-      Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.
-      Default: false
-    --password
-      Streams login password. Recommend using environment variable
-      Environment Variable: STREAMS_EXPORTER_PASSWORD
-      Default: ou812bmw
-    -p, --port
-      Listen Port for this service
-      Environment Variable: STREAMS_EXPORTER_PORT
-      Default: 25500
-    -r, --refresh
-      Refresh rate of metrics in seconds or 0 for no automatic refresh
-      Environment Variable: STREAMS_EXPORTER_REFRESHRATE
-      Default: 0
-    --serverkeystore
-      Java keystore containing server certificate and key to identify server side of this application
-      Environment Variable:
-      STREAMS_EXPORTER_SERVER_KEYSTORE
-    --serverkeystorepwd
-      Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
-      Environment Variable:
-      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD
-    --serverprotocol
-      http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
-      Environment
-      Variable: STREAMS_EXPORTER_SERVER_PROTOCOL
-      Default: http
-    -u, --user
-      Streams login username. Use this or X509CERT
-      Environment Variable: STREAMS_EXPORTER_USERNAME
-      Default: bmwilli
-    -v, --version
-      Display version information
-      Default: false
-    --webPath,
-      Base URI prefix (e.g. /someprefix)
-      Environment Variable: STREAMS_EXPORTER_WEBPATH
-      Default: /
-    -x, --x509cert
-      X509 Certificate file to use instead of username/password
-      Environment Variable: STREAMS_X509CERT
-</pre>
+IBM Streams 5 is typically run as part of IBM Cloud Pak for Data.  There are many ways to accomplish to goal of running streams-metric-exporter in CP4D.  Below is a simple way to get started, however, in a
+production environment you may want to create a more complex template which hides credentials in secrets.
 
-# Running the application
-```
-java -jar target/executable-streams-metric-exporter.jar -j \
-service:jmx:jmxmp://localhost:9975 -i StreamsInstance -u streamsadmin
+## Prerequisites
 
-password: <enter streamsadmin password>
+* IBM Cloud Pak for Data (CP4D) (tested with 2.5.0) Instance
+* IBM Streams Add-on installed in CP4D
+* IBM Streams Instance deployed in CP4D
+* CP4D User (e.g. streamsmetricuser) with permissions:
+  * CP4D User Role: minimum privilege of "Access catalog" (e.g. "Developer" role)
+  * CP4D Streams Instance Access minimum "User" role
+
+## Create and run new OpenShift Application
+
+1. Collection information required for streams-metric-exporter environment variables
+
+| Environment Variable | Details |
+| :----------------- | :---------- |
+| **STREAMS_INSTANCE_ID** | Name of Streams Instance provisioned in CP4D (e.g. stream1) |
+| **STREAMS_EXPORTER_JMXCONNECT** | Service JMX endpoint found under "view details" of Streams Instance |
+| **STREAMS_EXPORTER_USERNAME** | Name of CP4D user described in prerequisites |
+| **STREAMS_EXPORTER_PASSWORD** | Password of CP4D user described in prerequisites |
+
+2. Create new OpenShift Project
+
+```bash
+oc new-project streams-metrics
 ```
 
-# JMX Connection Failover
-The ``-j|--jmxurl`` option accepts a comma separated list of jmx connection urls.<br> 
-Example: ```service:jmx:jmxmp://host1:9975,service:jmx:jmxmp://host2:9975```<br>
-When attempting a connection to the jmx server, each of these will be tried in order without delay.
-If a list is provided and a connection cannot be made to any of the url's in the list, then an exception
-may be raised and normal delay / retry logic used.  The connection acquired will stay active until it is lost.  At that time, the list will be retried from the beginning.
+3. Create new Openshift Application from Docker Image
 
-# Logging
-Logging is performed through the log4j 1.2 facility. There are two arguments to control logging.
-
-| argument | env | default | description |
-|:---------|:----|:--------|:------------|
-|--logdir|STREAM_EXPORTER_LOGDIR|undefined<br>(stdout)|If this argument is undefined log messages are sent to the **console** (stdout).<br>If this argument is present then a rolling logfile is created in the directory specified with the name of the logfile: **StreamsMetricExporter.log**|
-|--loglevel|STREAMS_EXPORTER_LOGLEVEL|info|fatal,error,warn,info,debug,trace<br>**note:** debug level contains timing messages|
-
-
-## Adding to the default logging
-If you wish to configure your own logging (in addition to that which the application already does), create a log4j.properties file and point to it using the log4j.configuration java property.  For example:
+```bash
+oc new-app --bmwilli1/streams-metric-exporter:5.0.0 \
+      -e STREAMS_EXPORTER_JMXCONNECT=service:jmx:jmxmp://stream1-jmx.zen:9975 \
+      -e STREAMS_INSTANCE_ID=stream1 \
+      -e STREAMS_EXPORTER_USERNAME=streamsmetricuser \
+      -e STREAMS_EXPORTER_PASSWORD=passw0rd
 ```
-java -Dlog4j.configuration=file:${PWD}/log4j.properties -jar target/executable-streams-metric-exporter.jar -j \
-service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i \
-StreamsInstance -u streamsadmin
+
+4. Expose the new exporter service to test (optional)
+
 ```
-This would be useful in situations when you want to log to both the console and a file.<br>
-**Note:** The log level will still be set by the command line argument or environment variable, NOT the rootlogger value in your log4j.properties.
+oc expose svc/streams-metric-exporter
+```
 
-# Redirecting JMX HTTP URLs
-There are some configurations where you will need to override the URLs returned for large data sets to be pulled from IBM Streams over Http.
-<br>
-There are two arguments that can be used to overwrite the JMX Http URL that is used for large data objects.
+5. Get the name of the DNS entry created
 
-| argument | env | default | description |
-|:---------|:----|:--------|:------------|
-|--jmxhttphost|STREAM_EXPORTER_JMX_HTTP_HOST|undefined|Host name or IP Address<br>If this argument is specified the host field of the JMX Http URL will be replaced with this value|
-|--jmxhttpport|STREAMS_EXPORTER_JMX_HTTP_PORT|undefined|Port number<br>If this argument is specified the port field of the JMX Http URL will be replaced with this value|
+```
+oc describe route streams-metric-exporter
+```
 
+6. Test via curl
 
-## JMX HTTP Host and Port redirection examples and Kubernetes
-IBM Streams JMX API has several calls that return urls that are to be used by an HTTP Get request to pull back large data items.  Examples used in this application include: `snapshotJobMetrics()` and `snapshotJobs()`.
-
-The default configuration of IBM Streams uses a random port for the JMX Http Server.  To override this and set a specific port set the following IBM Streams properties:
-
-| Streams Version | Property Type | Property |
-|:----------------|:--------------|:---------|
-| 4.2.1.3 & earlier | Instance | sam.jmxHttpPort |
-| 4.2.4 & later | Domain | jmx.httpPort |
-
-In cases where the Streams JMX Server is running inside of a container or environment with private IP addresses and a gateway, the URLs returned from these calls will use the host and port of the internal address of the JMX Http Port.  In addition, the default configuration of Streams will use a random port at startup for the JMX Http Server.
-
-Using the `--jmxhttphost` and `--jmxhttpport` arguments or environment variables an be used to override the URL before the HTTP Get request is performed.
-
-Logging at the `debug` level will provide messages showing thge URLs before and after the override.
-
-When Streams metric export is running outside of the Kubernetes/OpenShift cluster hosting Streams, Kubernetes Service Objects and OpenShift routes are used to map external facing hostnames and ports to internal pod hosts (ip address) and ports.  The JMX HTTP Host and Port override arguments can be used to get around this issue.  Provide the Kubernetes external cluster hostname and the NodePort of the service or the OpenShift Route DNS name as the arguments for Streams Metric Exporter.
+```
+curl streams-metric-exporter-streams-metrics.apps.my.cluster.com/metrics
+```
 
 # Prometheus Integration
 
@@ -322,64 +199,162 @@ See [dashboards directory](dashboards/README.md) for more information.
 
 ![Grafana Example](images/IBMStreamsInstanceDashboard.png)
 
-# Running in OpenShift with Cloud Pak for Data
 
-IBM Streams 5 is typically run as part of IBM Cloud Pak for Data.  There are many ways to accomplish to goal of running streams-metric-exporter in CP4D.  Below is a simple way to get started, however, in a
-production environment you may want to create a more complex template which hides credentials in secrets.
+# Running from Command Line
+```
+java -jar target/executable-streams-metric-exporter.jar -j \
+service:jmx:jmxmp://localhost:9975 -i StreamsInstance -u streamsadmin
 
-## Prerequisites
-
-* IBM Cloud Pak for Data (CP4D) (tested with 2.5.0) Instance
-* IBM Streams Add-on installed in CP4D
-* IBM Streams Instance deployed in CP4D
-* CP4D User (e.g. streamsmetricuser) with permissions:
-  * CP4D User Role: minimum privilege of "Access catalog" (e.g. "Developer" role)
-  * CP4D Streams Instance Access minimum "User" role
-
-## Create and run new OpenShift Application
-
-1. Collection information required for streams-metric-exporter environment variables
-
-| Environment Variable | Details |
-| :----------------- | :---------- |
-| **STREAMS_INSTANCE_ID** | Name of Streams Instance provisioned in CP4D (e.g. stream1) |
-| **STREAMS_EXPORTER_JMXCONNECT** | Service JMX endpoint found under "view details" of Streams Instance |
-| **STREAMS_EXPORTER_USERNAME** | Name of CP4D user described in prerequisites |
-| **STREAMS_EXPORTER_PASSWORD** | Password of CP4D user described in prerequisites |
-
-2. Create new OpenShift Project
-
-```bash
-oc new-project streams-metrics
+password: <enter streamsadmin password>
 ```
 
-3. Create new Openshift Application from Docker Image
 
-```bash
-oc new-app --bmwilli1/streams-metric-exporter:5.0.0 \
-      -e STREAMS_EXPORTER_JMXCONNECT=service:jmx:jmxmp://stream1-jmx.zen:9975 \
-      -e STREAMS_INSTANCE_ID=stream1 \
-      -e STREAMS_EXPORTER_USERNAME=streamsmetricuser \
-      -e STREAMS_EXPORTER_PASSWORD=passw0rd
-```
+# Command line options
+`java -jar target/executable-streams-metric-exporter.jar --help`
 
-4. Expose the new exporter service to test (optional)
+<pre>
+Usage: streams-metric-exporter [options]
+  Options:
+    --help
+      Display command line arguments
+      Default: false
+    -h, --host
+      Listen Host or IP address for this service (e.g. localhost)
+      Environment Variable: STREAMS_EXPORTER_HOST
+      Default: localhost
+    -i, --instance
+      Streams instance name.  Only used if Instance List not provided.
+      Environment Variable: STREAMS_INSTANCE_ID
+      Default: stream1
+    --jmxhttphost
+      Host or IP used to replace jmx http large data set URL host fields.  Not usually needed. Use with caution.      Environment
+      Variable: STREAMS_EXPORTER_JMX_HTTP_HOST
+    --jmxhttpport
+      Port used to replace jmx http large data set URL port fields.  Not usually needed. Use with caution.      Environment
+      Variable: STREAMS_EXPORTER_JMX_HTTP_PORT
+      Default: 31819
+    --jmxssloption
+      SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
+      Environment Variable:
+      STREAMS_EXPORTER_JMX_SSLOPTION
+      Default: TLSv1.2
+    --jmxtruststore
+      Java keystore of certificates/signers to trust from JMX Server
+      Environment Variable: STREAMS_EXPORTER_JMX_TRUSTSTORE
+    -j, --jmxurl
+      JMX Connection URL (e.g. service:jmx:jmxmp://localhost:9975). Supports comma-separated list for failover.
+      Environment
+      Variable: STREAMS_EXPORTER_JMXCONNECT
+      Default: service:jmx:jmxmp://10.75.16.206:32399
+    --logdir
+      Logging direcotry.  If not set or empty log to stdout.
+     Environment Variable: STREAMS_EXPORTER_LOGDIR
+      Default: 
+    -l, --loglevel
+      Logging level [ fatal | error | warn | info | debug | trace ]
+      Environment Variable: STREAMS_EXPORTER_LOGLEVEL
+      Default: info
+    --noconsole
+      Flag to indicate not to prompt for password (can still redirect from stdin or use environment variable for password.
+      Default: false
+    --password
+      Streams login password. Recommend using environment variable
+      Environment Variable: STREAMS_EXPORTER_PASSWORD
+      Default: ou812bmw
+    -p, --port
+      Listen Port for this service
+      Environment Variable: STREAMS_EXPORTER_PORT
+      Default: 25500
+    -r, --refresh
+      Refresh rate of metrics in seconds or 0 for no automatic refresh
+      Environment Variable: STREAMS_EXPORTER_REFRESHRATE
+      Default: 0
+    --serverkeystore
+      Java keystore containing server certificate and key to identify server side of this application
+      Environment Variable:
+      STREAMS_EXPORTER_SERVER_KEYSTORE
+    --serverkeystorepwd
+      Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
+      Environment Variable:
+      STREAMS_EXPORTER_SERVER_KEYSTORE_PWD
+    --serverprotocol
+      http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
+      Environment
+      Variable: STREAMS_EXPORTER_SERVER_PROTOCOL
+      Default: http
+    -u, --user
+      Streams login username. Use this or X509CERT
+      Environment Variable: STREAMS_EXPORTER_USERNAME
+      Default: bmwilli
+    -v, --version
+      Display version information
+      Default: false
+    --webPath,
+      Base URI prefix (e.g. /someprefix)
+      Environment Variable: STREAMS_EXPORTER_WEBPATH
+      Default: /
+    -x, --x509cert
+      X509 Certificate file to use instead of username/password
+      Environment Variable: STREAMS_X509CERT
+</pre>
 
-```
-oc expose svc/streams-metric-exporter
-```
 
-5. Get the name of the DNS entry created
+# JMX Connection Failover
+The ``-j|--jmxurl`` option accepts a comma separated list of jmx connection urls.<br> 
+Example: ```service:jmx:jmxmp://host1:9975,service:jmx:jmxmp://host2:9975```<br>
+When attempting a connection to the jmx server, each of these will be tried in order without delay.
+If a list is provided and a connection cannot be made to any of the url's in the list, then an exception
+may be raised and normal delay / retry logic used.  The connection acquired will stay active until it is lost.  At that time, the list will be retried from the beginning.
 
-```
-oc describe route streams-metric-exporter
-```
+# Logging
+Logging is performed through the log4j 1.2 facility. There are two arguments to control logging.
 
-6. Test via curl
+| argument | env | default | description |
+|:---------|:----|:--------|:------------|
+|--logdir|STREAM_EXPORTER_LOGDIR|undefined<br>(stdout)|If this argument is undefined log messages are sent to the **console** (stdout).<br>If this argument is present then a rolling logfile is created in the directory specified with the name of the logfile: **StreamsMetricExporter.log**|
+|--loglevel|STREAMS_EXPORTER_LOGLEVEL|info|fatal,error,warn,info,debug,trace<br>**note:** debug level contains timing messages|
 
+
+## Adding to the default logging
+If you wish to configure your own logging (in addition to that which the application already does), create a log4j.properties file and point to it using the log4j.configuration java property.  For example:
 ```
-curl streams-metric-exporter-streams-metrics.apps.my.cluster.com/metrics
+java -Dlog4j.configuration=file:${PWD}/log4j.properties -jar target/executable-streams-metric-exporter.jar -j \
+service:jmx:jmxmp://localhost:9975 -d StreamsDomain -i \
+StreamsInstance -u streamsadmin
 ```
+This would be useful in situations when you want to log to both the console and a file.<br>
+**Note:** The log level will still be set by the command line argument or environment variable, NOT the rootlogger value in your log4j.properties.
+
+# Redirecting JMX HTTP URLs
+There are some configurations where you will need to override the URLs returned for large data sets to be pulled from IBM Streams over Http.
+<br>
+There are two arguments that can be used to overwrite the JMX Http URL that is used for large data objects.
+
+| argument | env | default | description |
+|:---------|:----|:--------|:------------|
+|--jmxhttphost|STREAM_EXPORTER_JMX_HTTP_HOST|undefined|Host name or IP Address<br>If this argument is specified the host field of the JMX Http URL will be replaced with this value|
+|--jmxhttpport|STREAMS_EXPORTER_JMX_HTTP_PORT|undefined|Port number<br>If this argument is specified the port field of the JMX Http URL will be replaced with this value|
+
+
+## JMX HTTP Host and Port redirection examples and Kubernetes
+IBM Streams JMX API has several calls that return urls that are to be used by an HTTP Get request to pull back large data items.  Examples used in this application include: `snapshotJobMetrics()` and `snapshotJobs()`.
+
+The default configuration of IBM Streams uses a random port for the JMX Http Server.  To override this and set a specific port set the following IBM Streams properties:
+
+| Streams Version | Property Type | Property |
+|:----------------|:--------------|:---------|
+| 4.2.1.3 & earlier | Instance | sam.jmxHttpPort |
+| 4.2.4 & later | Domain | jmx.httpPort |
+
+In cases where the Streams JMX Server is running inside of a container or environment with private IP addresses and a gateway, the URLs returned from these calls will use the host and port of the internal address of the JMX Http Port.  In addition, the default configuration of Streams will use a random port at startup for the JMX Http Server.
+
+Using the `--jmxhttphost` and `--jmxhttpport` arguments or environment variables an be used to override the URL before the HTTP Get request is performed.
+
+Logging at the `debug` level will provide messages showing thge URLs before and after the override.
+
+When Streams metric export is running outside of the Kubernetes/OpenShift cluster hosting Streams, Kubernetes Service Objects and OpenShift routes are used to map external facing hostnames and ports to internal pod hosts (ip address) and ports.  The JMX HTTP Host and Port override arguments can be used to get around this issue.  Provide the Kubernetes external cluster hostname and the NodePort of the service or the OpenShift Route DNS name as the arguments for Streams Metric Exporter.
+
+
 
 # Running in Docker
 
@@ -875,3 +850,34 @@ Displays JSON view of the configuration values the program is using.<br>
 ## /version
 Displays the version of the application
 
+# Building the application
+
+## Install Dependencies
+This application does NOT need to be compiled on a system with IBM Streams installed.  The lib folder contains two redistributable .jar files from IBM Streams that must be installed into your local maven repository.
+
+There is a Makefile included that will do this installation.
+
+```
+make setup
+```
+
+## Compiling the application
+```
+mvn compile
+```
+
+## Create executable .jar with dependencies included
+```
+mvn package
+```
+or
+```
+make package
+```
+Location will be: target/executable-streams-metric-exporter.jar
+
+## Create packaged binary and supporting files in .tar.gz
+```
+make tar
+```
+Location will be: target/streams-metric-exporter-x.x.x-release.tar.gz
