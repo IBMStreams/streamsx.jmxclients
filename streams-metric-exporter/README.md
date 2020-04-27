@@ -347,13 +347,13 @@ production environment you may want to create a more complex template which hide
 | **STREAMS_EXPORTER_USERNAME** | Name of CP4D user described in prerequisites |
 | **STREAMS_EXPORTER_PASSWORD** | Password of CP4D user described in prerequisites |
 
-1. Create new OpenShift Project
+2. Create new OpenShift Project
 
 ```bash
 oc new-project streams-metrics
 ```
 
-1. Create new Openshift Application from Docker Image
+3. Create new Openshift Application from Docker Image
 
 ```bash
 oc new-app --bmwilli1/streams-metric-exporter:5.0.0 \
@@ -363,19 +363,19 @@ oc new-app --bmwilli1/streams-metric-exporter:5.0.0 \
       -e STREAMS_EXPORTER_PASSWORD=passw0rd
 ```
 
-1. Expose the new exporter service to test (optional)
+4. Expose the new exporter service to test (optional)
 
 ```
 oc expose svc/streams-metric-exporter
 ```
 
-1. Get the name of the DNS entry created
+5. Get the name of the DNS entry created
 
 ```
 oc describe route streams-metric-exporter
 ```
 
-1. Test via curl
+6. Test via curl
 
 ```
 curl streams-metric-exporter-streams-metrics.apps.my.cluster.com/metrics
