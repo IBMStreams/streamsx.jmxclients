@@ -1,0 +1,520 @@
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  name: streams-metric-dashboard
+  annotations:
+    "openshift.io/display-name": "IBM Streams Metric Dashboard"
+    description: |
+      A metrics dashboard solution for an IBM Streams v5 Instance running in IBM Cloud Pak for Data on OpenShift - collect and gather metrics using the streams-metric-exporter, store in Prometheus, and display using Grafana.
+    iconClass: icon-openjdk
+    tags: "monitoring,streams,grafana,prometheus"
+
+parameters:
+# General
+- description: The namespace to instantiate dashboard system under. Defaults to 'streams-metrics'.
+  name: NAMESPACE
+  value: streams-metrics
+
+# streams-metric-exporter
+- name: STREAMS_INSTANCE_ID
+  description: Name of Streams Instance
+  value: stream1
+  required: true
+- name: STREAMS_EXPORTER_JMXCONNECT
+  description: Service JMX endpoint for IBM Streams Instance (e.g. service:jmx:jmxmp://stream1-jmx.zen:9975
+  value: service:jmx:jmxmp://stream1-jmx.zen:9975
+  required: true
+- name: STREAMS_EXPORTER_USERNAME
+  description: Name of CP4D user with minimum of "View Catalog" permissions and Streams Instance "User" role
+  value: streamsmetricuser
+  required: true
+- name: STREAMS_EXPORTER_PASSWORD
+  description: Password of CP4D user
+  value: passw0rd
+  required: true
+- name: STREAMS_EXPORTER_LOGLEVEL
+  description: Logging level [ fatal | error | warn | info | debug | trace ]
+  value: info
+- name: STREAMS_X509CERT
+  description: X509 Certificate file to use instead of username/password.  Streams must be configured for client certs
+- name: STREAMS_EXPORTER_JMX_SSLOPTION
+  description: SSL Option for connection to Streams JMX Server (e.g. SSL_TLSv2, TSLv1.1, TLSv1.2)
+  value: TLSv1.2
+- name: STREAMS_EXPORTER_JMX_TRUSTSTORE
+  description: Java keysrtore of certificates/signers to trust from JMX Server
+- name: STREAMS_EXPORTER_SERVER_KEYSTORE
+  description: Java keystore containing server certificate and key to identify server side of this application
+- name: STREAMS_EXPORTER_SERVER_KEYSTORE_PWD
+  description: Passphrase to java keystore.  Passphrase of keystore and key (if it has one) must match
+- name: STREAMS_EXPORTER_SERVER_PROTOCOL
+  description: http or https.  https will use one-way ssl authentication and java default for tls level (TLSv1.2)
+  value: http
+- name: IMAGE_STREAMSMETRICEXPORTER
+  description: The location of the streams-metric-exporter image.
+  value: bmwilli1/streams-metric-exporter:5.0.1
+
+# Prometheus
+- description: The location of the prometheus image.
+  name: IMAGE_PROMETHEUS
+  value: prom/prometheus:v2.17.1
+- description: Retention days for Prometheus. Defaults to '10d'
+  name: RETENTION_DAYS_PROMETHEUS
+  value: 10d
+- description: Size of the persistent volume for prometheus. Defaults to '10Gi'.
+  name: VOLUMESIZE_PROMETHEUS
+  value: 10Gi
+- description: Memory limit for Prometheus. Defaults to '8Gi'.
+  name: LIMITMEMORY_PROMETHEUS
+  value: 8Gi
+- description: Requested memory for Prometheus. Defaults to '1Gi'
+  name: REQMEMORY_PROMETHEUS
+  value: 1Gi
+
+# Grafana
+- description: The location of the grafana image.
+  name: IMAGE_GRAFANA
+  value: grafana/grafana:6.7.2
+- description: Size of the persistent volume for grafana
+  name: VOLUMESIZE_GRAFANA
+  value: 100Mi
+- description: Memory limit for Grafana. Defaults to '1Gi'.
+  name: LIMITMEMORY_GRAFANA
+  value: 1Gi
+- description: Requested memory for Grafana. Defaults to '512Mi'
+  name: REQMEMORY_GRAFANA
+  value: 512Mi
+- description: Default admin user name for Grafana. Defaults to 'admin'
+  name: ADMIN_USERNAME_GRAFANA
+  value: admin
+- description: Default admin password for Grafana. Defaults to 'passw0rd'
+  name: ADMIN_PASSWORD_GRAFANA
+  value: passw0rd
+
+objects:
+##############################################################################################
+#
+# Prometheus
+#
+##############################################################################################
+# service account with role cluster-reader
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: prometheus
+    namespace: "${NAMESPACE}"
+- apiVersion: authorization.openshift.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: prometheus-cluster-reader
+  roleRef:
+    name: cluster-reader
+  subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: "${NAMESPACE}"
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: prometheus
+    namespace: "${NAMESPACE}"
+  spec:
+    port:
+      targetPort: 9090
+    to:
+      kind: Service
+      name: prometheus
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: prometheus
+    namespace: "${NAMESPACE}"
+  spec:
+    ports:
+    - name: prometheus
+      port: 9090
+      protocol: TCP
+      targetPort: 9090
+    selector:
+      name: prometheus
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: pvc-prometheus
+    namespace: "${NAMESPACE}"
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${VOLUMESIZE_PROMETHEUS}"
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: prometheus
+    namespace: "${NAMESPACE}"
+  spec:
+    replicas: 1
+    selector:
+      name: prometheus
+    template:
+      metadata:
+        labels:
+          name: prometheus
+      spec:
+        serviceAccount: prometheus
+        serviceAccountName: prometheus
+        containers:
+        - name: prometheus
+          image: "${IMAGE_PROMETHEUS}"
+          imagePullPolicy: IfNotPresent
+          args:
+          - --config.file=/etc/prometheus/prometheus.yml
+          - --storage.tsdb.path=/prometheus
+          - --storage.tsdb.retention=${RETENTION_DAYS_PROMETHEUS}
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: 9090
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          ports:
+          - containerPort: 9090
+          resources:
+            limits:
+              memory: "${LIMITMEMORY_PROMETHEUS}"
+            requests:
+              memory: "${REQMEMORY_PROMETHEUS}"
+          volumeMounts:
+          - mountPath: /etc/prometheus
+            name: config-prometheus
+          - mountPath: '/prometheus'
+            name: data-prometheus
+        restartPolicy: Always
+        volumes:
+        - name: config-prometheus
+          configMap:
+            defaultMode: 420
+            name: configmap-prometheus
+        - name: data-prometheus
+          persistentVolumeClaim:
+            claimName: pvc-prometheus
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: configmap-prometheus
+    namespace: "${NAMESPACE}"
+  data:
+    prometheus.yml: |
+      global:
+        scrape_interval: 10s
+        evaluation_interval: 30s
+        scrape_timeout: 10s
+        # Attach these labels to any time series or alerts when communicating with
+        # external systems (federation, remote storage, Alertmanager).
+        external_labels:
+            monitor: "prometheus_${NAMESPACE}"
+
+      #rule_files:
+      #  - '*.rules'
+
+      scrape_configs:
+
+      - job_name: 'ibmstreams'
+        metrics_path: '/metrics'
+        scheme: http
+        static_configs:
+        - targets: ['streams-metric-exporter:25500']
+
+
+
+##############################################################################################
+#
+# Grafana
+#
+##############################################################################################
+# This is based upon the findings from http://widerin.net/blog/official-grafana-docker-image-on-openshift/
+# - adding a configmap for grafana.ini
+# - starting the docker image with custom "command" and "args"
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: grafana
+    namespace: "${NAMESPACE}"
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: grafana
+    namespace: "${NAMESPACE}"
+  spec:
+    port:
+      targetPort: 3000
+    to:
+      kind: Service
+      name: grafana
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: grafana
+    namespace: "${NAMESPACE}"
+  spec:
+    ports:
+    - name: grafana
+      port: 3000
+      targetPort: 3000
+    selector:
+      name: grafana
+
+- apiVersion: v1
+  kind: PersistentVolumeClaim
+  metadata:
+    name: pvc-grafana
+    namespace: "${NAMESPACE}"
+  spec:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: "${VOLUMESIZE_GRAFANA}"
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    name: grafana
+    namespace: "${NAMESPACE}"
+  spec:
+    replicas: 1
+    selector:
+      name: grafana
+    template:
+      metadata:
+        labels:
+          name: grafana
+      spec:
+        serviceAccount: grafana
+        serviceAccountName: grafana
+        containers:
+        - name: grafana
+          image: ${IMAGE_GRAFANA}
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "false"
+            - name: GF_AUTH_BASIC_ENABLED
+              value: "true"
+          #command:
+          #- /usr/sbin/grafana-server
+          #args:
+          #- '--homepath=/usr/share/grafana'
+          #- '--config=/etc/grafana/grafana.ini'
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          ports:
+          - containerPort: 3000
+          resources:
+            limits:
+              memory: "${LIMITMEMORY_GRAFANA}"
+            requests:
+              memory: "${REQMEMORY_GRAFANA}"
+          volumeMounts:
+          - mountPath: /etc/grafana
+            name: config-grafana
+          - mountPath: /var/lib/grafana
+            name: data-grafana
+          #- mountPath: /dashboards
+          #  name: dashboards-grafana
+          #- mountPath: /var/log/grafana
+          #  name: log-grafana
+          restartPolicy: Always
+        volumes:
+        - name: config-grafana
+          configMap:
+            defaultMode: 420
+            name: configmap-grafana
+            items:
+            - key: grafana.ini
+              path: grafana.ini
+            - key: datasource.yaml
+              path: provisioning/datasources/datasource.yaml
+        #    - key: dashboard.yaml
+        #      path: provisioning/dashboards/dashboard.yaml
+        #- name: log-grafana
+        #  emptyDir: {}
+        - name: data-grafana
+          persistentVolumeClaim:
+            claimName: pvc-grafana
+        #- name: dashboards-grafana
+        #  configMap:
+        #    name: dashboards-grafana
+
+- apiVersion: v1
+  kind: ConfigMap
+  metadata:
+    name: configmap-grafana
+    namespace: "${NAMESPACE}"
+  data:
+    grafana.ini: |
+      [paths]
+      data = /var/lib/grafana
+      plugins = /var/lib/grafana/plugins
+      provisioning = /etc/grafana/provisioning
+      #logs = /var/log/grafana
+
+      [log]
+      mode = console
+
+      [security]
+      admin_user = ${ADMIN_USERNAME_GRAFANA}
+      admin_password = ${ADMIN_PASSWORD_GRAFANA}
+
+    datasource.yaml: |
+      apiVersion: 1
+      deleteDatasources:
+        - name: Prometheus
+          orgId: 1
+      datasources:
+      - name: Prometheus
+        type: prometheus
+        access: proxy
+        orgId: 1
+        url: http://prometheus.${NAMESPACE}.svc.cluster.local:9090/
+        password:
+        user:
+        database:
+        basicAuth:
+        basicAuthUser:
+        basicAuthPassword:
+        withCredentials:
+        isDefault: true
+        version: 1
+        editable: true
+
+    #dashboard.yaml: |
+    #  apiVersion: 1
+    #  providers:
+    #  - name: 'default'
+    #    org_id: 1
+    #    folder: ''
+    #    type: file
+    #    options:
+    #      path: /dashboards
+
+##############################################################################################
+#
+# streams-metric-exporter
+#
+##############################################################################################
+# streams-metric-exporter service account with role cluster-reader
+- apiVersion: v1
+  kind: ServiceAccount
+  metadata:
+    name: streams-metric-exporter
+    namespace: "${NAMESPACE}"
+- apiVersion: authorization.openshift.io/v1
+  kind: ClusterRoleBinding
+  metadata:
+    name: streams-metric-exporter-cluster-reader
+  roleRef:
+    name: cluster-reader
+  subjects:
+  - kind: ServiceAccount
+    name: streams-metric-exporter
+    namespace: "${NAMESPACE}"
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    name: streams-metric-exporter
+    namespace: "${NAMESPACE}"
+    #annotations:
+    #  prometheus.io/scrape: 'true'
+    #  prometheus.io/port: '25500'
+  spec:
+    ports:
+    - name: streams-metric-exporter
+      port: 25500
+      targetPort: 25500
+    selector:
+      name: streams-metric-exporter
+
+- apiVersion: route.openshift.io/v1
+  kind: Route
+  metadata:
+    name: streams-metric-exporter
+    namespace: "${NAMESPACE}"
+  spec:
+    port:
+      targetPort: 25500
+    to:
+      kind: Service
+      name: streams-metric-exporter
+
+- apiVersion: v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: streams-metric-exporter
+    name: streams-metric-exporter
+    namespace: "${NAMESPACE}"
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      name: streams-metric-exporter
+      deploymentconfig: streams-metric-exporter
+    template:
+      metadata:
+        labels:
+          name: streams-metric-exporter
+          deploymentconfig: streams-metric-exporter
+      spec:
+        serviceAccount: streams-metric-exporter
+        serviceAccountName: streams-metric-exporter
+        containers:
+        - name: streams-metric-exporter
+          image: ${IMAGE_STREAMSMETRICEXPORTER}
+          imagePullPolicy: IfNotPresent
+          ports:
+          - containerPort: 25500
+            protocol: TCP
+          env:
+            - name: STREAMS_EXPORTER_JMXCONNECT
+              value: ${STREAMS_EXPORTER_JMXCONNECT}
+            - name: STREAMS_EXPORTER_PASSWORD
+              value: ${STREAMS_EXPORTER_PASSWORD}
+            - name: STREAMS_EXPORTER_USERNAME
+              value: ${STREAMS_EXPORTER_USERNAME}
+            - name: STREAMS_INSTANCE_ID
+              value: ${STREAMS_INSTANCE_ID}
+            - name: STREAMS_EXPORTER_LOGLEVEL
+              value: ${STREAMS_EXPORTER_LOGLEVEL}
+            - name: STREAMS_X509CERT
+              value: ${STREAMS_X509CERT}
+            - name: STREAMS_EXPORTER_JMX_SSLOPTION
+              value: ${STREAMS_EXPORTER_JMX_SSLOPTION}
+            - name: STREAMS_EXPORTER_JMX_TRUSTSTORE
+              value: ${STREAMS_EXPORTER_JMX_TRUSTSTORE}
+            - name: STREAMS_EXPORTER_SERVER_KEYSTORE
+              value: ${STREAMS_EXPORTER_SERVER_KEYSTORE}
+            - name: STREAMS_EXPORTER_SERVER_KEYSTORE_PWD
+              value: ${STREAMS_EXPORTER_SERVER_KEYSTORE_PWD}
+            - name: STREAMS_EXPORTER_SERVER_PROTOCOL
+              value: ${STREAMS_EXPORTER_SERVER_PROTOCOL}
+          dnsPolicy: ClusterFirst
+          restartPolicy: Always
+          #readinessProbe:
+          #  httpGet:
+          #    path: /healthz
+          #    port: 8080
+          #  initialDelaySeconds: 5
+          #  timeoutSeconds: 5
