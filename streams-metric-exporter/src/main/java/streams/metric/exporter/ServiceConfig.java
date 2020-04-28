@@ -414,6 +414,6 @@ public class ServiceConfig {
      
     private String getEnvDefault(String env, String defaultValue) {
     	String value = System.getenv(env);
-    	return value == null ? defaultValue : value;
+    	return (value == null || value.isEmpty() || (value.trim().length() == 0)) ? defaultValue : value;
     }
 }

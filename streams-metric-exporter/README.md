@@ -50,7 +50,7 @@ production environment you may want to create a more complex template which hide
 * IBM Streams Instance deployed in CP4D
 * CP4D User (e.g. streamsmetricuser) with permissions:
   * CP4D User Role: minimum privilege of "Access catalog" (e.g. "Developer" role)
-  * CP4D Streams Instance Access minimum "User" role
+  * CP4D Streams Instance Access to read all of the jobs they are to monitor
 
 ## Create and run new OpenShift Application
 

@@ -278,14 +278,14 @@ public class Launcher {
 			System.exit(1);
 		}
 		
-		System.out.println("Streams Metric Exporter STARTING...");
+		System.out.println("Streams Metric Exporter " + Version.getImplementationVersion() + " STARTING...");
 
 		if (setupLogging(config.getLoglevel(), config.getLogdir()) == false) {
 			System.exit(1);
 		};
 		
 		if (!consoleLogging) {
-			LOGGER.info("Streams Metric Exporter STARTING...");
+			LOGGER.info("Streams Metric Exporter " + Version.getImplementationVersion() + " STARTING...");
 		}
 
 
