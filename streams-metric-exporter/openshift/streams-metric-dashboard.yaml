@@ -96,28 +96,10 @@ objects:
 # Prometheus
 #
 ##############################################################################################
-# service account with role cluster-reader
-- apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: prometheus
-    #namespace: "${NAMESPACE}"
-- apiVersion: authorization.openshift.io/v1
-  kind: ClusterRoleBinding
-  metadata:
-    name: prometheus-cluster-reader
-  roleRef:
-    name: cluster-reader
-  subjects:
-  - kind: ServiceAccount
-    name: prometheus
-    #namespace: "${NAMESPACE}"
-
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
     name: prometheus
-    #namespace: "${NAMESPACE}"
   spec:
     port:
       targetPort: 9090
@@ -129,7 +111,6 @@ objects:
   kind: Service
   metadata:
     name: prometheus
-    #namespace: "${NAMESPACE}"
   spec:
     ports:
     - name: prometheus
@@ -143,7 +124,6 @@ objects:
   kind: PersistentVolumeClaim
   metadata:
     name: pvc-prometheus
-    #namespace: "${NAMESPACE}"
   spec:
     accessModes:
       - ReadWriteOnce
@@ -155,7 +135,6 @@ objects:
   kind: DeploymentConfig
   metadata:
     name: prometheus
-    #namespace: "${NAMESPACE}"
   spec:
     replicas: 1
     selector:
@@ -165,8 +144,6 @@ objects:
         labels:
           name: prometheus
       spec:
-        serviceAccount: prometheus
-        serviceAccountName: prometheus
         containers:
         - name: prometheus
           image: "${IMAGE_PROMETHEUS}"
@@ -237,20 +214,10 @@ objects:
 # Grafana
 #
 ##############################################################################################
-# This is based upon the findings from http://widerin.net/blog/official-grafana-docker-image-on-openshift/
-# - adding a configmap for grafana.ini
-# - starting the docker image with custom "command" and "args"
-- apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: grafana
-    #namespace: "${NAMESPACE}"
-
 - apiVersion: route.openshift.io/v1
   kind: Route
   metadata:
     name: grafana
-    #namespace: "${NAMESPACE}"
   spec:
     port:
       targetPort: 3000
@@ -262,7 +229,6 @@ objects:
   kind: Service
   metadata:
     name: grafana
-    #namespace: "${NAMESPACE}"
   spec:
     ports:
     - name: grafana
@@ -287,7 +253,6 @@ objects:
   kind: DeploymentConfig
   metadata:
     name: grafana
-    #namespace: "${NAMESPACE}"
   spec:
     replicas: 1
     selector:
@@ -297,8 +262,6 @@ objects:
         labels:
           name: grafana
       spec:
-        serviceAccount: grafana
-        serviceAccountName: grafana
         containers:
         - name: grafana
           image: ${IMAGE_GRAFANA}
@@ -308,11 +271,6 @@ objects:
               value: "false"
             - name: GF_AUTH_BASIC_ENABLED
               value: "true"
-          #command:
-          #- /usr/sbin/grafana-server
-          #args:
-          #- '--homepath=/usr/share/grafana'
-          #- '--config=/etc/grafana/grafana.ini'
           readinessProbe:
             httpGet:
               path: /api/health
@@ -361,7 +319,6 @@ objects:
   kind: ConfigMap
   metadata:
     name: configmap-grafana
-    #namespace: "${NAMESPACE}"
   data:
     grafana.ini: |
       [paths]
@@ -414,31 +371,13 @@ objects:
 # streams-metric-exporter
 #
 ##############################################################################################
-# streams-metric-exporter service account with role cluster-reader
-- apiVersion: v1
-  kind: ServiceAccount
-  metadata:
-    name: streams-metric-exporter
-    #namespace: "${NAMESPACE}"
-- apiVersion: authorization.openshift.io/v1
-  kind: ClusterRoleBinding
-  metadata:
-    name: streams-metric-exporter-cluster-reader
-  roleRef:
-    name: cluster-reader
-  subjects:
-  - kind: ServiceAccount
-    name: streams-metric-exporter
-    #namespace: "${NAMESPACE}"
-
 - apiVersion: v1
   kind: Service
   metadata:
     name: streams-metric-exporter
-    #namespace: "${NAMESPACE}"
-    #annotations:
-    #  prometheus.io/scrape: 'true'
-    #  prometheus.io/port: '25500'
+    annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port: '25500'
   spec:
     ports:
     - name: streams-metric-exporter
@@ -451,7 +390,6 @@ objects:
   kind: Route
   metadata:
     name: streams-metric-exporter
-    #namespace: "${NAMESPACE}"
   spec:
     port:
       targetPort: 25500
@@ -465,7 +403,6 @@ objects:
     labels:
       app: streams-metric-exporter
     name: streams-metric-exporter
-    #namespace: "${NAMESPACE}"
   spec:
     replicas: 1
     revisionHistoryLimit: 10
@@ -478,8 +415,6 @@ objects:
           name: streams-metric-exporter
           deploymentconfig: streams-metric-exporter
       spec:
-        serviceAccount: streams-metric-exporter
-        serviceAccountName: streams-metric-exporter
         containers:
         - name: streams-metric-exporter
           image: ${IMAGE_STREAMSMETRICEXPORTER}
