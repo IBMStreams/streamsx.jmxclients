@@ -17,9 +17,9 @@
 package streams.jmx.client.jobConfig;
 
 public enum ParallelRegionConfig {
-    NO_CHANNEL_INFLUENCE(0, "noChannelInfluence", "(default) Inclusion in this parallelRegion has no impact on the fusion process."),
-    CHANNEL_ISOLATION(1, "channelIsolation", "Operators within a channel are fused into a processing element only with operators from the same channel."),
-    CHANNEL_EXLOCATION(2, "channelExlocation", "Operators within a channel are fused with operators from the same channel or with operators from outside the region.");
+    NOCHANNELINFLUENCE(0, "noChannelInfluence", "(default) Inclusion in this parallelRegion has no impact on the fusion process."),
+    CHANNELISOLATION(1, "channelIsolation", "Operators within a channel are fused into a processing element only with operators from the same channel."),
+    CHANNELEXLOCATION(2, "channelExlocation", "Operators within a channel are fused with operators from the same channel or with operators from outside the region.");
 
     private final int code;
     private final String value;

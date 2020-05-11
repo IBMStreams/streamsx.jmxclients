@@ -21,29 +21,18 @@ package streams.jmx.client.jobConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 
-import com.beust.jcommander.JCommander;
-import com.beust.jcommander.Parameter;
-import com.beust.jcommander.ParameterException;
-import com.beust.jcommander.internal.Console;
-import com.beust.jcommander.internal.DefaultConsole;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-//import com.fasterxml.jackson.annotation.JsonGetter;
-//import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ibm.streams.management.job.JobPropertiesMXBean.FusionScheme;
-
-//import streams.jmx.client.cli.ServerProtocolValidator;
-//import streams.jmx.client.cli.InstanceListConverter;
-import streams.jmx.client.cli.LoglevelValidator;
-//import streams.jmx.client.rest.Protocol;
-import streams.jmx.client.cli.FileExistsValidator;
-import streams.jmx.client.cli.DirectoryExistsValidator;
-//import streams.jmx.client.cli.RefreshRateValidator;
-//import streams.jmx.client.cli.ServerProtocolConverter;
-
+import com.ibm.streams.management.job.JobPropertiesMXBean.ThreadingModel;
+import com.ibm.streams.management.instance.TracingPropertiesMXBean.Level;
 
 // JobConfigOverlay
 // Supports creating a default / simple JobConfigOverlay json file using the Config Parameters (-C) that 
@@ -55,13 +44,18 @@ public class JobConfigOverlay {
     private String dataDirectory;
     private FusionScheme fusionScheme;
     private String fusionTargetPeCount;
-    private String parallelRegionConfig;
+    private ParallelRegionConfig parallelRegionConfig;
     private String placementScheme;
     private Boolean preloadApplicationBundles;
     private Boolean dynamicThreadingElastic;
     private int dynamicThreadingThreadCount;
-    private String threadingModel;
-    private String tracing;
+    private ThreadingModel threadingModel;
+    private Level tracing;
+
+    // JobConfig Jackson Tree
+    private JsonNode jobConfigNode = null;
+
+    private ObjectMapper mapper = new ObjectMapper();
 
     public JobConfigOverlay() {
 
@@ -73,19 +67,126 @@ public class JobConfigOverlay {
         // Additional fields in map will be ignored and a warning provided
         LOGGER.debug("Creating JobConfigOverlay from configSettings...");
 
+        // Create empty json for our jobconfig
+        jobConfigNode = mapper.createObjectNode();
+
+        // Create the new jobconfig
+        updateWithConfigSettings(configSettings);
+    }
+
+    // Create with a given configuration file and the configuration parameters
+    public JobConfigOverlay(File jobConfigFile, Map<String,String> configSettings) throws IllegalArgumentException {
+        LOGGER.debug("Creating JobConfigOverlay from jobConfigFile and configSettings...");
+        
+        try {
+            // Read File into JSON
+            LOGGER.debug("Reading job config overlay file: {}",jobConfigFile.toString());
+            jobConfigNode = new ObjectMapper().readTree(jobConfigFile);
+
+
+        } catch (JsonProcessingException e) {
+            LOGGER.debug("Caught JsonProcessingException: {}", e.getLocalizedMessage());
+            throw new IllegalArgumentException("Error Parsing job config overlay file (" + jobConfigFile.toString() + ")");
+        } catch (IOException e) {
+            LOGGER.debug("Caught IOException: {}", e.getLocalizedMessage());
+            throw new IllegalArgumentException("Error Reading job config overlay file (" + jobConfigFile.toString() + ")");
+        }
+
+        // We need to update based on configSettings
+        updateWithConfigSettings(configSettings);
+
+    }
+
+
+    private void updateWithConfigSettings(Map<String,String> configSettings) throws IllegalArgumentException {
+        // Loop through the map, setting any fields that we support
+        // Additional fields in map will be ignored and a warning provided
+        LOGGER.debug("parsing configSettings to update JobConfigJsonNode ...");
+
         for (Map.Entry<String,String> entry : configSettings.entrySet()) {
             String key = entry.getKey();
             String valueString = entry.getValue();
             switch (entry.getKey()) {
                 case "dataDirectory" :
                     this.setDataDirectory(valueString);
+                    if (this.getDataDirectory() != null) {
+                        JsonNode jobConfig = getCreateJobConfig();
+                        //((ObjectNode) jobConfigNode.get("jobConfigOverlays").get(0).get("jobConfig")).put("dataDirectory",this.getDataDirectory());
+                        ((ObjectNode) jobConfig).put("dataDirectory",this.getDataDirectory());
+                    }
                     break;
                 case "fusionScheme":
                     try {
                         this.setFusionScheme(FusionScheme.valueOf(valueString.toUpperCase()));
+                        if (getFusionScheme() != null) {
+                            JsonNode deploymentConfig = getCreateDeploymentConfig();
+                            ((ObjectNode) deploymentConfig).put("fusionScheme",this.getFusionScheme().toString().toLowerCase());
+                        }
                     } catch (IllegalArgumentException e) {
                         throw new IllegalArgumentException("Invalid value for fusionScheme (" + valueString + ")");
-                    } catch (NullPointerException e) {}
+                    } catch (NullPointerException e) {
+                        throw new IllegalArgumentException("Invalid null value for fusionScheme (" + valueString + ")");
+                    }
+                    break;
+                case "parallelRegionConfig":
+                    try {
+                        this.setParallelRegionConfig(ParallelRegionConfig.valueOf(valueString.toUpperCase()));
+                        if (getParallelRegionConfig() != null) {
+                            JsonNode parallelRegionConfig = getCreateParallelRegionConfig();
+                            ((ObjectNode) parallelRegionConfig).put("fusionType",this.getParallelRegionConfig().toString());
+                        }
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException("Invalid value for parallelRegionConfig (" + valueString + ")");
+                    } catch (NullPointerException e) {
+                        throw new IllegalArgumentException("Invalid null value for parallelRegionConfig (" + valueString + ")");
+                    }                
+                    break;
+                case "preloadApplicationBundles": {
+                        this.setPreloadApplicationBundles(Boolean.parseBoolean(valueString));
+                        JsonNode jobConfig = getCreateJobConfig();
+                        ((ObjectNode) jobConfig).put("preloadApplicationBundles",this.isPreloadApplicationBundles());
+                    }
+                    break;  
+                case "dynamicThreadingElastic": {
+                        this.setDynamicThreadingElastic(Boolean.parseBoolean(valueString));
+                        JsonNode  deploymentConfig = getCreateDeploymentConfig();
+                        ((ObjectNode) deploymentConfig).put("dynamicThreadingElastic",this.isDynamicThreadingElastic());
+                    }
+                    break;                                      
+                case "dynamicThreadingThreadCount" :
+                    try {
+                        this.setDynamicThreadingThreadCount(Integer.parseInt(valueString));
+                        JsonNode deploymentConfig = getCreateDeploymentConfig();
+                        ((ObjectNode) deploymentConfig).put("dynamicThreadingThreadCount",this.getDynamicThreadingThreadCount());
+                        } catch (NumberFormatException e) {
+                            throw new IllegalArgumentException("Invalid integer value for dynamicThreadingCount (" + valueString + ")");
+                        }
+                    break;
+                case "threadingModel":
+                    try {
+                        this.setThreadingModel(ThreadingModel.valueOf(valueString.toUpperCase()));
+                        if (getThreadingModel() != null) {
+                            JsonNode deploymentConfig = getCreateDeploymentConfig();
+                            ((ObjectNode) deploymentConfig).put("threadingModel",this.getThreadingModel().toString().toLowerCase());
+                        }
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException("Invalid value for threadingModel (" + valueString + ")");
+                    } catch (NullPointerException e) {
+                        throw new IllegalArgumentException("Invalid null value for threadingModel (" + valueString + ")");
+                    }
+                    break;
+                case "tracing":
+                    try {
+                        this.setTracing(Level.valueOf(valueString.toUpperCase()));
+                        if (getTracing() != null) {
+                            JsonNode jobConfig = getCreateJobConfig();
+                            ((ObjectNode) jobConfig).put("tracing",this.getTracing().toString().toLowerCase());
+                        }
+                    } catch (IllegalArgumentException e) {
+                        throw new IllegalArgumentException("Invalid value for tracing (" + valueString + ")");
+                    } catch (NullPointerException e) {
+                        throw new IllegalArgumentException("Invalid null value for tracing (" + valueString + ")");
+                    }
                     break;
                 default:
                     LOGGER.warn("Unrecognized configuration parameter specified ({}), ignoring it",key);
@@ -117,11 +218,11 @@ public class JobConfigOverlay {
         this.fusionTargetPeCount = fusionTargetPeCount;
     }
 
-    public String getParallelRegionConfig() {
+    public ParallelRegionConfig getParallelRegionConfig() {
         return this.parallelRegionConfig;
     }
 
-    public void setParallelRegionConfig(String parallelRegionConfig) {
+    public void setParallelRegionConfig(ParallelRegionConfig parallelRegionConfig) {
         this.parallelRegionConfig = parallelRegionConfig;
     }
 
@@ -165,46 +266,77 @@ public class JobConfigOverlay {
         this.dynamicThreadingThreadCount = dynamicThreadingThreadCount;
     }
 
-    public String getThreadingModel() {
+    public ThreadingModel getThreadingModel() {
         return this.threadingModel;
     }
 
-    public void setThreadingModel(String threadingModel) {
+    public void setThreadingModel(ThreadingModel threadingModel) {
         this.threadingModel = threadingModel;
     }
 
-    public String getTracing() {
+    public Level getTracing() {
         return this.tracing;
     }
 
-    public void setTracing(String tracing) {
+    public void setTracing(Level tracing) {
         this.tracing = tracing;
     }
 
+    public JsonNode getJobConfigNode() {
+        return this.jobConfigNode;
+    }
 
-    private ObjectNode toObjectNode() {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode jobParameters = mapper.createObjectNode();
+    // Get the jobConfigOverlay (assuming only 1)
+    private JsonNode getCreateJobConfigOverlay() {
+        JsonNode jobConfigOverlays = this.jobConfigNode.get("jobConfigOverlays");
+        if (jobConfigOverlays == null || jobConfigOverlays.isNull()) {
+            ArrayNode jobConfigOverlaysArray = mapper.createArrayNode();
+            ((ObjectNode)this.jobConfigNode).set("jobConfigOverlays",jobConfigOverlaysArray);
+        }
 
-        // create IBM Streams JSON for config map overlay
-        ArrayNode jobConfigOverlays = mapper.createArrayNode();
-        ObjectNode jobConfigOverlay = mapper.createObjectNode();
-        ObjectNode jobConfig = mapper.createObjectNode();
-        ObjectNode deploymentConfig = mapper.createObjectNode();
+        JsonNode jobConfigOverlay = this.jobConfigNode.get("jobConfigOverlays").get(0);
+        if (jobConfigOverlay == null || jobConfigOverlay.isNull()) {
+            ObjectNode jobConfigOverlayObject = mapper.createObjectNode();
+            ((ArrayNode)this.jobConfigNode.get("jobConfigOverlays")).add(jobConfigOverlayObject);
+        }        
 
-        if (getDataDirectory() != null) jobConfig.put("dataDirectory",this.getDataDirectory());
-        if (getFusionScheme() != null) deploymentConfig.put("fusionScheme",this.getFusionScheme().toString().toLowerCase());
-        jobConfigOverlay.set("jobConfig",jobConfig);
-        jobConfigOverlay.set("deploymentConfig",deploymentConfig);
-        jobConfigOverlays.add(jobConfigOverlay);
-        jobParameters.set("jobConfigOverlays",jobConfigOverlays);
+        return this.jobConfigNode.get("jobConfigOverlays").get(0);
+    }
 
-        return(jobParameters);
+    private JsonNode getCreateJobConfig() {
+        JsonNode jco = getCreateJobConfigOverlay();
+        JsonNode jobConfig = jco.get("jobConfig");
+        if (jobConfig == null || jobConfig.isNull()) {
+            ObjectNode jobConfigObject = mapper.createObjectNode();
+            ((ObjectNode)jco).set("jobConfig",jobConfigObject);
+        }
+        return jco.get("jobConfig");
+    }
+
+
+    private JsonNode getCreateDeploymentConfig() {
+        JsonNode jco = getCreateJobConfigOverlay();
+        JsonNode deploymentConfig = jco.get("deploymentConfig");
+        if (deploymentConfig == null || deploymentConfig.isNull()) {
+            ObjectNode deploymentConfigObject = mapper.createObjectNode();
+            ((ObjectNode)jco).set("deploymentConfig",deploymentConfigObject);
+        }
+        return jco.get("deploymentConfig");
+    }
+
+    private JsonNode getCreateParallelRegionConfig() {
+        JsonNode dc = getCreateDeploymentConfig();
+        JsonNode parallelRegionConfig = dc.get("parallelRegionConfig");
+        if (parallelRegionConfig == null || parallelRegionConfig.isNull()) {
+            ObjectNode parallelRegionConfigObject = mapper.createObjectNode();
+            ((ObjectNode)dc).set("parallelRegionConfig",parallelRegionConfigObject);
+        }
+        return dc.get("parallelRegionConfig");
     }
 
 	@Override
     public String toString() {
-        return(toObjectNode().toPrettyString());
+        return(getJobConfigNode().toPrettyString());
     }
      
 }

@@ -161,15 +161,15 @@ public class SubmitJob extends AbstractInstanceCommand {
                 // 2) If no config overlay is provided, create one with -C parameters
 
                 if (jobConfigFile == null) {
+                    LOGGER.debug("jobconfig: Process Config Settings but no Job Config Overlay file");
                     // No jobconfig file, generate one.
                     jobConfigOverlayString = (new JobConfigOverlay(this.configSettings)).toString();
-
-                    LOGGER.info("** We created:");
-                    LOGGER.info("{}",jobConfigOverlayString);
                 } else {
-                    // A jobConfig file was provided, update it
-                    // To do: fill this in
+                    LOGGER.debug("jobconfig: Read Job Config Overlay file and update with config settings");
+                    jobConfigOverlayString = (new JobConfigOverlay(jobConfigFile, this.configSettings)).toString();
                 }
+                LOGGER.debug("jobconfig: New or Updated Job Config Overlay String to use:");
+                LOGGER.debug("{}",jobConfigOverlayString);
             }
 
 

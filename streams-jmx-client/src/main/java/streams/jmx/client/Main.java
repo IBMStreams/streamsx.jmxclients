@@ -543,16 +543,13 @@ public class Main {
 		// Turning down apache httpclient logging
 		// Default is DEBUG logging for wire is too verbose
 		if (!logger.isTraceEnabled()) {
-			org.apache.log4j.Logger theLogger = org.apache.log4j.Logger.getLogger("org.apache.httpwire");
-			theLogger.setLevel(org.apache.log4j.Level.toLevel("INFO"));
-			//logger.getLogger("org.apache.http.wire").setLevel(org.apache.log4j.Level.toLevel("INFO"));
+			ArrayList<String> cl = new ArrayList<String>(Arrays.asList("org.apache.http","org.apache.httpwire"));
+			for (String c : cl) {
+				org.apache.log4j.Logger theLogger = org.apache.log4j.Logger.getLogger(c);
+				theLogger.setLevel(org.apache.log4j.Level.toLevel("INFO"));
+				theLogger.setAdditivity(false);
+			}
 		}
-		//logger.getLogger("org.apache.http.http").setLevel(org.apache.log4j.Level.toLevel(loglevel));
-
-		// Turn off built in grizzly logging that uses JUL, and route to our SLF4J via
-		// log4j implementation
-		// SLF4JBridgeHandler.removeHandlersForRootLogger();
-		// SLF4JBridgeHandler.install();
 	
 		return true;
 	}

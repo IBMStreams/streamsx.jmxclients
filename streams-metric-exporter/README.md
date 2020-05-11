@@ -40,7 +40,7 @@ bmwilli@us.ibm.com
 
 # Running in OpenShift with Cloud Pak for Data
 
-IBM Streams 5 is typically run as part of IBM Cloud Pak for Data.  There are many ways to accomplish to goal of running streams-metric-exporter in CP4D.  Below is a simple way to get started, however, in a
+IBM Streams 5 is typically run as part of IBM Cloud Pak for Data.  There are many ways to accomplish to goal of running streams-metric-exporter in CP4D.  Below are two examples to get started, however, in a
 production environment you may want to create a more complex template which hides credentials in secrets.
 
 ## Prerequisites
@@ -52,9 +52,9 @@ production environment you may want to create a more complex template which hide
   * CP4D User Role: minimum privilege of "Access catalog" (e.g. "Developer" role)
   * CP4D Streams Instance Access to read all of the jobs they are to monitor
 
-## Create and run new OpenShift Application
+## Information Required
 
-1. Collection information required for streams-metric-exporter environment variables
+Collection information required for streams-metric-exporter environment variables
 
 | Environment Variable | Details |
 | :----------------- | :---------- |
@@ -63,7 +63,66 @@ production environment you may want to create a more complex template which hide
 | **STREAMS_EXPORTER_USERNAME** | Name of CP4D user described in prerequisites |
 | **STREAMS_EXPORTER_PASSWORD** | Password of CP4D user described in prerequisites |
 
+## Streams Metric Dashboard (streams-metric-exporter, Prometheus, and Grafana)
+
+This example will run a complete Streams Metric Dashboard solution in OpenShift with Cloud Pak for Data
+
+1. Copy the template file to your OpenShift command host
+```bash
+wget https://raw.githubusercontent.com/IBMStreams/streamsx.jmxclients/v5/streams-metric-exporter/openshift/streams-metric-dashboard.yaml
+```
+
+2. Copy the sample dashboards to your OpenShift command host
+
+```bash
+wget https://raw.githubusercontent.com/IBMStreams/streamsx.jmxclients/v5/streams-metric-exporter/dashboards/IBMStreamsInstanceDashboard.json
+wget https://raw.githubusercontent.com/IBMStreams/streamsx.jmxclients/v5/streams-metric-exporter/dashboards/IBMStreamsResourceDashboard.json
+wget https://raw.githubusercontent.com/IBMStreams/streamsx.jmxclients/v5/streams-metric-exporter/dashboards/IBMStreamsJobDashboard.json
+```
+
 2. Create new OpenShift Project
+
+```bash
+oc new-project streams-metric-dashboard
+```
+
+3. Create a new application based on the template
+
+```bash
+oc new-app -f streams-metric-dashboard.yaml \
+      -p STREAMS_EXPORTER_JMXCONNECT=service:jmx:jmxmp://stream1-jmx.zen:9975 \
+      -p STREAMS_INSTANCE_ID=stream1 \
+      -p STREAMS_EXPORTER_USERNAME=streamsmetricuser \
+      -p STREAMS_EXPORTER_PASSWORD=passw0rd
+```
+
+4. List the routes that were created
+
+```bash
+oc get routes
+```
+
+5. Test the streams-metric-exporter route
+```bash
+curl streams-metric-exporter-streams-metric-dashboard.apps.my.cluster.com
+```
+
+6. Open Grafana url in a browser
+   Default Username: admin
+   Default Password: passw0rd
+
+```bash
+http://grafana-streams-metric-dashboard.apps.my.cluster.com
+```
+
+7. Import the sample dashboards via the Grafana GUI
+
+
+## Streams Metric Exporter alone
+
+This example will run just the streams-metric-exporter app.  This would be useful for tying into an existing Prometheus/Grafana solution
+
+1. Create new OpenShift Project
 
 ```bash
 oc new-project streams-metrics
