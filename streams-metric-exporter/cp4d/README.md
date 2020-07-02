@@ -1,7 +1,9 @@
 # Deploy Streams Metric Dashboard in Cloud Pak 4 Data 3.x
 
 ## Create a new OpenShift Project
+```
 oc new-project streams-test-dashboard
+```
 
 ## Create new application with default admin login to IBM Streams (admin/password)
 ```
