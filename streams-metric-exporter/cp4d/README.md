@@ -32,7 +32,7 @@ NOTE: These can be configured as parameters to the new-app command above<br>
   -p ADMIN_PASSWORD_GRAFANA=<password><br>
 
 
-## Provision dashboards through import
+## Provision dashboards through import (if not done as configmap)
 See Grafana documentation to import dashboard yaml file from ../dashboards
 
 Done through import allows these dashboards to be edited via Grafana
