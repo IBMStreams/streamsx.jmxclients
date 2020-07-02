@@ -1,4 +1,4 @@
-# Sample Run
+# Deploy Streams Metric Dashboard in Cloud Pak 4 Data 3.x
 
 oc new-project streams-test-dashboard
 
