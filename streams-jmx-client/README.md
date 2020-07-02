@@ -1,5 +1,11 @@
 # streams-jmx-client
 
+Streams JMX Based Command-Line Interface for IBM STreams version 5.x.
+
+**NOTE:** This version will not work with older Streams versions (e.g. 4.x)
+
+**IMPORTANT:** To use this program from outside of CP4D/OpenShift you need to expose a new NodePort Service pointing to the JMX and JMX-HTTPS ports.  (See instructions below)
+
 This application provides a command-line interface to the IBM Streams - Stream Processing System.  This program functions similar to the **streamtool** command that is included with IBM Streams, however, this application uses a pure JMX interface and can be run on any java platform and does **not** require the IBM Streams installation on the same host.
 
 Reasons for using this application include
@@ -12,6 +18,41 @@ The application supports an interactive mode (similar to streamtool interactive 
 The initial set of commands focus on interacting with Streams in a container hosting environment.
 
 Requests for additional commands are welcome and contributions are encouraged.
+
+## Add NodePort to Streams JMX Interface i OpenShift
+1. Open OpenShift browser as an administrative user
+2. Select Networking -> Services
+3. Choose your cp4d project (e.g. zen)
+4. Click "Create Service"
+5. Fill in yaml:
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: <streams_instance_name>-jmx-external
+  namespace: zen
+spec:
+  type: NodePort
+  selector:
+    release: <streams_instance_name>
+    streams-jmx: active
+  ports:
+    - protocol: TCP
+      name: tcp-jmx
+      port: 9975
+      targetPort: 9975
+    - protocol: TCP
+      name: tcp-jmx-https
+      port: 9976
+      targetPort: 9976
+```   
+6. Press "Create"
+7. NOTE The NodePort it assigns for tcp-jmx and tcp-jmx-https (e.g. 30866 and 31303)
+
+In your environment variables for streams-jmx-client use:
+STREAMS_CLIENT_JMXCONNECT=service:jmx:jmxmp://<a_cluster_master_node_ip>:<tcp-jmx nodeport>
+STREAMS_CLIENT_JMX_HTTP_PORT=<tcp-jmx-https nodeport>
+
 
 ## Commands
 
