@@ -4,9 +4,9 @@
 
 As a Streams developer or admin, you might need a way to efficiently store and visualize current and historical Streams metrics.  For example, you could compare historical metrics to current values to determine the impact of enhancements or changes to application performance.  You could use current metrics to create application domain specific dashboards (e.g. Translate the `nTuplesSubmitted` metric into a meaningful application context for operations floor personnel).
 
-This tutorial will introduce an approach to monitoring IBM Streams metrics using the [Prometheus](https://prometheus.io/) time-series database and [Grafana](https://grafana.com/) dashboard solution.  A key component to this solution is the [Streams Metric Exporter](https://github.com/IBMStreams/streamsx.jmxclients/tree/develop/streams-metric-exporter), (Current version 4.0.0 works with any IBM Streams 4.x Domain, 5.x support coming soon) which publishes built-in and custom metrics from the IBM Streams JMX Service to the Prometheus database.  This provides a dynamic, interactive, and customizable capability to create dashboards that can focus on general IBM Streams objects (Jobs, Operators, etc.) as well as be tailored to specific application domains. In this tutorial we will demonstrate these features and provide a launch point for more advanced use cases.
+This tutorial will introduce an approach to monitoring IBM Streams metrics using the [Prometheus](https://prometheus.io/) time-series database and [Grafana](https://grafana.com/) dashboard solution.  A key component to this solution is the [Streams Metric Exporter](https://github.com/IBMStreams/streamsx.jmxclients/tree/develop/streams-metric-exporter), (Current version 4.0.0 works with any IBM Streams 4.x Domain, 5.x support coming soon) which publishes built-in and custom metrics from the IBM Streams JMX Service to the Prometheus database.  This provides a dynamic, interactvive, and customizable capability to create dashboards that can focus on general IBM Streams objects (Jobs, Operators, etc.) as well as be tailored to specific application domains. In this tutorial we will demonstrate these features and provide a launch point for more advanced use cases.
 
-![](images/IBMStreamsDomainDashboard-300x196.png)
+![](images/v4/IBMStreamsDomainDashboard_v1-300x196.png)
 
 ### Table of Contents
 
@@ -88,7 +88,7 @@ Unlike these two solutions, however, the StreamsMetricExporter/Prometheus/Grafan
 *   Provides a single integrated end to end solution for real-time and historical analysis of all built-in and custom metrics available in Streams.
 *   Efficient time-series storage of Prometheus and its built in retention period allows the data to be automatically aged off without additional administrator overhead.
 
-<figure class="wp-caption aligncenter" id="attachment_16742" style="width: 645px">![](images/GPSGeneralArchitecture-300x67.png)
+<figure class="wp-caption aligncenter" id="attachment_16742" style="width: 645px">![](images/v4/GPSGeneralArchitecture-300x67.png)
 
 <figcaption class="wp-caption-text">Figure 1: Solution Architecture</figcaption>
 
@@ -139,7 +139,7 @@ The tutorial environment is pictured below.  It uses Docker Compose to bring up 
 
 The tutorial environment also relies on IBM Streams Quick Start Edition for Docker.  In order to get all of the containers to communicate we will modify the `docker-compose.yml` file to utilize the Docker built-in bridge network and Docker links.
 
-![](images/GPSTutorialArchitecture-300x126.png)
+![](images/v4/GPSTutorialArchitecture-300x126.png)
 
 ## <a name="installation"></a>Installation and Configuration
 
@@ -172,7 +172,7 @@ The tutorial environment also relies on IBM Streams Quick Start Edition for Dock
     <pre>streamtool getdomainstate
     streamtool getinstancestate</pre>
 
-    ![](images/streamtool-getstate-300x53.png)
+    ![](images/v4/streamtool-getstate-300x53.png)
 
 3.  Verify the date in the Streams Docker QSE container matches your host date  
     Certain sleep conditions within the container can cause the Network Time Protocol Daemon to become inoperable.  If the dates are not the same, run the following command in the container: (`sudo service ntpd restart`) (sudo password is the same as the streamsadmin password above)
@@ -221,7 +221,7 @@ In this tutorial Grafana and Prometheus will be started with slightly modified c
 
     <pre>docker-compose build</pre>
 
-    ![](images/docker-compose-build-300x174.png)
+    ![](images/v4/docker-compose-build-300x174.png)
 
 ### <a name="startup"></a>Start Docker Compose Project
 
@@ -229,18 +229,18 @@ In this tutorial Grafana and Prometheus will be started with slightly modified c
 
     <pre>docker-compose up -d</pre>
 
-    ![](images/docker-compose-startup-300x191.png)
+    ![](images/v4/docker-compose-startup-300x191.png)
 2.  Verify the containers are running
 
     <pre>docker-compose ps</pre>
 
-    ![](images/docker-compose-ps-300x44.png)
+    ![](images/v4/docker-compose-ps-300x44.png)
 
 3.  Tail the log of the streams-metric-exporter container to verify it connected to the Streams domain
 
     <pre>docker-compose logs streamsexporter</pre>
 
-    ![](images/streamsexporter-log-300x113.png)
+    ![](images/v4/streamsexporter-log-300x113.png)
 
 ### <a name="viewsample"></a>View Grafana sample dashboard
 
@@ -250,11 +250,11 @@ In this tutorial Grafana and Prometheus will be started with slightly modified c
     username: admin  
     password: admin  
     The Home Dashboard should appear  
-    ![](images/grafana-home-300x162.png)
+    ![](images/v4/grafana-home-300x162.png)
 3.  Select the “IBM Streams Domain Dashboard”  
     This is a sample dashboard and can be edited, saved, and customized.  
     There are no streams jobs running at the moment, but the state of the domain and instance are green which means they are available.  
-    ![](images/DomainDashboard-300x204.png)
+    ![](images/v4/DomainDashboard-300x204.png)
 
 ## <a name="startapp"></a>Start the Streams application
 
@@ -287,7 +287,7 @@ The work in this section should be performed in the Streams QSE window you opene
     <pre>make submit</pre>
 
 5.  Visualize the HeadsTails application using StreamsConsole ([https://localhost:8443/streams/domain/console](https://localhost:8443/streams/domain/console)) it will look like this:  
-    ![](images/HeadsTailsLayout-300x132.png)
+    ![](images/v4/HeadsTailsLayout-300x132.png)
 
 ## <a name="viewexporter"></a>View Prometheus Metrics in Streams Metric Exporter
 
@@ -546,14 +546,14 @@ Before creating new dashboards and graphs it is often easier to view the availab
 
 1.  Open a new tab in your browser and navigate to the prometheus UI:  
     [http://localhost:9090](http://localhost:9090/)  
-    ![](images/PrometheusUI-300x138.png)
+    ![](images/v4/PrometheusUI-300x138.png)
 2.  Select the “- insert metric at cursor -” pulldown.  
     Browse all of the metrics that begin with “streams_” . These have all been created by the Streams Metric Exporter.
 3.  Select the “streams_operator_ip_nTuplesProcessed” metric  
     It should place the metric in the PromQL expression textbox.
 4.  Press the “Execute” button  
     Our HeadsTails application contains four operators with input ports.  Each should be displayed in the “Console” tab.  
-    Notice the labels for operator input port metrics include: domainname, instancename, jobname, operatorname, and inputportname.![](images/PrometheusConsoleQuery1-300x41.png)
+    Notice the labels for operator input port metrics include: domainname, instancename, jobname, operatorname, and inputportname.![](images/v4/PrometheusConsoleQuery1-300x41.png)
 5.  Modify the PromQL expression in the textbox to select only the metric instances containing a specific label:
 
     <pre>streams_operator_ip_nTuplesProcessed{inputportname="FlipStream"}</pre>
@@ -579,15 +579,15 @@ Throughout the remainder of the tutorial we will be working in the Grafana UI to
 4.  The dashboard should now show our streams application running and look something like the figure below.  
     Notice that we now show a job count.  The CPU Rate will take 5 minutes after execution to show up because the query is a 5-minute rate, thus it needs to accumulate 5 minutes worth of metrics before graphing.  This can be adjusted by editing the panel.  
     The Streams Job Resident Memory graph, however, uses the instantaneous values and will begin show values much more quickly.  
-    ![](images/DomainDashboardRunning-300x187.png)
+    ![](images/v4/DomainDashboardRunning-300x187.png)
 5.  View the internals of the Streams Jobs CPU Milliseconds Rate panel  
     Click on the panels title bar and select “Edit” from the drop-down menu.
 
-![](images/PanelEditMenu-300x139.png)
+![](images/v4/PanelEditMenu-300x139.png)
 
 The Grafana Panel editor appears.  Details of all the different options and capabilities of Grafana is well beyond the purpose of this tutorial, however, the panel editor is a good way to see the metrics that are used in the existing graphs.
 
-![](images/CPUEditPanel-300x259.png)
+![](images/v4/CPUEditPanel-300x259.png)
 
 This panel uses a Prometheus PromQL aggregate rate function over the metric “streams_job_nCpuMilliseconds”.  In addition, this dashboard has a Grafana template variable called “instancename” that allows a user to specify a single streams instance or all streams instances that are being captured into Prometheus.
 
@@ -603,9 +603,9 @@ Grafana considers a dashboard a single web page with one or more panels. Each pa
 ### <a name="firstgraph"></a>Create your first Graph (i.e Panel)
 
 1.  Using the Grafana UI, press the “+” (Create) palette icon on the left side of the screen and select the “Dashboard” option.  
-    ![](images/CreateDashboardMenu-300x171.png)
+    ![](images/v4/CreateDashboardMenu-300x171.png)
 2.  Select the “Graph” icon from the “New Panel” window  
-    ![](images/NewPanel-300x194.png)  
+    ![](images/v4/NewPanel-300x194.png)  
     A blank graph should appear.
 3.  Left-click on the “Panel Title” and select the “Edit” menu option.
 4.  In the query text box enter the first metric to graph
@@ -622,10 +622,10 @@ Grafana considers a dashboard a single web page with one or more panels. Each pa
     Legend Text: Number of Tails</pre>
 
 7.  Notice as you add metrics the graph automatically updates, and uses values that have already been collected.  
-    ![](images/HeadsAndTailsGraph-300x164.png)
+    ![](images/v4/HeadsAndTailsGraph-300x164.png)
 8.  Select the “General” tab in the editor and give the graph a meaningful title such as “Heads and Tails”
-9.  Press the “Back to Dashboard” button ![](images/ReturnButton.png) in the upper right to return to the dashboard view
-10.  Press the “Save Dashboard” button ![](images/SaveDashboardButton.png) and give the Dashboard the name: “IBM Streams Heads and Tails Dashboard”
+9.  Press the “Back to Dashboard” button ![](images/v4/ReturnButton.png) in the upper right to return to the dashboard view
+10.  Press the “Save Dashboard” button ![](images/v4/SaveDashboardButton.png) and give the Dashboard the name: “IBM Streams Heads and Tails Dashboard”
 
 ### <a name="custommetricgraph"></a>Create a Graph to view a Custom Metric
 
@@ -633,7 +633,7 @@ A lot of graphs can be created using the IBM Streams built-in metrics.  Adding c
 
 The HeadsTails application used custom metrics to keep track of the maximum number of consecutive flips that were Heads (maxConsecutiveHeads) and the maximum number of flips that were Tails (maxConsecutiveTails).  These are operator metrics, and thus the Streams Metric Exporter will name them as such: streams_operator_maxConsecutiveHeads and streams_operator_maxConsecutiveTails.  If your application used these metric names in multiple places or reused the operator they were created in, the Prometheus metric labels can be used to distinguish which operator to refer.
 
-1.  Press the “Add panel” icon in the upper right bar ![](images/AddPanelButton.png) and select the “Graph” icon from the “New Panel” window.
+1.  Press the “Add panel” icon in the upper right bar ![](images/v4/AddPanelButton.png) and select the “Graph” icon from the “New Panel” window.
 2.  Left-click on the “Panel Title” and select the “Edit” menu option.
 3.  Create a query for each metric and change the “Legend format” for each:
 
@@ -646,7 +646,7 @@ The HeadsTails application used custom metrics to keep track of the maximum numb
 4.  Click on the “General” tab and give the panel a meaningful name such as “Max Consecutive Flips”
 5.  Click on the “Axis” tab to provide a zero-base on the Y axis
 6.  Set Y-min on the LeftY axis to 0 (zero)
-7.  Press the “Back to Dashboard” button ![](images/ReturnButton.png) in the upper right to return to the dashboard /> ![](images/MaxConsecutiveFlipsGraph-300x162.png)
+7.  Press the “Back to Dashboard” button ![](images/v4/ReturnButton.png) in the upper right to return to the dashboard /> ![](images/v4/MaxConsecutiveFlipsGraph-300x162.png)
 
 ### <a name="arithmeticgraph"></a>Create a Graph Using Metric Arithmetic
 
@@ -665,13 +665,13 @@ The Prometheus query language supports many functions and operations on metrics.
 
 4.  Enter a meaningful Legend Format:”Heads vs Tails Difference (heads > 0)”
 5.  Give the panel a meaningful title
-6.  Press the “Back to Dashboard” button ![](images/ReturnButton.png)in the upper right to return to the dashboard view
+6.  Press the “Back to Dashboard” button ![](images/v4/ReturnButton.png)in the upper right to return to the dashboard view
 
-![](images/HeadsVSTails-300x152.png)
+![](images/v4/HeadsVSTails-300x152.png)
 
 With some additional Grafana Panels (Text and Single-stat) you can finalize your dashboard.
 
-![](images/FinishedDashboard-300x155.png)
+![](images/v4/FinishedDashboard-300x155.png)
 
 ## <a name="additional"></a>Additional items of interest
 
@@ -680,7 +680,7 @@ With some additional Grafana Panels (Text and Single-stat) you can finalize your
 It is often useful to check the status of targets that Prometheus scrapes for metrics
 
 1.  On the Promethus UI, press the “Status” pull down menu and select the “Targets” option  
-    This will display the status of the connection to the Streams Metric Exporter.![](images/PrometheusTargetStatus-300x52.png)
+    This will display the status of the connection to the Streams Metric Exporter.![](images/v4/PrometheusTargetStatus-300x52.png)
 
 Note: The link to the streams-metric-exporter endpoint will not work because the hostname is not available to your host computer.  We will access the exposed URL in the next section.
 
